@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "alzahim-portal",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/Users/dohaalhusyin/alzahim-portal/server.py"],
+      "port": 4040,
+      "autoPort": true
+    }
+  ]
+}
