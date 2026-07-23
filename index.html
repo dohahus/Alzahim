@@ -40,6 +40,7 @@
   --shadow-pop: 0 18px 44px rgba(52,40,12,.16);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
+html, body { max-width:100vw; overflow-x:hidden; }
 body { font-family: var(--font-ui); background:var(--dark); color:var(--white); font-size:14px; }
 ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--dark-2); } ::-webkit-scrollbar-thumb { background:var(--dark-4); border-radius:3px; }
 
@@ -185,7 +186,7 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .btn-logout:hover { border-color:var(--red); color:var(--red); background:rgba(168,65,47,.05); }
 
 /* ═══════════ MAIN ═══════════ */
-.main { margin-right:var(--sidebar-w); flex:1; display:flex; flex-direction:column; min-height:100vh; }
+.main { margin-right:var(--sidebar-w); flex:1; min-width:0; display:flex; flex-direction:column; min-height:100vh; }
 
 /* ═══════════ VERSE BANNER ═══════════ */
 .verse-banner {
@@ -529,6 +530,78 @@ tbody td { padding:13px 16px; font-size:13px; }
 .text-sm { font-size:12px; }
 .font-bold { font-weight:700; }
 .flex-center { display:flex; align-items:center; gap:8px; }
+
+/* ═══════════ MOBILE MENU TOGGLE (مخفي على الحاسوب) ═══════════ */
+.menu-toggle {
+  display:none; width:38px; height:38px; border-radius:8px; border:1px solid var(--border);
+  background:transparent; color:var(--white); cursor:pointer; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(38,48,38,.55); z-index:99; }
+.sidebar-backdrop.open { display:block; }
+
+/* ═══════════ الجوال والشاشات الصغيرة ═══════════ */
+@media (max-width: 860px) {
+  .sidebar {
+    transform:translateX(100%); transition:transform .28s ease; box-shadow:var(--shadow-pop);
+  }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-right:0; }
+  .menu-toggle { display:flex; }
+
+  .topbar { flex-wrap:wrap; height:auto; min-height:56px; padding:10px 14px; row-gap:10px; }
+  .menu-toggle { order:1; }
+  .topbar-title { order:2; font-size:15px; }
+  .topbar-actions { order:3; }
+  .topbar-search { order:4; flex-basis:100%; width:100%; max-width:none; }
+
+  .verse-banner { padding:14px 18px; }
+  .verse-text { font-size:15px; line-height:1.8; }
+  .verse-ref { font-size:10px; }
+
+  .content { padding:16px; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:18px; }
+  .stat-card { padding:14px; }
+  .stat-value { font-size:24px; }
+  .two-col, .three-col { grid-template-columns:1fr; }
+  .form-row { grid-template-columns:1fr; }
+
+  .section-header { flex-direction:column; align-items:stretch; gap:10px; width:100%; min-width:0; }
+  .section-header > div:last-child {
+    display:flex !important; flex-wrap:wrap; gap:8px !important; width:100%; min-width:0;
+  }
+  .section-header > div:last-child > * { min-width:0; }
+  .section-header > div:last-child input, .section-header > div:last-child select {
+    flex:1 1 130px; width:auto !important; max-width:100%;
+  }
+
+  .table-wrap { width:100%; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .table-wrap table { min-width:640px; }
+
+  .modal-overlay { padding:0; align-items:flex-end; }
+  .modal { width:100% !important; max-width:100% !important; border-radius:16px 16px 0 0; max-height:92vh; }
+
+  .cdm-tabs { overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+  .cdm-tab { white-space:nowrap; }
+  .case-detail-header { padding:16px; }
+  .case-name { font-size:18px; }
+
+  .notif-panel { width:88vw; max-width:340px; }
+
+  .login-box { width:calc(100% - 32px); max-width:430px; padding:36px 24px; }
+  .login-logo img { width:180px; }
+  .login-watermark { min-width:0; width:75%; }
+
+  .portal-banner { flex-direction:column; text-align:center; padding:22px; }
+  .doc-row { flex-wrap:wrap; }
+  .hearing-item { flex-wrap:wrap; row-gap:8px; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns:1fr; }
+  .verse-text { font-size:13.5px; }
+  .login-box { padding:28px 18px; }
+}
 </style>
 </head>
 <body>
@@ -563,6 +636,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 <!-- ═══════════════ APP ═══════════════ -->
 <div id="app">
   <div class="layout">
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -590,6 +664,7 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div class="verse-ref" id="verse-ref"></div>
       </div>
       <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()" title="القائمة" aria-label="القائمة">☰</button>
         <div class="topbar-title" id="page-title">لوحة التحكم</div>
         <div class="topbar-search" id="topbar-search">
           <span style="color:var(--gray)">🔍</span>
@@ -933,6 +1008,7 @@ const SVG_ICONS = {
   bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
   search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
   plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  menu: '<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>',
   clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
   user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   landmark: '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
@@ -978,6 +1054,7 @@ const EMOJI_MAP = {
   '📂':'folder-open', '📜':'scroll', '🚪':'logout', '🔍':'search', '🔎':'search', '🔔':'bell', '🆚':'shield',
   '🔴':'alert-circle', '⏰':'clock', '📈':'trending', '🟢':'check-circle', '🟡':'pause-circle', '🏆':'award',
   '🏢':'building', '🗑':'trash', '🔒':'lock', '📱':'phone', '📧':'mail', '📍':'pin', '📤':'upload', '👁️':'eye', '👁':'eye',
+  '☰':'menu',
 };
 const EMOJI_KEYS = Object.keys(EMOJI_MAP).sort((a,b)=>b.length-a.length);
 function iconify(html, sz) {
@@ -1197,7 +1274,12 @@ function load() {
     t.assigneeId = t.assigneeId || null;
   });
   if (!DB.nextId.notifications) DB.nextId.notifications = Math.max(0, ...DB.notifications.map(n=>n.id)) + 1;
-  DB.currentUser = null;
+  // إبقاء جلسة الدخول قائمة عبر التحديثات، مع التحقق أن المستخدم/الموكل ما زال موجوداً
+  if (DB.currentUser) {
+    const u = DB.currentUser;
+    const stillValid = u.type === 'admin' ? DB.users.some(x=>x.id===u.userId) : DB.clients.some(x=>x.id===u.clientId);
+    if (!stillValid) DB.currentUser = null;
+  }
 }
 load();
 
@@ -1223,18 +1305,19 @@ function doLogin() {
     const usr = DB.users.find(x => (x.user === u || x.name === u) && x.pass === p);
     if (usr) {
       DB.currentUser = { type:'admin', userId:usr.id, name:usr.name, role:usr.role, initials:usr.name.charAt(0), perms:{...usr.perms} };
-      startApp();
+      save(); startApp();
     } else { alert('بيانات الدخول غير صحيحة'); }
   } else {
     const cl = DB.clients.find(c => (c.user === u || c.idNum === u) && c.pass === p);
     if (cl) {
       DB.currentUser = { type:'client', clientId: cl.id, name: cl.name, role:'موكل', initials: cl.name.charAt(0) };
-      startApp();
+      save(); startApp();
     } else { alert('بيانات الدخول غير صحيحة'); }
   }
 }
 function doLogout() {
   DB.currentUser = null;
+  save();
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-user').value = '';
@@ -1323,10 +1406,19 @@ function buildSidebar() {
 }
 let currentPage = '';
 const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', invoices:'invoices', reports:'reports', settings:'settings' };
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-backdrop').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('open');
+}
 function navTo(page) {
   if (DB.currentUser && DB.currentUser.type === 'admin' && PAGE_PERMS[page] && !hasPerm(PAGE_PERMS[page])) {
     alert('ليست لديك صلاحية الوصول إلى هذه الصفحة'); return;
   }
+  closeSidebar();
   currentPage = page;
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const active = document.getElementById('nav-' + page);
@@ -2830,6 +2922,9 @@ document.addEventListener('click', e => {
     panel.classList.remove('open');
   }
 });
+
+// استئناف الجلسة تلقائياً إن كان المستخدم قد سجّل الدخول سابقاً من هذا المتصفح
+if (DB.currentUser) startApp();
 </script>
 </body>
 </html>
