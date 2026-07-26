@@ -159,7 +159,18 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   display:flex; align-items:center; justify-content:center;
   color:#FFFDF6; font-size:15px; font-weight:700; flex-shrink:0;
   font-family:'Alharf', var(--font-ui);
+  background-size:cover; background-position:center; overflow:hidden; position:relative;
 }
+#user-avatar { cursor:pointer; transition:.15s; }
+#user-avatar:hover { box-shadow:0 0 0 3px var(--olive-pale); }
+#user-avatar.has-photo { color:transparent; }
+.avatar-edit-row { display:flex; align-items:center; gap:14px; }
+.avatar-preview {
+  width:72px; height:72px; border-radius:50%; background:var(--gold); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; color:#FFFDF6; font-size:26px; font-weight:700;
+  font-family:'Alharf', var(--font-ui); background-size:cover; background-position:center;
+}
+.avatar-preview.has-photo { color:transparent; }
 .user-info { flex:1; min-width:0; }
 .user-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .user-role { font-size:11px; color:var(--gold-deep); font-weight:500; }
@@ -561,6 +572,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 .color-gray { color:var(--gray-light); }
 .text-sm { font-size:12px; }
 .date-greg { color:var(--gray-light); font-size:.9em; font-weight:400; }
+.date-hijri-preview { margin-top:6px; font-size:12px; color:var(--gold-deep); font-weight:600; min-height:16px; }
 .font-bold { font-weight:700; }
 .flex-center { display:flex; align-items:center; gap:8px; }
 
@@ -675,7 +687,7 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div class="sidebar-logo-sub">بوابة إدارة القضايا</div>
       </div>
       <div class="sidebar-user">
-        <div class="user-avatar" id="user-avatar">م</div>
+        <div class="user-avatar" id="user-avatar" onclick="triggerAvatarUpload()" title="اضغط لتغيير الصورة الشخصية">م</div>
         <div class="user-info">
           <div class="user-name" id="user-name">زياد عبدالله الزاحم</div>
           <div class="user-role" id="user-role">مدير المكتب</div>
@@ -863,7 +875,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 <div class="modal-overlay" id="task-modal" style="display:none" onclick="closeModal('task-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <span class="modal-title">➕ مهمة جديدة</span>
+      <span class="modal-title" id="task-modal-title">➕ مهمة جديدة</span>
       <button class="modal-close" onclick="closeModal('task-modal',event)">×</button>
     </div>
     <div class="modal-body">
@@ -887,7 +899,7 @@ tbody td { padding:13px 16px; font-size:13px; }
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('task-modal',event)">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveTask()">💾 حفظ المهمة</button>
+      <button class="btn btn-primary" id="task-modal-save-btn" onclick="saveTask()">💾 حفظ المهمة</button>
     </div>
   </div>
 </div>
@@ -911,6 +923,7 @@ tbody td { padding:13px 16px; font-size:13px; }
   </div>
 </div>
 <input type="file" id="task-attach-input" style="display:none" onchange="handleTaskAttachUpload(event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+<input type="file" id="avatar-upload-input" style="display:none" onchange="handleAvatarUpload(event)" accept="image/*" />
 
 <!-- ═══════════════ MODAL: TICKET THREAD (تذاكر التواصل مع الموكلين) ═══════════════ -->
 <div class="modal-overlay" id="ticket-modal" style="display:none" onclick="closeModal('ticket-modal',event)">
@@ -984,7 +997,10 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div class="form-group-v"><label>الموكل (الطرف الثاني)</label>
           <select id="inv-client" onchange="invClientChanged()"><option value="">اختر الموكل</option></select>
         </div>
-        <div class="form-group-v"><label>تاريخ تحرير العقد</label><input type="date" id="inv-date" /></div>
+        <div class="form-group-v"><label>تاريخ تحرير العقد</label>
+          <input type="date" id="inv-date" onchange="updateInvDatePreview()" oninput="updateInvDatePreview()" />
+          <div id="inv-date-hijri" class="date-hijri-preview"></div>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group-v"><label>مدينة إبرام العقد</label><input type="text" id="inv-city" value="المدينة المنورة" /></div>
@@ -1051,6 +1067,33 @@ tbody td { padding:13px 16px; font-size:13px; }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('user-modal',event)">إلغاء</button>
       <button class="btn btn-primary" onclick="saveUser()">💾 حفظ المستخدم</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: CLIENT PORTAL ACCOUNT ═══════════════ -->
+<div class="modal-overlay" id="client-account-modal" style="display:none" onclick="closeModal('client-account-modal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="ca-title">➕ إنشاء حساب موكل</span>
+      <button class="modal-close" onclick="closeModal('client-account-modal',event)">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group-v"><label>الموكل</label>
+        <select id="ca-client"><option value="">اختر الموكل</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group-v"><label>اسم المستخدم</label><input type="text" id="ca-user" placeholder="username" /></div>
+        <div class="form-group-v"><label>الرمز السري</label><input type="text" id="ca-pass" placeholder="رمز الدخول" /></div>
+      </div>
+      <p class="color-gray text-sm">
+        يدخل الموكل من شاشة تسجيل الدخول عبر تبويب «دخول العميل»، ويستطيع الدخول باسم المستخدم أو برقم هويته.
+        لن يرى سوى قضاياه وجلساته وفواتيره ومستنداته الخاصة به فقط.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('client-account-modal',event)">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveClientAccount()">💾 حفظ الحساب</button>
     </div>
   </div>
 </div>
@@ -1154,12 +1197,17 @@ const DAILY_VERSES = [
   { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ حَقَّ تُقَاتِهِ وَلَا تَمُوتُنَّ إِلَّا وَأَنتُم مُّسْلِمُونَ', ref:'سورة آل عمران — الآية 102' },
   { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا وَسَبِّحُوهُ بُكْرَةً وَأَصِيلًا', ref:'سورة الأحزاب — الآيات 41-42' },
 ];
+// تتجدد الآية مع كل فتح أو تحديث للصفحة، وتُحفَظ آخر آية ظهرت لتجنّب تكرارها مباشرةً
 function renderVerseBanner() {
   const el = document.getElementById('verse-text'), refEl = document.getElementById('verse-ref');
   if (!el) return;
-  const now = new Date();
-  const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-  const v = DAILY_VERSES[dayOfYear % DAILY_VERSES.length];
+  let idx = Math.floor(Math.random() * DAILY_VERSES.length);
+  try {
+    const last = parseInt(localStorage.getItem('alzahim_last_verse'));
+    if (DAILY_VERSES.length > 1 && idx === last) idx = (idx + 1) % DAILY_VERSES.length;
+    localStorage.setItem('alzahim_last_verse', String(idx));
+  } catch(e) {}
+  const v = DAILY_VERSES[idx];
   el.textContent = '﴿ ' + v.text + ' ﴾';
   refEl.textContent = v.ref;
 }
@@ -1259,63 +1307,21 @@ const DEFAULT_USERS = [
   { id:5, name:'منصور القرشي', user:'mansour', pass:'1234', role:'محاسب', perms:{...ROLE_PRESETS['محاسب']} },
 ];
 
+// يُرفَع هذا الرقم لتفريغ البيانات التجريبية من المتصفحات التي سبق أن حفظتها
+const DATA_VERSION = 2;
 let DB = {
+  dataVersion: DATA_VERSION,
   currentUser: null,
   loginType: 'admin',
   users: DEFAULT_USERS.map(u => ({ ...u, perms:{...u.perms} })),
-  clients: [
-    { id:1, name:'أحمد بن سعد الغامدي', idNum:'1054321789', phone:'0501234567', email:'ahmed@example.com', user:'ahmed', pass:'1234', nationality:'سعودي', notes:'' },
-    { id:2, name:'شركة النخبة للتجارة', idNum:'7012345678', phone:'0551234567', email:'elite@example.com', user:'elite', pass:'1234', nationality:'سعودية', notes:'شركة' },
-    { id:3, name:'فاطمة علي المطيري', idNum:'2087654321', phone:'0561234567', email:'fatima@example.com', user:'fatima', pass:'1234', nationality:'سعودية', notes:'' },
-    { id:4, name:'محمد خالد العتيبي', idNum:'1098765432', phone:'0591234567', email:'mkhaled@example.com', user:'mkhaled', pass:'1234', nationality:'سعودي', notes:'' },
-  ],
-  cases: [
-    { id:1, num:'1446/3872', title:'نزاع تجاري – عقد توريد', type:'تجارية', clientId:2, court:'المحكمة التجارية بالرياض', dept:'الدائرة الثانية', lawyer:'زياد عبدالله الزاحم', opponent:'شركة الفجر', nextHearing:'2026-07-22', status:'active', progress:45, notes:'قضية نزاع عقدي بشأن عقد توريد بضائع', updates:[
-      { date:'2026-06-10', text:'تم تقديم صحيفة الدعوى وقيدها', status:'active' },
-      { date:'2026-06-28', text:'جلسة أولى — أحيلت إلى التحقيق', status:'active' },
-    ]},
-    { id:2, num:'1446/4120', title:'قضية عمالية – إنهاء خدمة', type:'عمالية', clientId:1, court:'المحكمة العمالية بالرياض', dept:'الدائرة السابعة', lawyer:'محمد الأحمد', opponent:'شركة التقنية المتقدمة', nextHearing:'2026-07-30', status:'active', progress:30, notes:'', updates:[
-      { date:'2026-07-01', text:'تم تقديم الدعوى وتحديد موعد الجلسة الأولى', status:'active' },
-    ]},
-    { id:3, num:'1446/2901', title:'حضانة وزيارة – قضية أسرية', type:'أسرية', clientId:3, court:'المحكمة العامة بجدة', dept:'شعبة الأحوال الشخصية', lawyer:'سارة المطيري', opponent:'—', nextHearing:'2026-08-05', status:'pending', progress:60, notes:'', updates:[
-      { date:'2026-05-15', text:'أولى الجلسات — طلب المدعى عليه التأجيل', status:'pending' },
-      { date:'2026-06-20', text:'جلسة ثانية — إحالة للتحقيق', status:'pending' },
-    ]},
-    { id:4, num:'1445/9900', title:'قضية عقارية – إثبات ملكية', type:'مدنية', clientId:4, court:'المحكمة العامة بالرياض', dept:'الدائرة الخامسة', lawyer:'خالد العتيبي', opponent:'ورثة المالك', nextHearing:null, status:'closed', progress:100, notes:'', updates:[
-      { date:'2026-04-10', text:'صدر الحكم الابتدائي لصالح الموكل', status:'won' },
-    ]},
-  ],
-  hearings: [
-    { id:1, caseId:1, date:'2026-07-22', time:'10:00', court:'المحكمة التجارية بالرياض', purpose:'نظر', notes:'' },
-    { id:2, caseId:2, date:'2026-07-30', time:'09:30', court:'المحكمة العمالية بالرياض', purpose:'مرافعة', notes:'' },
-    { id:3, caseId:3, date:'2026-08-05', time:'11:00', court:'المحكمة العامة بجدة', purpose:'حكم', notes:'' },
-  ],
-  tasks: [
-    { id:1, title:'مراجعة ملف القضية قبل الجلسة', desc:'مراجعة كافة مستندات القضية 1446/3872 والتأكد من اكتمالها قبل موعد الجلسة القادمة.', done:false, due:'2026-07-20', caseId:1, assigneeId:1 },
-    { id:2, title:'إرسال المذكرة الجوابية', desc:'إعداد وإرسال المذكرة الجوابية في قضية العتيبي العقارية. @خالد العتيبي', done:false, due:'2026-07-18', caseId:4, assigneeId:4 },
-    { id:3, title:'تحديث بيانات الموكل', desc:'التواصل مع الموكل أحمد الغامدي لتحديث بياناته في ملف القضية.', done:true, due:'2026-07-15', caseId:2, assigneeId:2 },
-    { id:4, title:'إعداد عريضة الاستئناف', desc:'صياغة عريضة الاستئناف في القضية العمالية وتجهيزها للإيداع. @محمد الأحمد', done:false, due:'2026-07-25', caseId:2, assigneeId:2 },
-  ],
-  invoices: [
-    { id:1, ref:'2026-001', caseIds:[1], clientId:2, date:'2026-06-15', city:'المدينة المنورة', notes:'', amount:25000, paid:false, installments:[
-      { label:'دفعة أولى عند توقيع العقد – غير مستردة', amount:15000, due:'2026-06-15', paid:true },
-      { label:'الدفعة الثانية بعد صدور الحكم الابتدائي', amount:10000, due:'2026-08-01', paid:false },
-    ]},
-    { id:2, ref:'2026-002', caseIds:[2], clientId:1, date:'2026-06-20', city:'المدينة المنورة', notes:'', amount:8000, paid:true, installments:[
-      { label:'أتعاب محاماة – مرحلة التفاوض', amount:8000, due:'2026-07-20', paid:true },
-    ]},
-    { id:3, ref:'2026-003', caseIds:[4], clientId:4, date:'2026-05-10', city:'المدينة المنورة', notes:'', amount:15000, paid:true, installments:[
-      { label:'أتعاب محاماة – قضية ملكية عقارية', amount:15000, due:'2026-06-30', paid:true },
-    ]},
-  ],
-  notifications: [
-    { id:1, title:'جلسة اليوم', desc:'لديك جلسة في قضية 1446/3872 الساعة 10:00', time:'منذ ساعة', read:false },
-    { id:2, title:'مهمة عاجلة', desc:'إرسال المذكرة الجوابية في قضية العتيبي', time:'منذ ساعتين', read:false },
-    { id:3, title:'موكل جديد', desc:'تم تسجيل موكل جديد: محمد خالد العتيبي', time:'أمس', read:true },
-    { id:4, title:'فاتورة مستحقة', desc:'فاتورة أحمد الغامدي تستحق خلال يومين', time:'أمس', read:true },
-  ],
+  clients: [],
+  cases: [],
+  hearings: [],
+  tasks: [],
+  invoices: [],
+  notifications: [],
   clientMessages: [],
-  nextId: { clients:5, cases:5, hearings:4, tasks:5, invoices:4, notifications:5, users:6, clientMessages:1 },
+  nextId: { clients:1, cases:1, hearings:1, tasks:1, invoices:1, notifications:1, users:6, clientMessages:1 },
 };
 
 function parseInstAmount(v) {
@@ -1341,6 +1347,13 @@ function load() {
     const d = localStorage.getItem('alzahim_db');
     if (d) { const p = JSON.parse(d); if (p.cases) DB = p; }
   } catch(e) {}
+  // تفريغ البيانات التجريبية لمرة واحدة عند بدء الاستخدام الفعلي (تُحفَظ حسابات المكتب)
+  if (DB.dataVersion !== DATA_VERSION) {
+    DB.clients = []; DB.cases = []; DB.hearings = []; DB.tasks = [];
+    DB.invoices = []; DB.notifications = []; DB.clientMessages = [];
+    DB.nextId = Object.assign({}, DB.nextId, { clients:1, cases:1, hearings:1, tasks:1, invoices:1, notifications:1, clientMessages:1 });
+    DB.dataVersion = DATA_VERSION;
+  }
   // ترقية البيانات المحفوظة من إصدارات سابقة
   if (!DB.users || !DB.users.length) DB.users = DEFAULT_USERS.map(u => ({ ...u, perms:{...u.perms} }));
   DB.users.forEach(u => { u.perms = u.perms || {}; });
@@ -1424,13 +1437,86 @@ document.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════
+//  الصورة الشخصية للحساب
+// ═══════════════════════════════════
+// تُحفَظ الصورة على سجل المستخدم/الموكل نفسه لتظهر في أي متصفح يدخل منه
+function currentUserRecord() {
+  const u = DB.currentUser; if (!u) return null;
+  return u.type === 'admin' ? DB.users.find(x=>x.id===u.userId) : DB.clients.find(x=>x.id===u.clientId);
+}
+function currentAvatar() {
+  const rec = currentUserRecord();
+  return (rec && rec.avatar) || (DB.currentUser && DB.currentUser.avatar) || '';
+}
+function applyAvatar() {
+  const u = DB.currentUser; if (!u) return;
+  const el = document.getElementById('user-avatar'); if (!el) return;
+  const src = currentAvatar();
+  if (src) {
+    el.classList.add('has-photo');
+    el.style.backgroundImage = `url("${src}")`;
+    el.textContent = u.initials || (u.name||'').charAt(0);
+  } else {
+    el.classList.remove('has-photo');
+    el.style.backgroundImage = '';
+    el.textContent = u.initials || (u.name||'').charAt(0);
+  }
+}
+function triggerAvatarUpload() { document.getElementById('avatar-upload-input').click(); }
+function handleAvatarUpload(ev) {
+  const file = ev.target.files[0]; ev.target.value = '';
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { alert('يرجى اختيار ملف صورة'); return; }
+  if (file.size > 4*1024*1024) { alert('حجم الصورة كبير — الحد الأقصى 4 ميغابايت'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    // تُصغَّر الصورة وتُقصّ دائرياً قبل الحفظ حتى لا تستهلك مساحة التخزين
+    const img = new Image();
+    img.onload = () => {
+      const SIZE = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = SIZE; canvas.height = SIZE;
+      const ctx = canvas.getContext('2d');
+      const side = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, SIZE, SIZE);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const rec = currentUserRecord();
+      const prev = rec ? rec.avatar : undefined;
+      if (rec) rec.avatar = dataUrl;
+      DB.currentUser.avatar = dataUrl;
+      try { save(); } catch(e) {
+        if (rec) rec.avatar = prev;
+        delete DB.currentUser.avatar;
+        alert('تعذّر حفظ الصورة — مساحة التخزين في المتصفح ممتلئة');
+        return;
+      }
+      applyAvatar();
+      if (currentPage === 'settings') renderPage('settings');
+      const prev2 = document.getElementById('avatar-preview');
+      if (prev2) { prev2.classList.add('has-photo'); prev2.style.backgroundImage = `url("${dataUrl}")`; }
+    };
+    img.onerror = () => alert('تعذّر قراءة الصورة — جرّب صورة أخرى');
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeAvatar() {
+  if (!confirm('إزالة الصورة الشخصية؟')) return;
+  const rec = currentUserRecord();
+  if (rec) delete rec.avatar;
+  if (DB.currentUser) delete DB.currentUser.avatar;
+  save(); applyAvatar();
+  if (currentPage === 'settings') renderPage('settings');
+}
+
+// ═══════════════════════════════════
 //  APP BOOT
 // ═══════════════════════════════════
 function startApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   const u = DB.currentUser;
-  document.getElementById('user-avatar').textContent = u.initials;
+  applyAvatar();
   document.getElementById('user-name').textContent = u.name;
   document.getElementById('user-role').textContent = u.role;
   buildSidebar();
@@ -1741,6 +1827,7 @@ function renderCases(filter='') {
         <th>الحالة</th><th>إجراءات</th>
       </tr></thead>
       <tbody>
+        ${filtered.length === 0 ? `<tr><td colspan="8" style="text-align:center;padding:28px 12px" class="color-gray text-sm">${scoped.length === 0 ? 'لا توجد قضايا مسجلة بعد — اضغط «قضية جديدة» لإضافة أول قضية' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>` : ''}
         ${filtered.map(c => {
           const cl = DB.clients.find(x=>x.id===c.clientId);
           return `<tr>
@@ -2003,6 +2090,7 @@ function renderHearings() {
   </div>
   <div class="two-col">
     <div>
+      ${sorted.length === 0 ? '<div class="card"><p class="color-gray text-sm">لا توجد جلسات مسجلة بعد — اضغط «جلسة جديدة» لإضافة أول جلسة</p></div>' : ''}
       ${sorted.map(h => {
         const c = DB.cases.find(x=>x.id===h.caseId);
         const d = new Date(h.date);
@@ -2088,6 +2176,9 @@ function renderTasks() {
     return `<span class="task-assignee">👤 ${u?u.name:'—'}</span>`;
   };
   const discussBtn = t => `<button class="task-open-btn" onclick="openTaskDetail(${t.id})">💬 نقاش${(t.comments||[]).length ? ' ('+t.comments.length+')' : ''}</button>`;
+  const rowActions = t => `
+    <button class="task-open-btn" onclick="event.stopPropagation();openTaskModal(${t.id})">✏️ تعديل</button>
+    <button class="task-open-btn" style="color:var(--red)" onclick="event.stopPropagation();deleteTask(${t.id})">🗑️ حذف</button>`;
   return `
   <div class="section-header">
     <div class="section-title">✅ ${owner ? 'المهام' : 'مهامي'} <span>(${pending.length} معلقة)</span></div>
@@ -2119,7 +2210,7 @@ function renderTasks() {
           </div>
           <div style="text-align:left">
             ${t.due ? `<span class="task-due">📅 ${formatDate(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar(${t.id})">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
-            ${discussBtn(t)}
+            ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
     </div>
@@ -2135,7 +2226,7 @@ function renderTasks() {
           </div>
           <div style="text-align:left">
             <span class="task-due" style="color:var(--gray)">✔ ${t.due ? formatDate(t.due) : 'بدون تاريخ استحقاق'}</span><br>
-            ${discussBtn(t)}
+            ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
     </div>
@@ -2192,9 +2283,15 @@ function renderTaskDetail() {
   document.getElementById('td-title').textContent = t.title;
   document.getElementById('td-body').innerHTML = iconify(`
     ${t.desc ? `<p style="color:var(--gray-light);font-size:13.5px;margin-bottom:14px;line-height:1.7">${t.desc}</p>` : ''}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-      ${c ? `<span class="badge badge-new">📋 ${c.num || 'بدون رقم'} — ${c.title}</span>` : ''}
-      ${assignee ? `<span class="badge badge-new">👤 ${assignee.name}</span>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;align-items:center;justify-content:space-between">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${c ? `<span class="badge badge-new">📋 ${c.num || 'بدون رقم'} — ${c.title}</span>` : ''}
+        ${assignee ? `<span class="badge badge-new">👤 ${assignee.name}</span>` : ''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('task-detail-modal',{});openTaskModal(${t.id})">✏️ تعديل</button>
+        <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteTask(${t.id})">🗑️ حذف</button>
+      </div>
     </div>
     ${taskTimelineHTML(t)}
     <div class="td-comments-title">💬 النقاش (${t.comments.length})</div>
@@ -2264,16 +2361,28 @@ function toggleTask(id) {
 // ═══════════════════════════════════
 //  TASK MODAL + @MENTION ASSIGNMENT
 // ═══════════════════════════════════
-let taskModalState = { assigneeId: null };
-function openTaskModal() {
-  taskModalState = { assigneeId: null };
-  document.getElementById('task-title').value = '';
-  document.getElementById('task-desc').value = '';
-  document.getElementById('task-due').value = '';
+let taskModalState = { assigneeId: null, editId: null };
+function openTaskModal(id) {
+  const t = id ? DB.tasks.find(x=>x.id===id) : null;
+  taskModalState = { assigneeId: t ? t.assigneeId : null, editId: t ? t.id : null };
+  document.getElementById('task-modal-title').textContent = t ? '✏️ تعديل المهمة' : '➕ مهمة جديدة';
+  document.getElementById('task-modal-save-btn').textContent = t ? '💾 حفظ التعديلات' : '💾 حفظ المهمة';
+  document.getElementById('task-title').value = t ? t.title : '';
+  document.getElementById('task-desc').value = t ? (t.desc||'') : '';
+  document.getElementById('task-due').value = t ? (t.due||'') : '';
   document.getElementById('task-case').innerHTML = '<option value="">بدون قضية محددة</option>' + myScopedCases().map(c=>`<option value="${c.id}">${c.num || 'بدون رقم'} — ${c.title}</option>`).join('');
-  document.getElementById('task-assignee-chip').innerHTML = '';
+  if (t && t.caseId) document.getElementById('task-case').value = t.caseId;
+  renderTaskAssigneeChip();
   const dd = document.getElementById('task-mention-dropdown'); dd.classList.remove('open'); dd.innerHTML = '';
   openModal('task-modal');
+}
+function deleteTask(id) {
+  const t = DB.tasks.find(x=>x.id===id); if (!t) return;
+  if (!confirm(`هل أنت متأكد من حذف المهمة «${t.title}»؟`)) return;
+  DB.tasks = DB.tasks.filter(x=>x.id!==id);
+  save();
+  if (document.getElementById('task-detail-modal').style.display === 'flex') closeModal('task-detail-modal',{});
+  navTo('tasks'); buildSidebar();
 }
 function handleTaskMentionInput(ev) {
   const el = ev.target;
@@ -2316,23 +2425,32 @@ function saveTask() {
   const due = document.getElementById('task-due').value;
   const caseId = parseInt(document.getElementById('task-case').value) || null;
   const assigneeId = taskModalState.assigneeId;
-  DB.tasks.push({
-    id: DB.nextId.tasks++, title, desc, done:false, due, caseId, assigneeId,
-    creatorId: DB.currentUser.userId, createdAt: new Date().toISOString().split('T')[0],
-    completedAt: null, comments: [],
-  });
-  if (assigneeId && assigneeId !== DB.currentUser.userId) {
+  const editing = taskModalState.editId ? DB.tasks.find(x=>x.id===taskModalState.editId) : null;
+  const prevAssignee = editing ? editing.assigneeId : null;
+  if (editing) {
+    Object.assign(editing, { title, desc, due, caseId, assigneeId });
+  } else {
+    DB.tasks.push({
+      id: DB.nextId.tasks++, title, desc, done:false, due, caseId, assigneeId,
+      creatorId: DB.currentUser.userId, createdAt: new Date().toISOString().split('T')[0],
+      completedAt: null, comments: [],
+    });
+  }
+  // يُرسَل الإشعار عند التوكيل الجديد فقط، لا عند كل تعديل على مهمة موكَّلة مسبقاً
+  if (assigneeId && assigneeId !== DB.currentUser.userId && assigneeId !== prevAssignee) {
     const assignee = DB.users.find(u=>u.id===assigneeId);
     if (assignee) {
       DB.notifications.unshift({
         id: DB.nextId.notifications++,
-        title: 'مهمة جديدة مُوكَّلة إليك',
+        title: editing ? 'مهمة مُوكَّلة إليك' : 'مهمة جديدة مُوكَّلة إليك',
         desc: `${DB.currentUser.name} وكّلك بمهمة: ${title}`,
         time: 'الآن', read:false, forUserId: assigneeId,
       });
     }
   }
+  taskModalState.editId = null;
   save(); closeModal('task-modal',{}); navTo('tasks'); buildSidebar();
+  refreshTaskDetailIfOpen();
 }
 
 // ═══════════════════════════════════
@@ -2350,6 +2468,7 @@ function renderClients() {
     <table>
       <thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>البريد</th><th>عدد القضايا</th><th>اسم المستخدم</th><th>إجراءات</th></tr></thead>
       <tbody>
+        ${clientsList.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا يوجد موكلون مسجلون بعد — اضغط «موكل جديد» لإضافة أول موكل</td></tr>' : ''}
         ${clientsList.map(cl => {
           const caseCount = myScopedCases().filter(c=>c.clientId===cl.id).length;
           return `<tr>
@@ -2414,6 +2533,7 @@ function renderInvoices() {
     <table>
       <thead><tr><th>رقم العقد</th><th>القضايا</th><th>الموكل</th><th>الإجمالي (ر.س)</th><th>المُحصَّل</th><th>الدفعات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
       <tbody>
+        ${DB.invoices.length === 0 ? '<tr><td colspan="8" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد فواتير أو عقود أتعاب بعد — اضغط «فاتورة جديدة» لإصدار أول عقد</td></tr>' : ''}
         ${DB.invoices.map(inv => {
           const cl = DB.clients.find(x=>x.id===inv.clientId);
           const nums = (inv.caseIds||[]).map(id=>{const c=DB.cases.find(x=>x.id===id);return c?c.num:'';}).filter(Boolean).join('، ') || '—';
@@ -2548,6 +2668,21 @@ function renderSettings() {
   return `
   <div class="section-title" style="margin-bottom:20px">⚙️ إعدادات المكتب</div>
   <div class="card" style="margin-bottom:20px">
+    <div class="card-title" style="margin-bottom:16px">👤 حسابي — الصورة الشخصية</div>
+    <div class="avatar-edit-row">
+      <div class="avatar-preview ${currentAvatar()?'has-photo':''}" id="avatar-preview"
+        style="${currentAvatar()?`background-image:url('${currentAvatar()}')`:''}">${(me.name||'').charAt(0)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px;margin-bottom:2px">${me.name}</div>
+        <div class="color-gray text-sm" style="margin-bottom:10px">${me.role}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="triggerAvatarUpload()">📤 ${currentAvatar()?'تغيير الصورة':'رفع صورة'}</button>
+          ${currentAvatar() ? '<button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="removeAvatar()">🗑️ إزالة الصورة</button>' : ''}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:20px">
     <div class="card-title" style="margin-bottom:16px">🏢 بيانات المكتب</div>
     <div class="two-col" style="gap:16px">
       <div>
@@ -2576,7 +2711,7 @@ function renderSettings() {
           ${DB.users.map(u => `<tr>
             <td>
               <div style="display:flex;align-items:center;gap:10px">
-                <div class="user-avatar" style="width:32px;height:32px;font-size:13px">${u.name.charAt(0)}</div>
+                <div class="user-avatar ${u.avatar?'has-photo':''}" style="width:32px;height:32px;font-size:13px${u.avatar?`;background-image:url('${u.avatar}');color:transparent`:''}">${u.name.charAt(0)}</div>
                 <span>${u.name}${me.userId===u.id?' <span style="color:var(--gold);font-size:11px">(أنت)</span>':''}</span>
               </div>
             </td>
@@ -2591,7 +2726,66 @@ function renderSettings() {
         </tbody>
       </table>
     </div>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <div class="section-header" style="margin-bottom:14px">
+      <div class="card-title">🔒 حسابات الموكلين — بوابة العميل</div>
+      <button class="btn btn-primary btn-sm" onclick="openClientAccountModal()">➕ إنشاء حساب موكل</button>
+    </div>
+    <p class="color-gray text-sm" style="margin-bottom:14px">
+      يدخل الموكل من تبويب «دخول العميل» باسم المستخدم والرمز السري أدناه، ولا يرى سوى قضاياه وجلساته وفواتيره ومستنداته فقط.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الموكل</th><th>اسم المستخدم</th><th>الرمز السري</th><th>عدد القضايا</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+        <tbody>
+          ${DB.clients.length === 0 ? '<tr><td colspan="6" class="color-gray text-sm">لا يوجد موكلون مسجلون — أضف موكلاً أولاً من صفحة الموكلين</td></tr>' : DB.clients.map(cl => {
+            const active = !!(cl.user && cl.pass);
+            return `<tr>
+              <td><strong>${cl.name}</strong></td>
+              <td style="color:var(--gold)">${cl.user || '—'}</td>
+              <td class="color-gray">${cl.pass ? '••••••' : '—'}</td>
+              <td><span class="badge badge-new">${DB.cases.filter(c=>c.clientId===cl.id).length} قضية</span></td>
+              <td><span class="badge ${active?'badge-active':'badge-closed'}">${active?'حساب مُفعَّل':'بدون حساب'}</span></td>
+              <td style="white-space:nowrap">
+                <button class="btn btn-secondary btn-sm" onclick="openClientAccountModal(${cl.id})">✏️ ${active?'تعديل':'إنشاء'}</button>
+                ${active ? `<button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="revokeClientAccount(${cl.id})">🔒 إلغاء الحساب</button>` : ''}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
   </div>` : ''}`;
+}
+function openClientAccountModal(clientId) {
+  const sel = document.getElementById('ca-client');
+  sel.innerHTML = '<option value="">اختر الموكل</option>' + DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const cl = clientId ? DB.clients.find(c=>c.id===clientId) : null;
+  document.getElementById('ca-title').textContent = cl && cl.user ? '✏️ تعديل حساب الموكل' : '➕ إنشاء حساب موكل';
+  sel.value = cl ? cl.id : '';
+  document.getElementById('ca-user').value = cl ? (cl.user||'') : '';
+  document.getElementById('ca-pass').value = cl ? (cl.pass||'') : '';
+  openModal('client-account-modal');
+}
+function saveClientAccount() {
+  const clientId = parseInt(document.getElementById('ca-client').value);
+  if (!clientId) { alert('يرجى اختيار الموكل'); return; }
+  const user = document.getElementById('ca-user').value.trim();
+  const pass = document.getElementById('ca-pass').value.trim();
+  if (!user || !pass) { alert('يرجى إدخال اسم المستخدم والرمز السري'); return; }
+  // اسم الدخول يجب ألّا يتعارض مع موكل آخر أو مع أحد حسابات المكتب
+  if (DB.clients.some(c => c.user === user && c.id !== clientId)) { alert('اسم المستخدم مستخدم لموكل آخر — اختر اسماً غيره'); return; }
+  if (DB.users.some(u => u.user === user)) { alert('اسم المستخدم مستخدم لأحد حسابات المكتب — اختر اسماً غيره'); return; }
+  const cl = DB.clients.find(c=>c.id===clientId); if (!cl) return;
+  cl.user = user; cl.pass = pass;
+  save(); closeModal('client-account-modal',{}); navTo('settings');
+}
+function revokeClientAccount(clientId) {
+  const cl = DB.clients.find(c=>c.id===clientId); if (!cl) return;
+  if (!confirm(`إلغاء حساب بوابة العميل الخاص بـ «${cl.name}»؟ لن يتمكن من الدخول بعدها.`)) return;
+  cl.user = ''; cl.pass = '';
+  save(); navTo('settings');
 }
 function renderPermChecks(perms) {
   document.getElementById('um-perms').innerHTML = PERM_DEFS.map(([k,l]) => `
@@ -2630,9 +2824,10 @@ function saveUser() {
     Object.assign(u, { name, user, pass, role, perms });
     if (DB.currentUser.userId === id) {
       DB.currentUser.name = name; DB.currentUser.role = role; DB.currentUser.perms = {...perms};
+      DB.currentUser.initials = name.charAt(0);
       document.getElementById('user-name').textContent = name;
       document.getElementById('user-role').textContent = role;
-      document.getElementById('user-avatar').textContent = name.charAt(0);
+      applyAvatar();
       buildSidebar();
     }
   } else {
@@ -2969,6 +3164,12 @@ function populateInvoiceModal() {
   document.getElementById('inv-installments').innerHTML = '';
   addInstRow();
   addInstRow();
+  updateInvDatePreview();
+}
+function updateInvDatePreview() {
+  const el = document.getElementById('inv-date-hijri'); if (!el) return;
+  const v = document.getElementById('inv-date').value;
+  el.innerHTML = v ? ic('calendar',13) + ' ' + formatDate(v) : '';
 }
 function invClientChanged() {
   const cid = parseInt(document.getElementById('inv-client').value);
@@ -3135,9 +3336,9 @@ function tafqit(n) {
 function contractDates(dstr) {
   const d = dstr ? new Date(dstr + 'T12:00:00') : new Date();
   const weekday = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { weekday:'long' }).format(d);
-  const greg = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day:'2-digit', month:'2-digit', year:'numeric' }).format(d);
+  const greg = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day:'numeric', month:'long', year:'numeric' }).format(d);
   let hijri = '';
-  try { hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day:'2-digit', month:'2-digit', year:'numeric' }).format(d).replace(/هـ/g,'').trim(); } catch(e) {}
+  try { hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day:'numeric', month:'long', year:'numeric' }).format(d).replace(/هـ/g,'').trim(); } catch(e) {}
   return { weekday, greg, hijri };
 }
 function buildContractHTML(inv) {
@@ -3190,12 +3391,13 @@ function buildContractHTML(inv) {
       <div class="sig"><div class="sig-title">الطرف الثاني</div><div>${cl.name}</div><div class="sig-line">التوقيع: ..............................</div></div>
       <div class="sig"><div class="sig-title">الطرف الأول</div><div>مكتب المحامي/ أ.د. عبدالله الزاحم</div><div class="sig-line">التوقيع: ..............................</div></div>
     </div>
-    <div class="ref-line">عقد أتعاب رقم: ${inv.ref}</div>`;
-  return { page1, page2 };
+    `;
+  // تُقسَّم الكتل تلقائياً على عدد الصفحات اللازم عند الطباعة (حتى لا يُقتطع بند التوقيع)
+  return page1 + page2;
 }
 function openContractPDF(id) {
   const inv = DB.invoices.find(i=>i.id===id); if (!inv) return;
-  const { page1, page2 } = buildContractHTML(inv);
+  const contractBody = buildContractHTML(inv);
   const bg = location.href.replace(/[^/]*$/, '') + 'assets/letterhead.png';
   const w = window.open('', '_blank');
   if (!w) { alert('يرجى السماح بالنوافذ المنبثقة في المتصفح لإصدار ملف الـ PDF'); return; }
@@ -3220,7 +3422,7 @@ function openContractPDF(id) {
     .sig { text-align:center; flex:1; }
     .sig-title { font-weight:700; color:#7C5F16; margin-bottom:6px; }
     .sig-line { margin-top:20px; color:#444; }
-    .ref-line { margin-top:24px; text-align:center; font-size:11px; color:#888; font-family:'IBM Plex Mono', monospace; }
+    .ref-line { position:absolute; bottom:30mm; right:20mm; left:20mm; text-align:center; font-size:10.5px; color:#8C8C8C; font-family:'IBM Plex Mono', monospace; }
     .toolbar { position:fixed; top:12px; left:12px; z-index:50; }
     .toolbar button { padding:11px 22px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; background:#A3801C; color:#FFFDF6; box-shadow:0 2px 10px rgba(0,0,0,.4); }
     @media print {
@@ -3229,11 +3431,51 @@ function openContractPDF(id) {
       .page:last-child { page-break-after:auto; }
       .toolbar { display:none; }
     }
+    #flow { position:absolute; visibility:hidden; pointer-events:none; }
   </style></head><body>
   <div class="toolbar"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>
-  <div class="page"><img class="pagebg" src="${bg}"><div class="pagecontent">${page1}</div></div>
-  <div class="page"><img class="pagebg" src="${bg}"><div class="pagecontent">${page2}</div></div>
-  <scr` + `ipt>window.onload = function(){ setTimeout(function(){ window.print(); }, 700); };</scr` + `ipt>
+  <div id="pages"></div>
+  <div id="flow" class="pagecontent" style="position:absolute;top:0;right:0;left:auto;bottom:auto;width:170mm">${contractBody}</div>
+  <scr` + `ipt>
+  (function(){
+    var BG = ${JSON.stringify(bg)};
+    var REF = ${JSON.stringify(inv.ref)};
+    function paginate() {
+      var flow = document.getElementById('flow');
+      var pagesWrap = document.getElementById('pages');
+      var blocks = Array.prototype.slice.call(flow.children);
+      function newPage() {
+        var p = document.createElement('div'); p.className = 'page';
+        var img = document.createElement('img'); img.className = 'pagebg'; img.src = BG;
+        var c = document.createElement('div'); c.className = 'pagecontent';
+        p.appendChild(img); p.appendChild(c); pagesWrap.appendChild(p);
+        return c;
+      }
+      var cur = newPage();
+      blocks.forEach(function(b){
+        cur.appendChild(b);
+        // إن تجاوزت الكتلة حدود الصفحة، انقلها إلى صفحة جديدة بدل قصّها
+        if (cur.scrollHeight > cur.clientHeight && cur.children.length > 1) {
+          cur = newPage();
+          cur.appendChild(b);
+        }
+      });
+      flow.parentNode.removeChild(flow);
+      // ترويسة مرجعية أسفل كل صفحة مع ترقيمها
+      var pages = pagesWrap.querySelectorAll('.page');
+      for (var i = 0; i < pages.length; i++) {
+        var f = document.createElement('div');
+        f.className = 'ref-line';
+        f.textContent = 'عقد أتعاب رقم: ' + REF + '  —  صفحة ' + (i+1) + ' من ' + pages.length;
+        pages[i].appendChild(f);
+      }
+    }
+    window.onload = function(){
+      paginate();
+      setTimeout(function(){ window.print(); }, 700);
+    };
+  })();
+  </scr` + `ipt>
   </body></html>`);
   w.document.close();
 }
