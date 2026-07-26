@@ -123,6 +123,13 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   transition:.2s; margin-top:8px; letter-spacing:.2px;
 }
 .btn-login:hover { background:var(--olive-hover); }
+.btn-login:disabled { opacity:.6; cursor:default; }
+.login-link {
+  width:100%; margin-top:12px; background:none; border:none; color:var(--gold-deep);
+  font-family:inherit; font-size:12.5px; cursor:pointer; text-decoration:underline; padding:4px;
+}
+.login-link:hover { color:var(--gold); }
+.login-note { margin-top:14px; font-size:11.5px; color:var(--gray); line-height:1.7; }
 .btn-login:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
   outline:2px solid var(--gold-deep); outline-offset:2px;
 }
@@ -655,7 +662,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 <!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
 <div id="login-screen">
   <img class="login-watermark" src="assets/logo-black.png" alt="" />
-  <div class="login-box">
+  <div class="login-box" id="login-box-main">
     <div class="login-logo"><img src="assets/logo-gold.png" alt="شعار الزاحم" /></div>
     <div class="login-office">مكتب الزاحم للمحاماة والاستشارات القانونية</div>
     <div class="login-rule"></div>
@@ -665,14 +672,48 @@ tbody td { padding:13px 16px; font-size:13px; }
       <button class="login-tab" onclick="setLoginType('client')">دخول العميل</button>
     </div>
     <div class="form-group">
-      <label id="login-label-id">رقم المستخدم / البريد الإلكتروني</label>
-      <input type="text" id="login-user" placeholder="أدخل اسم المستخدم" />
+      <label id="login-label-id">اسم المستخدم أو البريد الإلكتروني</label>
+      <input type="text" id="login-user" placeholder="اسم المستخدم أو البريد" autocomplete="username" />
     </div>
     <div class="form-group">
       <label>كلمة المرور</label>
-      <input type="password" id="login-pass" placeholder="••••••••" />
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
     </div>
     <button class="btn-login" onclick="doLogin()">دخول</button>
+    <button class="login-link" onclick="openResetRequest()">نسيت كلمة المرور؟</button>
+  </div>
+
+  <!-- طلب رابط استعادة كلمة المرور -->
+  <div class="login-box" id="reset-request-box" style="display:none">
+    <div class="login-logo"><img src="assets/logo-gold.png" alt="شعار الزاحم" /></div>
+    <div class="login-office">استعادة كلمة المرور</div>
+    <div class="login-rule"></div>
+    <div class="login-sub">أدخل بريدك الإلكتروني المسجَّل في المكتب</div>
+    <div class="form-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="reset-email" placeholder="example@email.com" autocomplete="email" />
+    </div>
+    <button class="btn-login" onclick="sendResetLink()">إرسال رابط الاستعادة</button>
+    <button class="login-link" onclick="closeResetRequest()">رجوع لتسجيل الدخول</button>
+    <p class="login-note">
+      إن لم يكن لحسابك بريد مسجَّل، فلن يصل الرابط — راجع مكتب المحاماة لإعادة ضبط الرمز.
+    </p>
+  </div>
+
+  <!-- تعيين كلمة مرور جديدة بعد فتح رابط الاستعادة -->
+  <div class="login-box" id="reset-set-box" style="display:none">
+    <div class="login-logo"><img src="assets/logo-gold.png" alt="شعار الزاحم" /></div>
+    <div class="login-office">تعيين كلمة مرور جديدة</div>
+    <div class="login-rule"></div>
+    <div class="form-group">
+      <label>كلمة المرور الجديدة</label>
+      <input type="password" id="reset-pass1" placeholder="٦ أحرف على الأقل" autocomplete="new-password" />
+    </div>
+    <div class="form-group">
+      <label>تأكيد كلمة المرور</label>
+      <input type="password" id="reset-pass2" placeholder="أعد كتابتها" autocomplete="new-password" />
+    </div>
+    <button class="btn-login" onclick="applyNewPassword()">حفظ كلمة المرور</button>
   </div>
 </div>
 
@@ -1631,14 +1672,64 @@ async function doLogout() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
+  showLoginBox('login-box-main');
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
 });
-// استعادة الجلسة عند فتح الصفحة أو تحديثها
+// ═══════════════════════════════════
+//  استعادة كلمة المرور بالبريد
+//  تعمل للحسابات التي لها بريد حقيقي مسجَّل. أما الحسابات ذات البريد
+//  الاصطناعي (اسم مستخدم فقط) فيعيد المدير ضبط رمزها من الإعدادات.
+// ═══════════════════════════════════
+function showLoginBox(which) {
+  ['login-box-main','reset-request-box','reset-set-box'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (id === which) ? 'block' : 'none';
+  });
+}
+function openResetRequest()  { showLoginBox('reset-request-box'); }
+function closeResetRequest() { showLoginBox('login-box-main'); }
+async function sendResetLink() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email || !email.includes('@')) { alert('يرجى إدخال بريد إلكتروني صحيح'); return; }
+  const btn = document.querySelector('#reset-request-box .btn-login');
+  btn.disabled = true; btn.textContent = 'جارٍ الإرسال…';
+  // العنوان الذي يُعاد إليه المستخدم بعد الضغط على الرابط
+  const redirectTo = location.href.split('#')[0].split('?')[0];
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  btn.disabled = false; btn.textContent = 'إرسال رابط الاستعادة';
+  if (error) { alert('تعذّر الإرسال: ' + error.message); return; }
+  // لا يُكشف ما إن كان البريد مسجَّلاً أم لا
+  alert('إن كان هذا البريد مسجَّلاً لدينا فسيصلك رابط لتعيين كلمة مرور جديدة.\nتحقق من صندوق الوارد ومن مجلد الرسائل غير المرغوبة.');
+  closeResetRequest();
+}
+async function applyNewPassword() {
+  const p1 = document.getElementById('reset-pass1').value;
+  const p2 = document.getElementById('reset-pass2').value;
+  if (p1.length < 6) { alert('كلمة المرور يجب أن تكون ٦ أحرف على الأقل'); return; }
+  if (p1 !== p2) { alert('كلمتا المرور غير متطابقتين'); return; }
+  const btn = document.querySelector('#reset-set-box .btn-login');
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  btn.disabled = false; btn.textContent = 'حفظ كلمة المرور';
+  if (error) { alert('تعذّر حفظ كلمة المرور: ' + error.message); return; }
+  alert('تم تحديث كلمة المرور بنجاح');
+  history.replaceState(null, '', location.pathname);
+  await afterAuth();
+}
+
+// استعادة الجلسة عند فتح الصفحة أو تحديثها،
+// أو عرض شاشة تعيين كلمة المرور إن كان القادم من رابط استعادة
 (async function restoreSession() {
   try {
+    const hash = location.hash || '';
+    const isRecovery = hash.includes('type=recovery');
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') showLoginBox('reset-set-box');
+    });
     const { data: { session } } = await sb.auth.getSession();
+    if (isRecovery) { showLoginBox('reset-set-box'); return; }
     if (session) await afterAuth();
   } catch(e) {}
 })();
