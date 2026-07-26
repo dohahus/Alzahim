@@ -45,6 +45,24 @@ select 'جدول الحسابات المعلَّقة محجوب عن المتص�
             then '✅ سليم' else '❌ يجب ألّا يملك أي سياسة' end
 
 union all
+select 'دالة التهيئة محجوبة عن المتصفح',
+       case when has_function_privilege('anon', 'bootstrap_owner(text,text,text)', 'execute')
+            then 'مكشوفة' else 'محجوبة' end,
+       case when has_function_privilege('anon', 'bootstrap_owner(text,text,text)', 'execute')
+            then '❌ خطر — أعد تنفيذ schema.sql' else '✅ سليم' end
+
+union all
+select 'دالة استكمال الحساب تتحقق من كلمة المرور',
+       case when exists (
+         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname='public' and p.proname='finalize_account' and p.pronargs = 2
+       ) then 'نعم' else 'لا' end,
+       case when exists (
+         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname='public' and p.proname='finalize_account' and p.pronargs = 2
+       ) then '✅ سليم' else '❌ خطر — أعد تنفيذ schema.sql' end
+
+union all
 select 'حساب المدير',
        case when exists (select 1 from staff) then 'مُسجَّل ومكتمل'
             when exists (select 1 from pending_accounts where kind='staff') then 'جاهز — سجّل الدخول من الموقع'

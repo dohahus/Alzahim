@@ -508,7 +508,11 @@ end;
 $$;
 
 -- يُستدعى بعد نجاح التسجيل ليُنشئ سطر المكتب/الموكل ويُفرِّغ الحساب المعلَّق
-create or replace function finalize_account(p_username text)
+-- تُعاد كلمة المرور هنا ويُتحقَّق منها مرة أخرى.
+-- بدون ذلك يستطيع أي حساب مسجَّل (موكل مثلاً) استدعاء الدالة باسم مستخدم مديرٍ
+-- معلَّق فيُدرج نفسه في جدول المكتب بصلاحيات كاملة
+drop function if exists finalize_account(text);
+create or replace function finalize_account(p_username text, p_password text)
 returns void
   language plpgsql security definer set search_path = public, extensions as $$
 declare v_pending pending_accounts;
@@ -517,6 +521,9 @@ begin
   if v_pending.username is null then return; end if;
   if auth.uid() is null then
     raise exception 'يجب تسجيل الدخول أولاً';
+  end if;
+  if v_pending.password_hash <> crypt(p_password, v_pending.password_hash) then
+    raise exception 'بيانات الدخول غير صحيحة';
   end if;
 
   if v_pending.kind = 'staff' then
@@ -533,6 +540,25 @@ begin
   delete from pending_accounts where username = p_username;
 end;
 $$;
+
+-- ════════════════════════════════════════════════════════════════════
+--  تقييد الوصول للدوال الحسّاسة
+--  الدوال في PostgreSQL متاحة للجميع افتراضياً، وواجهة Supabase تعرضها
+--  للاستدعاء من المتصفح. فيجب سحب الصلاحية صراحةً عن الدوال التي لا
+--  يُفترض استدعاؤها من المتصفح.
+-- ════════════════════════════════════════════════════════════════════
+
+-- أمر تهيئة لمرة واحدة يُنفَّذ من SQL Editor فقط.
+-- بدون هذا السحب يستطيع أي زائر مجهول استدعاءه — ما دام جدول المكتب فارغاً —
+-- فيستبدل حساب المدير بكلمة مرور من عنده ويصبح مدير المكتب
+revoke all on function bootstrap_owner(text, text, text) from anon, authenticated;
+
+-- إنشاء الحسابات لمدير المكتب المسجَّل فقط (الدالة تتحقق أيضاً بنفسها)
+revoke all on function create_pending_account(text, text, text, text, text, jsonb, uuid) from anon;
+
+-- جدول الحسابات المعلَّقة: لا يُقرأ ولا يُكتب من المتصفح إطلاقاً.
+-- الدوال أعلاه تصل إليه لأنها SECURITY DEFINER فتتجاوز صلاحيات الجدول
+revoke all on table pending_accounts from anon, authenticated;
 
 -- ════════════════════════════════════════════════════════════════════
 --  مساحة تخزين الملفات (المستندات ومرفقات المهام والصور الشخصية)
