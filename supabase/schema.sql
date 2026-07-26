@@ -1,6 +1,9 @@
 -- ════════════════════════════════════════════════════════════════════
 --  مكتب الزاحم للمحاماة والاستشارات القانونية — مخطط قاعدة البيانات
---  يُنفَّذ مرة واحدة في: Supabase Dashboard → SQL Editor → New query → Run
+--  يُنفَّذ في: Supabase Dashboard → SQL Editor → New query → Run
+--
+--  الملف آمن لإعادة التنفيذ أكثر من مرة: لا يحذف بيانات ولا يفقد سجلاً،
+--  وإنما يُعيد بناء الجداول الناقصة وسياسات الحماية فقط.
 -- ════════════════════════════════════════════════════════════════════
 
 create extension if not exists pgcrypto;
@@ -254,124 +257,174 @@ alter table pending_accounts enable row level security;
 -- pending_accounts: بلا أي سياسة = لا يستطيع المتصفح قراءته أو تعديله إطلاقاً
 
 -- ───────── حسابات المكتب ─────────
+drop policy if exists staff_read on staff;
 create policy staff_read on staff for select
   using (is_staff() or id = auth.uid());
+drop policy if exists staff_self_update on staff;
 create policy staff_self_update on staff for update
   using (id = auth.uid() or is_owner());
+drop policy if exists staff_owner_write on staff;
 create policy staff_owner_write on staff for insert
   with check (id = auth.uid() or is_owner());
+drop policy if exists staff_owner_delete on staff;
 create policy staff_owner_delete on staff for delete
   using (is_owner());
 
 -- ───────── الموكلون ─────────
 -- المحامي لا يرى إلا موكلي قضاياه، والموكل لا يرى إلا نفسه
+drop policy if exists clients_read on clients;
 create policy clients_read on clients for select using (
   is_owner()
   or id = my_client_id()
   or (is_staff() and exists (select 1 from cases c where c.client_id = clients.id and c.lawyer_id = auth.uid()))
 );
+drop policy if exists clients_staff_write on clients;
 create policy clients_staff_write on clients for insert with check (is_staff());
+drop policy if exists clients_staff_update on clients;
 create policy clients_staff_update on clients for update using (is_staff() or id = my_client_id());
+drop policy if exists clients_owner_delete on clients;
 create policy clients_owner_delete on clients for delete using (is_owner());
 
 -- ───────── القضايا ─────────
+drop policy if exists cases_read on cases;
 create policy cases_read on cases for select using (
   is_owner() or (is_staff() and lawyer_id = auth.uid()) or client_id = my_client_id()
 );
+drop policy if exists cases_staff_write on cases;
 create policy cases_staff_write on cases for insert with check (is_staff());
+drop policy if exists cases_staff_update on cases;
 create policy cases_staff_update on cases for update using (is_owner() or (is_staff() and lawyer_id = auth.uid()));
+drop policy if exists cases_owner_delete on cases;
 create policy cases_owner_delete on cases for delete using (is_owner());
 
 -- ───────── مستجدات ومستندات وجلسات القضية: تتبع صلاحية القضية نفسها ─────────
+drop policy if exists case_updates_read on case_updates;
 create policy case_updates_read on case_updates for select using (can_see_case(case_id));
+drop policy if exists case_updates_write on case_updates;
 create policy case_updates_write on case_updates for insert with check (is_staff() and can_see_case(case_id));
+drop policy if exists case_updates_update on case_updates;
 create policy case_updates_update on case_updates for update using (is_staff() and can_see_case(case_id));
+drop policy if exists case_updates_delete on case_updates;
 create policy case_updates_delete on case_updates for delete using (is_staff() and can_see_case(case_id));
 
+drop policy if exists case_documents_read on case_documents;
 create policy case_documents_read on case_documents for select using (can_see_case(case_id));
+drop policy if exists case_documents_write on case_documents;
 create policy case_documents_write on case_documents for insert with check (is_staff() and can_see_case(case_id));
+drop policy if exists case_documents_delete on case_documents;
 create policy case_documents_delete on case_documents for delete using (is_staff() and can_see_case(case_id));
 
+drop policy if exists hearings_read on hearings;
 create policy hearings_read on hearings for select using (can_see_case(case_id));
+drop policy if exists hearings_write on hearings;
 create policy hearings_write on hearings for insert with check (is_staff() and can_see_case(case_id));
+drop policy if exists hearings_update on hearings;
 create policy hearings_update on hearings for update using (is_staff() and can_see_case(case_id));
+drop policy if exists hearings_delete on hearings;
 create policy hearings_delete on hearings for delete using (is_staff() and can_see_case(case_id));
 
 -- ───────── المهام: للمكتب فقط، والمحامي يرى ما وُكِّل به ─────────
+drop policy if exists tasks_read on tasks;
 create policy tasks_read on tasks for select using (
   is_owner() or (is_staff() and (assignee_id = auth.uid() or creator_id = auth.uid()))
 );
+drop policy if exists tasks_write on tasks;
 create policy tasks_write on tasks for insert with check (is_staff());
+drop policy if exists tasks_update on tasks;
 create policy tasks_update on tasks for update using (
   is_owner() or (is_staff() and (assignee_id = auth.uid() or creator_id = auth.uid()))
 );
+drop policy if exists tasks_delete on tasks;
 create policy tasks_delete on tasks for delete using (
   is_owner() or (is_staff() and creator_id = auth.uid())
 );
 
+drop policy if exists task_comments_read on task_comments;
 create policy task_comments_read on task_comments for select using (
   exists (select 1 from tasks t where t.id = task_id
     and (is_owner() or (is_staff() and (t.assignee_id = auth.uid() or t.creator_id = auth.uid()))))
 );
+drop policy if exists task_comments_write on task_comments;
 create policy task_comments_write on task_comments for insert with check (
   is_staff() and exists (select 1 from tasks t where t.id = task_id
     and (is_owner() or t.assignee_id = auth.uid() or t.creator_id = auth.uid()))
 );
 
 -- ───────── المالية: حسابات المكتب ذات صلاحية الفواتير + الموكل صاحب العقد ─────────
+drop policy if exists invoices_read on invoices;
 create policy invoices_read on invoices for select using (
   has_perm('invoices') or client_id = my_client_id()
 );
+drop policy if exists invoices_write on invoices;
 create policy invoices_write on invoices for insert with check (has_perm('invoices'));
+drop policy if exists invoices_update on invoices;
 create policy invoices_update on invoices for update using (has_perm('invoices'));
+drop policy if exists invoices_delete on invoices;
 create policy invoices_delete on invoices for delete using (has_perm('invoices'));
 
+drop policy if exists invoice_cases_read on invoice_cases;
 create policy invoice_cases_read on invoice_cases for select using (
   exists (select 1 from invoices i where i.id = invoice_id
     and (has_perm('invoices') or i.client_id = my_client_id()))
 );
+drop policy if exists invoice_cases_write on invoice_cases;
 create policy invoice_cases_write on invoice_cases for insert with check (has_perm('invoices'));
+drop policy if exists invoice_cases_delete on invoice_cases;
 create policy invoice_cases_delete on invoice_cases for delete using (has_perm('invoices'));
 
+drop policy if exists installments_read on installments;
 create policy installments_read on installments for select using (
   exists (select 1 from invoices i where i.id = invoice_id
     and (has_perm('invoices') or i.client_id = my_client_id()))
 );
+drop policy if exists installments_write on installments;
 create policy installments_write on installments for insert with check (has_perm('invoices'));
+drop policy if exists installments_update on installments;
 create policy installments_update on installments for update using (has_perm('invoices'));
+drop policy if exists installments_delete on installments;
 create policy installments_delete on installments for delete using (has_perm('invoices'));
 
 -- ───────── تذاكر التواصل ─────────
+drop policy if exists tickets_read on tickets;
 create policy tickets_read on tickets for select using (
   is_owner() or client_id = my_client_id()
   or (is_staff() and exists (select 1 from cases c where c.client_id = tickets.client_id and c.lawyer_id = auth.uid()))
 );
+drop policy if exists tickets_write on tickets;
 create policy tickets_write on tickets for insert with check (is_staff() or client_id = my_client_id());
+drop policy if exists tickets_update on tickets;
 create policy tickets_update on tickets for update using (
   is_staff() or client_id = my_client_id()
 );
 
+drop policy if exists ticket_messages_read on ticket_messages;
 create policy ticket_messages_read on ticket_messages for select using (
   exists (select 1 from tickets t where t.id = ticket_id
     and (is_owner() or t.client_id = my_client_id()
       or (is_staff() and exists (select 1 from cases c where c.client_id = t.client_id and c.lawyer_id = auth.uid()))))
 );
+drop policy if exists ticket_messages_write on ticket_messages;
 create policy ticket_messages_write on ticket_messages for insert with check (
   exists (select 1 from tickets t where t.id = ticket_id
     and (is_staff() or t.client_id = my_client_id()))
 );
 
 -- ───────── الإشعارات ─────────
+drop policy if exists notifications_read on notifications;
 create policy notifications_read on notifications for select using (
   is_staff() and (for_staff_id is null or for_staff_id = auth.uid())
 );
+drop policy if exists notifications_write on notifications;
 create policy notifications_write on notifications for insert with check (is_staff() or my_client_id() is not null);
+drop policy if exists notifications_update on notifications;
 create policy notifications_update on notifications for update using (
   is_staff() and (for_staff_id is null or for_staff_id = auth.uid())
 );
 
 -- ───────── بيانات المكتب ─────────
+drop policy if exists office_read on office_settings;
 create policy office_read on office_settings for select using (true);
+drop policy if exists office_update on office_settings;
 create policy office_update on office_settings for update using (has_perm('settings'));
 
 -- ════════════════════════════════════════════════════════════════════
@@ -488,27 +541,35 @@ values ('case-docs','case-docs',false), ('task-files','task-files',false), ('ava
 on conflict (id) do nothing;
 
 -- مستندات القضايا: يُقرأ الملف بحسب صلاحية القضية المذكورة في أول مقطع من المسار
+drop policy if exists case_docs_read on storage.objects;
 create policy case_docs_read on storage.objects for select using (
   bucket_id = 'case-docs' and can_see_case(((storage.foldername(name))[1])::uuid)
 );
+drop policy if exists case_docs_write on storage.objects;
 create policy case_docs_write on storage.objects for insert with check (
   bucket_id = 'case-docs' and is_staff() and can_see_case(((storage.foldername(name))[1])::uuid)
 );
+drop policy if exists case_docs_delete on storage.objects;
 create policy case_docs_delete on storage.objects for delete using (
   bucket_id = 'case-docs' and is_staff() and can_see_case(((storage.foldername(name))[1])::uuid)
 );
 
+drop policy if exists task_files_read on storage.objects;
 create policy task_files_read on storage.objects for select using (
   bucket_id = 'task-files' and is_staff()
 );
+drop policy if exists task_files_write on storage.objects;
 create policy task_files_write on storage.objects for insert with check (
   bucket_id = 'task-files' and is_staff()
 );
 
+drop policy if exists avatars_read on storage.objects;
 create policy avatars_read on storage.objects for select using (bucket_id = 'avatars');
+drop policy if exists avatars_write on storage.objects;
 create policy avatars_write on storage.objects for insert with check (
   bucket_id = 'avatars' and auth.uid() is not null and (storage.foldername(name))[1] = auth.uid()::text
 );
+drop policy if exists avatars_update on storage.objects;
 create policy avatars_update on storage.objects for update using (
   bucket_id = 'avatars' and auth.uid() is not null and (storage.foldername(name))[1] = auth.uid()::text
 );
