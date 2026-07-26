@@ -6,7 +6,9 @@
 --  وإنما يُعيد بناء الجداول الناقصة وسياسات الحماية فقط.
 -- ════════════════════════════════════════════════════════════════════
 
-create extension if not exists pgcrypto;
+-- Supabase يضع الإضافات في مخطط extensions لا في public
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ════════════════════════════════════════════════════════════════════
 --  الجداول
@@ -200,28 +202,28 @@ create table if not exists pending_accounts (
 -- ════════════════════════════════════════════════════════════════════
 
 create or replace function is_staff() returns boolean
-  language sql stable security definer set search_path = public as $$
+  language sql stable security definer set search_path = public, extensions as $$
   select exists (select 1 from staff where id = auth.uid());
 $$;
 
 create or replace function is_owner() returns boolean
-  language sql stable security definer set search_path = public as $$
+  language sql stable security definer set search_path = public, extensions as $$
   select exists (select 1 from staff where id = auth.uid() and (perms->>'users')::boolean is true);
 $$;
 
 create or replace function has_perm(k text) returns boolean
-  language sql stable security definer set search_path = public as $$
+  language sql stable security definer set search_path = public, extensions as $$
   select exists (select 1 from staff where id = auth.uid() and (perms->>k)::boolean is true);
 $$;
 
 create or replace function my_client_id() returns uuid
-  language sql stable security definer set search_path = public as $$
+  language sql stable security definer set search_path = public, extensions as $$
   select id from clients where auth_user_id = auth.uid();
 $$;
 
 -- القضايا التي يحق للحساب الحالي رؤيتها
 create or replace function can_see_case(c_id uuid) returns boolean
-  language sql stable security definer set search_path = public as $$
+  language sql stable security definer set search_path = public, extensions as $$
   select exists (
     select 1 from cases c
     where c.id = c_id
@@ -438,7 +440,7 @@ create or replace function create_pending_account(
   p_name text, p_role text default null,
   p_perms jsonb default '{}'::jsonb, p_client_id uuid default null
 ) returns void
-  language plpgsql security definer set search_path = public as $$
+  language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_owner() then
     raise exception 'غير مصرَّح: إنشاء الحسابات لمدير المكتب فقط';
@@ -459,7 +461,7 @@ $$;
 -- لأن إنشاء الحسابات العادية يتطلب وجود مدير مسبقاً
 create or replace function bootstrap_owner(p_username text, p_password text, p_name text)
 returns void
-  language plpgsql security definer set search_path = public as $$
+  language plpgsql security definer set search_path = public, extensions as $$
 begin
   if exists (select 1 from staff) then
     raise exception 'تم إنشاء حساب المكتب مسبقاً — تُنشأ بقية الحسابات من صفحة الإعدادات';
@@ -476,7 +478,7 @@ $$;
 -- لا يكشف كلمة المرور ولا أي بيانات أخرى.
 create or replace function claim_account(p_username text, p_password text)
 returns table (synthetic_email text, kind text, already_registered boolean)
-  language plpgsql security definer set search_path = public as $$
+  language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_pending pending_accounts;
   v_staff   staff;
@@ -508,7 +510,7 @@ $$;
 -- يُستدعى بعد نجاح التسجيل ليُنشئ سطر المكتب/الموكل ويُفرِّغ الحساب المعلَّق
 create or replace function finalize_account(p_username text)
 returns void
-  language plpgsql security definer set search_path = public as $$
+  language plpgsql security definer set search_path = public, extensions as $$
 declare v_pending pending_accounts;
 begin
   select * into v_pending from pending_accounts where username = p_username;
