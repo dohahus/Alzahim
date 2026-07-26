@@ -6,7 +6,7 @@
 <title>مكتب الزاحم للمحاماة — إدارة القضايا</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 @font-face {
   font-family: 'Alharf';
@@ -67,7 +67,11 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .inv-case-item { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:13px; border-bottom:1px solid var(--border); cursor:pointer; }
 .inv-case-item:last-child { border-bottom:none; }
 .inv-case-item input { accent-color:var(--gold); width:16px; height:16px; flex-shrink:0; }
-.inst-row { display:grid; grid-template-columns:1fr 110px 140px 34px; gap:8px; margin-bottom:8px; align-items:center; }
+.inst-row { display:grid; grid-template-columns:1fr 1fr 34px; gap:8px; margin-bottom:8px; align-items:center; }
+.inst-label-auto {
+  padding:10px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:7px;
+  color:var(--gold-deep); font-size:13px; font-weight:600;
+}
 .inst-del { background:none; border:1px solid var(--border); color:var(--red); border-radius:6px; cursor:pointer; height:34px; font-size:14px; }
 .inst-del:hover { border-color:var(--red); }
 .perms-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; background:var(--dark-3); border:1px solid var(--border); border-radius:8px; padding:14px; }
@@ -195,7 +199,7 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   border-bottom:2px solid var(--gold);
 }
 .verse-text {
-  font-family:'Aref Ruqaa', 'Alharf', serif; font-size:23px; font-weight:700; line-height:1.9;
+  font-family:'Amiri', 'Noto Naskh Arabic', serif; font-size:23px; font-weight:700; line-height:1.9;
   color:var(--gold-light); position:relative; display:inline-block;
   animation:verse-reveal 1.8s cubic-bezier(.22,1,.36,1) both;
 }
@@ -517,6 +521,34 @@ tbody td { padding:13px 16px; font-size:13px; }
   color:var(--white); font-family:inherit; font-size:13px; outline:none;
 }
 .task-filter-bar select:focus { border-color:var(--gold); }
+.task-open-btn { background:none; border:1px solid var(--border); color:var(--gray-light); border-radius:7px; padding:5px 10px; font-size:11px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; margin-top:6px; transition:.15s; }
+.task-open-btn:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
+.task-open-btn svg { width:12px; height:12px; }
+
+/* ═══════════ TASK TIMELINE ═══════════ */
+.task-timeline { margin-top:8px; }
+.task-timeline-label { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--gray-light); margin-bottom:4px; gap:8px; }
+.task-timeline-label b { color:var(--white); font-weight:600; }
+.task-timeline-label .overdue { color:var(--red); font-weight:700; }
+.task-timeline-label .done-ok { color:var(--green); font-weight:700; }
+.task-timeline-bar { background:var(--dark-3); border-radius:20px; height:5px; overflow:hidden; }
+.task-timeline-bar > div { height:100%; border-radius:20px; background:var(--gold); transition:width .3s; }
+.task-timeline-bar > div.overdue { background:var(--red); }
+.task-timeline-bar > div.done-ok { background:var(--green); }
+
+/* ═══════════ TASK DETAIL MODAL — النقاش والمرفقات ═══════════ */
+.td-comments-title { font-size:13px; font-weight:700; color:var(--gold-deep); margin:18px 0 10px; }
+.td-comments { display:flex; flex-direction:column; gap:12px; max-height:280px; overflow-y:auto; padding-left:2px; }
+.td-comment { display:flex; gap:10px; align-items:flex-start; }
+.td-avatar { width:30px; height:30px; border-radius:50%; background:var(--gold); color:#FFFDF6; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.td-comment-head { display:flex; align-items:center; gap:8px; margin-bottom:3px; font-size:12.5px; }
+.td-comment-text { font-size:13px; color:var(--gray-light); line-height:1.6; background:var(--dark-3); border-radius:8px; padding:8px 12px; display:inline-block; }
+.td-attachment { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--gold-deep); background:var(--olive-pale); border-radius:7px; padding:6px 10px; margin-top:5px; text-decoration:none; }
+.td-attachment:hover { background:var(--gold); color:#FFFDF6; }
+.td-composer { border-top:1px solid var(--border); padding:14px 24px; }
+.td-composer-row { display:flex; gap:8px; align-items:flex-end; }
+.td-composer-row textarea { flex:1; resize:none; padding:9px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:8px; color:var(--white); font-family:inherit; font-size:13px; outline:none; }
+.td-composer-row textarea:focus { border-color:var(--gold); }
 
 /* ═══════════ PAGES (hidden by default) ═══════════ */
 .page { display:none; }
@@ -528,6 +560,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 .color-gold { color:var(--gold); }
 .color-gray { color:var(--gray-light); }
 .text-sm { font-size:12px; }
+.date-greg { color:var(--gray-light); font-size:.9em; font-weight:400; }
 .font-bold { font-weight:700; }
 .flex-center { display:flex; align-items:center; gap:8px; }
 
@@ -627,9 +660,6 @@ tbody td { padding:13px 16px; font-size:13px; }
       <input type="password" id="login-pass" placeholder="••••••••" />
     </div>
     <button class="btn-login" onclick="doLogin()">دخول</button>
-    <p style="margin-top:16px;font-size:12px;color:var(--gray)">
-      للتجربة: مكتب → admin / 1234 &nbsp;|&nbsp; عميل → ahmed / 1234
-    </p>
   </div>
 </div>
 
@@ -698,13 +728,13 @@ tbody td { padding:13px 16px; font-size:13px; }
 <div class="modal-overlay" id="add-case-modal" style="display:none" onclick="closeModal('add-case-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <span class="modal-title">➕ إضافة قضية جديدة</span>
+      <span class="modal-title" id="case-modal-title">➕ إضافة قضية جديدة</span>
       <button class="modal-close" onclick="closeModal('add-case-modal',event)">×</button>
     </div>
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group-v">
-          <label>رقم القضية</label>
+          <label>رقم القضية <span class="color-gray text-sm">(اختياري — يمكن إضافته لاحقاً)</span></label>
           <input type="text" id="new-case-num" placeholder="مثال: 2025/1234" />
         </div>
         <div class="form-group-v">
@@ -733,7 +763,7 @@ tbody td { padding:13px 16px; font-size:13px; }
       </div>
       <div class="form-row">
         <div class="form-group-v">
-          <label>الدائرة</label>
+          <label>الدائرة <span class="color-gray text-sm">(اختياري — يمكن إضافته لاحقاً)</span></label>
           <input type="text" id="new-case-dept" placeholder="رقم / اسم الدائرة" />
         </div>
         <div class="form-group-v">
@@ -746,7 +776,7 @@ tbody td { padding:13px 16px; font-size:13px; }
       </div>
       <div class="form-row">
         <div class="form-group-v">
-          <label>الجلسة القادمة</label>
+          <label>الجلسة القادمة <span class="color-gray text-sm">(اختياري — يمكن إضافته لاحقاً)</span></label>
           <input type="date" id="new-case-hearing" />
         </div>
         <div class="form-group-v">
@@ -761,7 +791,7 @@ tbody td { padding:13px 16px; font-size:13px; }
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('add-case-modal',event)">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveNewCase()">💾 حفظ القضية</button>
+      <button class="btn btn-primary" id="case-modal-save-btn" onclick="saveCaseModal()">💾 حفظ القضية</button>
     </div>
   </div>
 </div>
@@ -849,7 +879,7 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div id="task-assignee-chip"></div>
       </div>
       <div class="form-row">
-        <div class="form-group-v"><label>تاريخ الاستحقاق</label><input type="date" id="task-due" /></div>
+        <div class="form-group-v"><label>تاريخ الاستحقاق <span class="color-gray text-sm">(اختياري)</span></label><input type="date" id="task-due" /></div>
         <div class="form-group-v"><label>القضية المرتبطة (اختياري)</label>
           <select id="task-case"><option value="">بدون قضية محددة</option></select>
         </div>
@@ -858,6 +888,43 @@ tbody td { padding:13px 16px; font-size:13px; }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('task-modal',event)">إلغاء</button>
       <button class="btn btn-primary" onclick="saveTask()">💾 حفظ المهمة</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: TASK DETAIL (نقاش + مرفقات) ═══════════════ -->
+<div class="modal-overlay" id="task-detail-modal" style="display:none" onclick="closeModal('task-detail-modal',event)">
+  <div class="modal" style="width:640px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="td-title">تفاصيل المهمة</span>
+      <button class="modal-close" onclick="closeModal('task-detail-modal',event)">×</button>
+    </div>
+    <div class="modal-body" id="td-body"></div>
+    <div class="td-composer">
+      <div id="td-pending-attachment"></div>
+      <div class="td-composer-row">
+        <button class="btn btn-secondary btn-sm" onclick="triggerTaskAttach()" title="إرفاق ملف">📎</button>
+        <textarea id="td-comment-input" placeholder="اكتب تعليقك هنا... (للمدير والمحامي المعنيين بالمهمة)" rows="2"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="sendTaskComment()">إرسال</button>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="task-attach-input" style="display:none" onchange="handleTaskAttachUpload(event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+
+<!-- ═══════════════ MODAL: TICKET THREAD (تذاكر التواصل مع الموكلين) ═══════════════ -->
+<div class="modal-overlay" id="ticket-modal" style="display:none" onclick="closeModal('ticket-modal',event)">
+  <div class="modal" style="width:640px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="tk-title">تذكرة تواصل</span>
+      <button class="modal-close" onclick="closeModal('ticket-modal',event)">×</button>
+    </div>
+    <div class="modal-body" id="tk-body"></div>
+    <div class="td-composer">
+      <div class="td-composer-row">
+        <textarea id="tk-reply-input" placeholder="اكتب ردك هنا..." rows="2"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="sendTicketReply()">إرسال</button>
+      </div>
     </div>
   </div>
 </div>
@@ -890,8 +957,7 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div class="form-group-v"><label>حالة القضية بعد المستجد</label>
           <select id="update-status">
             <option value="active">جارية</option><option value="pending">معلقة</option>
-            <option value="closed">مغلقة</option><option value="won">مكسوبة</option>
-            <option value="lost">مخسورة</option>
+            <option value="closed">مغلقة</option>
           </select>
         </div>
         <div class="form-group-v"><label>الجلسة القادمة (إن وجدت)</label>
@@ -929,9 +995,8 @@ tbody td { padding:13px 16px; font-size:13px; }
       </div>
       <div class="form-group-v"><label>الأتعاب — جدول الدفعات</label>
         <div id="inv-installments"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+        <div style="margin-top:4px">
           <button class="btn btn-secondary btn-sm" onclick="addInstRow()">➕ إضافة دفعة</button>
-          <div style="font-size:14px">الإجمالي: <b id="inv-total" style="color:var(--gold)">0</b> ر.س</div>
         </div>
       </div>
       <div class="form-group-v"><label>شروط أو ملاحظات إضافية (تُدرج في العقد — اختياري)</label>
@@ -1041,6 +1106,8 @@ const SVG_ICONS = {
   eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
   at: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  'message-circle': '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  paperclip: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
 };
 function ic(name, sz) {
   sz = sz || 16;
@@ -1054,7 +1121,7 @@ const EMOJI_MAP = {
   '📂':'folder-open', '📜':'scroll', '🚪':'logout', '🔍':'search', '🔎':'search', '🔔':'bell', '🆚':'shield',
   '🔴':'alert-circle', '⏰':'clock', '📈':'trending', '🟢':'check-circle', '🟡':'pause-circle', '🏆':'award',
   '🏢':'building', '🗑':'trash', '🔒':'lock', '📱':'phone', '📧':'mail', '📍':'pin', '📤':'upload', '👁️':'eye', '👁':'eye',
-  '☰':'menu',
+  '☰':'menu', '💬':'message-circle', '📎':'paperclip', '🕐':'clock', '⚠':'alert',
 };
 const EMOJI_KEYS = Object.keys(EMOJI_MAP).sort((a,b)=>b.length-a.length);
 function iconify(html, sz) {
@@ -1071,13 +1138,21 @@ const DAILY_VERSES = [
   { text:'إِنَّ اللَّهَ يَأْمُرُكُمْ أَنْ تُؤَدُّوا الْأَمَانَاتِ إِلَىٰ أَهْلِهَا وَإِذَا حَكَمْتُمْ بَيْنَ النَّاسِ أَنْ تَحْكُمُوا بِالْعَدْلِ', ref:'سورة النساء — الآية 58' },
   { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا كُونُوا قَوَّامِينَ بِالْقِسْطِ شُهَدَاءَ لِلَّهِ وَلَوْ عَلَىٰ أَنْفُسِكُمْ', ref:'سورة النساء — الآية 135' },
   { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا كُونُوا قَوَّامِينَ لِلَّهِ شُهَدَاءَ بِالْقِسْطِ وَلَا يَجْرِمَنَّكُمْ شَنَآنُ قَوْمٍ عَلَىٰ أَلَّا تَعْدِلُوا اعْدِلُوا هُوَ أَقْرَبُ لِلتَّقْوَىٰ', ref:'سورة المائدة — الآية 8' },
-  { text:'إِنَّ اللَّهَ يَأْمُرُ بِالْعَدْلِ وَالْإِحْسَانِ وَإِيتَاءِ ذِي الْقُرْبَىٰ وَيَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ وَالْبَغْيِ', ref:'سورة النحل — الآية 90' },
+  { text:'إِنَّ اللَّهَ يَأْمُرُ بِالْعَدْلِ وَالْإِحْسَانِ وَإِيتَاءِ ذِي الْقُرْبَىٰ وَيَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنْكَرِ وَالْبَغْيِ', ref:'سورة النحل — الآية 90' },
   { text:'يَا دَاوُودُ إِنَّا جَعَلْنَاكَ خَلِيفَةً فِي الْأَرْضِ فَاحْكُمْ بَيْنَ النَّاسِ بِالْحَقِّ وَلَا تَتَّبِعِ الْهَوَىٰ', ref:'سورة ص — الآية 26' },
   { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا أَوْفُوا بِالْعُقُودِ', ref:'سورة المائدة — الآية 1' },
   { text:'وَلَا تَكْتُمُوا الشَّهَادَةَ وَمَنْ يَكْتُمْهَا فَإِنَّهُ آثِمٌ قَلْبُهُ', ref:'سورة البقرة — الآية 283' },
   { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تَخُونُوا اللَّهَ وَالرَّسُولَ وَتَخُونُوا أَمَانَاتِكُمْ وَأَنْتُمْ تَعْلَمُونَ', ref:'سورة الأنفال — الآية 27' },
   { text:'وَأَوْفُوا بِالْعَهْدِ إِنَّ الْعَهْدَ كَانَ مَسْئُولًا', ref:'سورة الإسراء — الآية 34' },
   { text:'وَقُلْ رَبِّ زِدْنِي عِلْمًا', ref:'سورة طه — الآية 114' },
+  { text:'رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَىٰ وَالِدَيَّ وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ وَأَصْلِحْ لِي فِي ذُرِّيَّتِي إِنِّي تُبْتُ إِلَيْكَ وَإِنِّي مِنَ الْمُسْلِمِينَ', ref:'سورة الأحقاف — الآية 15' },
+  { text:'وَأَحْسِنُوا إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ', ref:'سورة البقرة — الآية 195' },
+  { text:'وَقَالَ رَبُّكُمُ ادْعُونِي أَسْتَجِبْ لَكُمْ', ref:'سورة غافر — الآية 60' },
+  { text:'وَقُلْ رَبِّ أَدْخِلْنِي مُدْخَلَ صِدْقٍ وَأَخْرِجْنِي مُخْرَجَ صِدْقٍ وَاجْعَلْ لِي مِنْ لَدُنْكَ سُلْطَانًا نَصِيرًا', ref:'سورة الإسراء — الآية 80' },
+  { text:'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي يَفْقَهُوا قَوْلِي', ref:'سورة طه — الآيات 25-28' },
+  { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ إِنَّ اللَّهَ مَعَ الصَّابِرِينَ', ref:'سورة البقرة — الآية 153' },
+  { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ حَقَّ تُقَاتِهِ وَلَا تَمُوتُنَّ إِلَّا وَأَنتُم مُّسْلِمُونَ', ref:'سورة آل عمران — الآية 102' },
+  { text:'يَا أَيُّهَا الَّذِينَ آمَنُوا اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا وَسَبِّحُوهُ بُكْرَةً وَأَصِيلًا', ref:'سورة الأحزاب — الآيات 41-42' },
 ];
 function renderVerseBanner() {
   const el = document.getElementById('verse-text'), refEl = document.getElementById('verse-ref');
@@ -1239,11 +1314,24 @@ let DB = {
     { id:3, title:'موكل جديد', desc:'تم تسجيل موكل جديد: محمد خالد العتيبي', time:'أمس', read:true },
     { id:4, title:'فاتورة مستحقة', desc:'فاتورة أحمد الغامدي تستحق خلال يومين', time:'أمس', read:true },
   ],
-  nextId: { clients:5, cases:5, hearings:4, tasks:5, invoices:4, notifications:5, users:6 },
+  clientMessages: [],
+  nextId: { clients:5, cases:5, hearings:4, tasks:5, invoices:4, notifications:5, users:6, clientMessages:1 },
 };
 
-function invTotal(inv) { return (inv.installments||[]).reduce((s,i)=>s+(+i.amount||0),0); }
-function invPaidAmount(inv) { return (inv.installments||[]).filter(i=>i.paid).reduce((s,i)=>s+(+i.amount||0),0); }
+function parseInstAmount(v) {
+  const n = parseFloat(String(v==null?'':v).replace(/,/g,''));
+  return isNaN(n) ? 0 : n;
+}
+function isPureNumericAmount(v) {
+  return /^\d+(\.\d+)?$/.test(String(v==null?'':v).trim().replace(/,/g,''));
+}
+function instAmountDisplay(v) {
+  const s = String(v==null?'':v).trim();
+  if (s === '') return '—';
+  return isPureNumericAmount(s) ? parseInstAmount(s).toLocaleString() + ' ر.س' : s;
+}
+function invTotal(inv) { return (inv.installments||[]).reduce((s,i)=>s+parseInstAmount(i.amount),0); }
+function invPaidAmount(inv) { return (inv.installments||[]).filter(i=>i.paid).reduce((s,i)=>s+parseInstAmount(i.amount),0); }
 function invStatus(inv) { const t=invTotal(inv), p=invPaidAmount(inv); return t>0&&p>=t ? 'paid' : (p>0 ? 'partial' : 'unpaid'); }
 function syncInvoiceDerived(inv) { inv.amount = invTotal(inv); inv.paid = invStatus(inv)==='paid'; }
 
@@ -1268,12 +1356,20 @@ function load() {
     }
     syncInvoiceDerived(inv);
   });
-  (DB.cases||[]).forEach(c => { c.documents = c.documents || { agency: [], papers: [] }; });
+  (DB.cases||[]).forEach(c => {
+    c.documents = c.documents || { agency: [], papers: [] };
+    if (c.status === 'won' || c.status === 'lost') c.status = 'closed';
+  });
   (DB.tasks||[]).forEach(t => {
     if (t.title === undefined) { t.title = t.text || 'مهمة'; t.desc = t.desc || ''; }
     t.assigneeId = t.assigneeId || null;
+    t.comments = t.comments || [];
+    t.creatorId = t.creatorId || null;
+    t.createdAt = t.createdAt || null;
   });
   if (!DB.nextId.notifications) DB.nextId.notifications = Math.max(0, ...DB.notifications.map(n=>n.id)) + 1;
+  if (!DB.clientMessages) DB.clientMessages = [];
+  if (!DB.nextId.clientMessages) DB.nextId.clientMessages = Math.max(0, ...DB.clientMessages.map(m=>m.id)) + 1;
   // إبقاء جلسة الدخول قائمة عبر التحديثات، مع التحقق أن المستخدم/الموكل ما زال موجوداً
   if (DB.currentUser) {
     const u = DB.currentUser;
@@ -1361,6 +1457,31 @@ function hasPerm(k) {
   const u = DB.currentUser;
   return !!(u && u.type === 'admin' && u.perms && u.perms[k]);
 }
+// نطاق البيانات: صاحب المكتب (صلاحية إدارة المستخدمين) يرى كل شيء،
+// وبقية الحسابات (محامٍ/مستشار/محاسب/سكرتير) تقتصر على ما يخصها فقط
+function isOfficeOwner() { return hasPerm('users'); }
+function myScopedCases() {
+  return isOfficeOwner() ? DB.cases : DB.cases.filter(c => c.lawyer === DB.currentUser.name);
+}
+function myScopedClients() {
+  if (isOfficeOwner()) return DB.clients;
+  const ids = new Set(myScopedCases().map(c=>c.clientId).filter(Boolean));
+  return DB.clients.filter(cl => ids.has(cl.id));
+}
+function myScopedHearings() {
+  if (isOfficeOwner()) return DB.hearings;
+  const caseIds = new Set(myScopedCases().map(c=>c.id));
+  return DB.hearings.filter(h => caseIds.has(h.caseId));
+}
+function myScopedTasks() {
+  if (isOfficeOwner()) return DB.tasks;
+  return DB.tasks.filter(t => t.assigneeId === DB.currentUser.userId);
+}
+function myScopedTickets() {
+  if (isOfficeOwner()) return DB.clientMessages;
+  const ids = new Set(myScopedClients().map(cl=>cl.id));
+  return DB.clientMessages.filter(m => ids.has(m.clientId));
+}
 const ADMIN_NAV = [
   { section: 'الرئيسية' },
   { id:'dashboard', icon:ic('home',18), label:'لوحة التحكم' },
@@ -1370,6 +1491,7 @@ const ADMIN_NAV = [
   { id:'tasks', icon:ic('check-square',18), label:'المهام', perm:'tasks', badge: () => DB.tasks.filter(t=>!t.done).length },
   { section: 'العملاء' },
   { id:'clients', icon:ic('users',18), label:'الموكلون', perm:'clients' },
+  { id:'client-tickets', icon:ic('message-circle',18), label:'رسائل الموكلين', perm:'clients', badge: () => myScopedTickets().filter(t=>t.status==='open').length },
   { section: 'المالية' },
   { id:'invoices', icon:ic('wallet',18), label:'الفواتير', perm:'invoices' },
   { section: 'التقارير' },
@@ -1405,7 +1527,7 @@ function buildSidebar() {
   });
 }
 let currentPage = '';
-const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', invoices:'invoices', reports:'reports', settings:'settings' };
+const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', 'client-tickets':'clients', invoices:'invoices', reports:'reports', settings:'settings' };
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-backdrop').classList.toggle('open');
@@ -1425,7 +1547,7 @@ function navTo(page) {
   if (active) active.classList.add('active');
   const titles = {
     dashboard:'لوحة التحكم', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
-    clients:'الموكلون', invoices:'الفواتير', reports:'التقارير', settings:'الإعدادات',
+    clients:'الموكلون', 'client-tickets':'رسائل الموكلين', invoices:'الفواتير', reports:'التقارير', settings:'الإعدادات',
     'client-portal':'قضاياي', 'client-hearings':'جلساتي', 'client-invoices':'فواتيري وعقودي',
     'client-docs':'مستنداتي', 'client-contact':'التواصل مع المكتب',
   };
@@ -1444,6 +1566,7 @@ function renderPage(page) {
     case 'hearings': c.innerHTML = iconify(renderHearings()); break;
     case 'tasks': c.innerHTML = iconify(renderTasks()); initTaskChecks(); break;
     case 'clients': c.innerHTML = iconify(renderClients()); break;
+    case 'client-tickets': c.innerHTML = iconify(renderTicketsAdmin()); break;
     case 'invoices': c.innerHTML = iconify(renderInvoices()); break;
     case 'reports': c.innerHTML = iconify(renderReports()); break;
     case 'settings': c.innerHTML = iconify(renderSettings()); break;
@@ -1460,20 +1583,25 @@ function renderPage(page) {
 //  DASHBOARD
 // ═══════════════════════════════════
 function renderDashboard() {
-  const active = DB.cases.filter(c=>c.status==='active').length;
-  const pending = DB.cases.filter(c=>c.status==='pending').length;
-  const clients = DB.clients.length;
-  const upcomingHearings = DB.hearings.filter(h => new Date(h.date) >= new Date()).length;
+  const owner = isOfficeOwner();
+  const cases = myScopedCases();
+  const clientsList = myScopedClients();
+  const hearings = myScopedHearings();
+  const tasks = myScopedTasks();
+  const active = cases.filter(c=>c.status==='active').length;
+  const pending = cases.filter(c=>c.status==='pending').length;
+  const upcomingHearings = hearings.filter(h => new Date(h.date) >= new Date()).length;
   const unpaidInv = DB.invoices.filter(i=>!i.paid).reduce((s,i)=>s+i.amount,0);
-  const todayH = DB.hearings.filter(h => h.date === new Date().toISOString().split('T')[0]);
-  const pendingTasks = DB.tasks.filter(t=>!t.done);
+  const todayH = hearings.filter(h => h.date === new Date().toISOString().split('T')[0]);
+  const pendingTasks = tasks.filter(t=>!t.done);
+  const canSeeFinance = hasPerm('invoices');
 
   return `
   <div class="stats-grid">
     <div class="stat-card gold">
       <div class="stat-icon">⚖️</div>
-      <div class="stat-value">${DB.cases.length}</div>
-      <div class="stat-label">إجمالي القضايا</div>
+      <div class="stat-value">${cases.length}</div>
+      <div class="stat-label">${owner ? 'إجمالي القضايا' : 'قضاياي'}</div>
       <div class="stat-change">▲ ${active} جارية</div>
     </div>
     <div class="stat-card blue">
@@ -1484,25 +1612,32 @@ function renderDashboard() {
     </div>
     <div class="stat-card green">
       <div class="stat-icon">👥</div>
-      <div class="stat-value">${clients}</div>
-      <div class="stat-label">الموكلون</div>
+      <div class="stat-value">${clientsList.length}</div>
+      <div class="stat-label">${owner ? 'الموكلون' : 'موكلوني'}</div>
       <div class="stat-change">▲ نشطون</div>
     </div>
+    ${canSeeFinance ? `
     <div class="stat-card red">
       <div class="stat-icon">💰</div>
       <div class="stat-value">${unpaidInv.toLocaleString()}</div>
       <div class="stat-label">مستحقات غير مسددة (ر.س)</div>
       <div class="stat-change">${DB.invoices.filter(i=>!i.paid).length} فاتورة</div>
-    </div>
+    </div>` : `
+    <div class="stat-card red">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value">${pendingTasks.length}</div>
+      <div class="stat-label">مهامي المعلقة</div>
+      <div class="stat-change">${pendingTasks.length} مهمة</div>
+    </div>`}
   </div>
 
   <div class="two-col" style="margin-bottom:20px">
     <div class="card">
       <div class="card-header">
-        <span class="card-title">⚖️ القضايا الجارية</span>
+        <span class="card-title">⚖️ ${owner ? 'القضايا الجارية' : 'قضاياي الجارية'}</span>
         <button class="btn btn-primary btn-sm" onclick="navTo('cases')">عرض الكل</button>
       </div>
-      ${DB.cases.filter(c=>c.status==='active'||c.status==='pending').map(c => {
+      ${cases.filter(c=>c.status==='active'||c.status==='pending').map(c => {
         const cl = DB.clients.find(x=>x.id===c.clientId);
         return `
         <div onclick="openCaseDetail(${c.id})" style="padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer">
@@ -1511,7 +1646,7 @@ function renderDashboard() {
             <span class="badge badge-${c.status}">${statusLabel(c.status)}</span>
           </div>
           <div style="display:flex;gap:12px;font-size:12px;color:var(--gray-light)">
-            <span>📋 ${c.num}</span><span>👤 ${cl?cl.name:'—'}</span><span>🏛️ ${c.court.replace('المحكمة','').trim()}</span>
+            <span>📋 ${c.num||'بدون رقم'}</span><span>👤 ${cl?cl.name:'—'}</span><span>🏛️ ${c.court.replace('المحكمة','').trim()}</span>
           </div>
           <div class="progress-bar" style="margin-top:8px">
             <div class="progress-fill" style="width:${c.progress}%"></div>
@@ -1526,7 +1661,7 @@ function renderDashboard() {
           <span class="card-title">📅 الجلسات القادمة</span>
           <button class="btn btn-secondary btn-sm" onclick="openModal('add-hearing-modal');populateHearingModal()">+ إضافة</button>
         </div>
-        ${DB.hearings.sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3).map(h => {
+        ${hearings.slice().sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3).map(h => {
           const c = DB.cases.find(x=>x.id===h.caseId);
           const d = new Date(h.date);
           return `
@@ -1546,14 +1681,14 @@ function renderDashboard() {
 
       <div class="card">
         <div class="card-header">
-          <span class="card-title">✅ المهام المعلقة</span>
+          <span class="card-title">✅ ${owner ? 'المهام المعلقة' : 'مهامي المعلقة'}</span>
           <button class="btn btn-secondary btn-sm" onclick="navTo('tasks')">عرض الكل</button>
         </div>
         ${pendingTasks.slice(0,4).map(t => `
           <div class="task-item">
             <div class="task-check ${t.done?'done':''}" onclick="toggleTask(${t.id})"></div>
             <span class="task-text ${t.done?'done':''}">${t.title}</span>
-            <span class="task-due">📅 ${t.due}</span>
+            <span class="task-due">${t.due ? '📅 '+formatDate(t.due) : ''}</span>
           </div>`).join('')}
       </div>
     </div>
@@ -1564,11 +1699,9 @@ function renderDashboard() {
       <span class="card-title">📊 توزيع القضايا حسب الحالة</span>
     </div>
     <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
-      ${[['active','جارية',DB.cases.filter(c=>c.status==='active').length,'#3F6B3F'],
-         ['pending','معلقة',DB.cases.filter(c=>c.status==='pending').length,'#A9601E'],
-         ['closed','مغلقة',DB.cases.filter(c=>c.status==='closed').length,'#8A7F63'],
-         ['won','مكسوبة',DB.cases.filter(c=>c.status==='won').length,'#3F6B3F'],
-         ['lost','مخسورة',DB.cases.filter(c=>c.status==='lost').length,'#A8412F']].map(([k,l,n,col]) => `
+      ${[['active','جارية',cases.filter(c=>c.status==='active').length,'#3F6B3F'],
+         ['pending','معلقة',cases.filter(c=>c.status==='pending').length,'#A9601E'],
+         ['closed','مغلقة',cases.filter(c=>c.status==='closed').length,'#8A7F63']].map(([k,l,n,col]) => `
         <div style="text-align:center;padding:12px 20px;background:var(--dark-3);border-radius:10px">
           <div style="font-size:26px;font-weight:700;color:${col};font-family:var(--font-mono)">${n}</div>
           <div style="font-size:12px;color:var(--gray-light)">${l}</div>
@@ -1581,12 +1714,13 @@ function renderDashboard() {
 //  CASES PAGE
 // ═══════════════════════════════════
 function renderCases(filter='') {
+  const scoped = myScopedCases();
   const filtered = filter
-    ? DB.cases.filter(c => c.title.includes(filter) || c.num.includes(filter) || c.type.includes(filter))
-    : DB.cases;
+    ? scoped.filter(c => c.title.includes(filter) || c.num.includes(filter) || c.type.includes(filter))
+    : scoped;
   return `
   <div class="section-header">
-    <div class="section-title">⚖️ القضايا <span>(${DB.cases.length})</span></div>
+    <div class="section-title">⚖️ ${isOfficeOwner() ? 'القضايا' : 'قضاياي'} <span>(${scoped.length})</span></div>
     <div style="display:flex;gap:10px">
       <input type="text" placeholder="بحث في القضايا..." oninput="document.getElementById('content').innerHTML=renderCases(this.value)"
         style="padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:200px" />
@@ -1594,9 +1728,9 @@ function renderCases(filter='') {
         style="padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:13px;outline:none">
         <option value="">كل الحالات</option>
         <option value="active">جارية</option><option value="pending">معلقة</option>
-        <option value="closed">مغلقة</option><option value="won">مكسوبة</option>
+        <option value="closed">مغلقة</option>
       </select>
-      <button class="btn btn-primary" onclick="openModal('add-case-modal');populateCaseModal()">➕ قضية جديدة</button>
+      <button class="btn btn-primary" onclick="openCaseModal()">➕ قضية جديدة</button>
     </div>
   </div>
   <div class="table-wrap">
@@ -1610,15 +1744,16 @@ function renderCases(filter='') {
         ${filtered.map(c => {
           const cl = DB.clients.find(x=>x.id===c.clientId);
           return `<tr>
-            <td style="font-family:monospace;color:var(--gold)">${c.num}</td>
+            <td style="font-family:monospace;color:var(--gold)">${c.num || '<span class="color-gray">بدون رقم</span>'}</td>
             <td><span style="font-weight:600">${c.title}</span><br><span class="text-sm color-gray">${c.court}</span></td>
             <td><span class="badge badge-new">${c.type}</span></td>
             <td>${cl?cl.name:'—'}</td>
             <td>${c.lawyer}</td>
             <td>${c.nextHearing ? `<span style="color:var(--gold-light)">${formatDate(c.nextHearing)}</span>` : '<span class="color-gray">—</span>'}</td>
             <td><span class="badge badge-${c.status}">${statusLabel(c.status)}</span></td>
-            <td>
+            <td style="white-space:nowrap">
               <button class="btn btn-secondary btn-sm" onclick="openCaseDetail(${c.id})">تفاصيل</button>
+              <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal(${c.id})">✏️ تعديل</button>
               <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate(${c.id})">+ مستجد</button>
             </td>
           </tr>`;
@@ -1633,23 +1768,24 @@ function filterCasesByStatus(status) {
   c.innerHTML = iconify(renderCases());
   if (!status) return;
   // re-render with filter
-  const filtered = DB.cases.filter(x => x.status === status);
-  document.querySelector('tbody').innerHTML = filtered.map(c => {
+  const filtered = myScopedCases().filter(x => x.status === status);
+  document.querySelector('tbody').innerHTML = iconify(filtered.map(c => {
     const cl = DB.clients.find(x=>x.id===c.clientId);
     return `<tr>
-      <td style="font-family:monospace;color:var(--gold)">${c.num}</td>
+      <td style="font-family:monospace;color:var(--gold)">${c.num || '<span class="color-gray">بدون رقم</span>'}</td>
       <td><span style="font-weight:600">${c.title}</span><br><span class="text-sm color-gray">${c.court}</span></td>
       <td><span class="badge badge-new">${c.type}</span></td>
       <td>${cl?cl.name:'—'}</td>
       <td>${c.lawyer}</td>
       <td>${c.nextHearing ? formatDate(c.nextHearing) : '—'}</td>
       <td><span class="badge badge-${c.status}">${statusLabel(c.status)}</span></td>
-      <td>
+      <td style="white-space:nowrap">
         <button class="btn btn-secondary btn-sm" onclick="openCaseDetail(${c.id})">تفاصيل</button>
+        <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal(${c.id})">✏️ تعديل</button>
         <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate(${c.id})">+ مستجد</button>
       </td>
     </tr>`;
-  }).join('');
+  }).join(''));
 }
 
 // ═══════════════════════════════════
@@ -1673,16 +1809,21 @@ function renderCdmBody() {
   const c = DB.cases.find(x=>x.id===cdmState.caseId);
   if (!c) return;
   const cl = DB.clients.find(x=>x.id===c.clientId);
+  const canSeeFinance = hasPerm('invoices');
   const tabs = [
     ['updates','المستجدات','scroll'],
-    ['contract','العقد','file'],
+    ...(canSeeFinance ? [['contract','العقد','file']] : []),
     ['agency','الوكالة','shield'],
     ['papers','أوراق القضية','folder'],
-    ['payments','الدفعات','wallet'],
+    ...(canSeeFinance ? [['payments','الدفعات','wallet']] : []),
   ];
+  if (!canSeeFinance && (cdmState.tab === 'contract' || cdmState.tab === 'payments')) cdmState.tab = 'updates';
   const body = `
     <div class="case-detail-header">
-      <div class="case-num">📋 رقم القضية: <span class="ref-code">${c.num}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div class="case-num">📋 رقم القضية: <span class="ref-code">${c.num || 'بدون رقم — اضغط تعديل لإضافته'}</span></div>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openCaseModal(${c.id})">✏️ تعديل بيانات القضية</button>
+      </div>
       <div class="case-name">${c.title}</div>
       <div class="case-meta">
         <div class="case-meta-item">👤 <strong>${cl?cl.name:'—'}</strong></div>
@@ -1698,7 +1839,7 @@ function renderCdmBody() {
     <div style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap">
       <span class="badge badge-${c.status}" style="font-size:13px;padding:6px 14px">${statusLabel(c.status)}</span>
       <span class="badge badge-new" style="font-size:13px;padding:6px 14px">${c.type}</span>
-      <span style="font-size:13px;padding:6px 14px;background:var(--dark-3);border-radius:20px;color:var(--gray-light)">الدائرة: ${c.dept}</span>
+      <span style="font-size:13px;padding:6px 14px;background:var(--dark-3);border-radius:20px;color:var(--gray-light)">الدائرة: ${c.dept || 'غير محددة'}</span>
     </div>
     <div class="cdm-tabs">
       ${tabs.map(([key,label,icon]) => `<div class="cdm-tab ${cdmState.tab===key?'active':''}" onclick="switchCdmTab('${key}')">${ic(icon,15)}<span>${label}</span></div>`).join('')}
@@ -1708,6 +1849,7 @@ function renderCdmBody() {
   document.getElementById('cdm-body').innerHTML = iconify(body);
 }
 function renderCdmTab(c, cl, tab) {
+  if ((tab === 'contract' || tab === 'payments') && !hasPerm('invoices')) return renderCdmUpdates(c);
   if (tab === 'updates') return renderCdmUpdates(c);
   if (tab === 'contract') return renderCdmContract(c, cl);
   if (tab === 'agency') return renderCdmDocs(c, 'agency', 'الوكالة', 'صك الوكالة الشرعية');
@@ -1726,7 +1868,7 @@ function renderCdmUpdates(c) {
       ${c.updates.slice().reverse().map(u => `
         <li class="timeline-item">
           <div class="timeline-dot"></div>
-          <div class="timeline-date">${u.date}</div>
+          <div class="timeline-date">${formatDate(u.date)}</div>
           <div class="timeline-text">${u.text}</div>
         </li>`).join('')}
     </ul>`}
@@ -1749,7 +1891,7 @@ function renderCdmContract(c, cl) {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px">
         <div>
           <div class="case-num" style="margin-bottom:4px">عقد أتعاب — <span class="ref-code">${inv.ref}</span></div>
-          <div style="font-size:12.5px;color:var(--gray-light)">بتاريخ ${inv.date} — ${cl?cl.name:''}</div>
+          <div style="font-size:12.5px;color:var(--gray-light)">بتاريخ ${formatDate(inv.date)} — ${cl?cl.name:''}</div>
         </div>
         <span class="badge ${stBadge[st]}">${stLabel[st]}</span>
       </div>
@@ -1765,21 +1907,20 @@ function renderCdmPayments(c) {
   const rows = [];
   invs.forEach(inv => inv.installments.forEach((s,i) => rows.push({inv, s, i})));
   if (!rows.length) return '<div class="card"><p class="color-gray text-sm">لا توجد دفعات مسجلة. تُنشأ الدفعات تلقائياً عند إضافة عقد أتعاب لهذه القضية من تبويب «العقد».</p></div>';
-  const total = rows.reduce((s,r)=>s+(+r.s.amount||0),0);
-  const paid = rows.filter(r=>r.s.paid).reduce((s,r)=>s+(+r.s.amount||0),0);
+  const total = rows.reduce((s,r)=>s+parseInstAmount(r.s.amount),0);
+  const paid = rows.filter(r=>r.s.paid).reduce((s,r)=>s+parseInstAmount(r.s.amount),0);
   return `
     <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:18px">
       <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value">${total.toLocaleString()}</div><div class="stat-label">إجمالي الأتعاب (ر.س)</div></div>
       <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value">${paid.toLocaleString()}</div><div class="stat-label">المُحصَّل (ر.س)</div></div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>بند الدفعة</th><th>العقد</th><th>المبلغ</th><th>الاستحقاق</th><th>الحالة</th><th></th></tr></thead>
+      <thead><tr><th>بند الدفعة</th><th>العقد</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead>
       <tbody>
         ${rows.map(r=>`<tr>
           <td>${r.s.label}</td>
           <td class="color-gray ref-code">${r.inv.ref}</td>
-          <td class="tabular-num" style="font-weight:700;color:var(--gold-deep)">${(+r.s.amount).toLocaleString()}</td>
-          <td>${r.s.due||'—'}</td>
+          <td class="tabular-num" style="font-weight:700;color:var(--gold-deep)">${instAmountDisplay(r.s.amount)}</td>
           <td><span class="badge ${r.s.paid?'badge-active':'badge-urgent'}">${r.s.paid?'مسدَّدة':'مستحقة'}</span></td>
           <td>${!r.s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment(${r.inv.id},${r.i})">✓ تسديد</button>`:''}</td>
         </tr>`).join('')}
@@ -1801,7 +1942,7 @@ function renderCdmDocs(c, key, label, hint) {
         <div class="doc-icon">📄</div>
         <div style="flex:1;min-width:0">
           <div class="doc-name">${d.name}</div>
-          <div class="doc-meta">${formatBytes(d.size)} — رُفع بتاريخ ${d.uploadedAt}${d.uploadedBy ? ' بواسطة '+d.uploadedBy : ''}</div>
+          <div class="doc-meta">${formatBytes(d.size)} — رُفع بتاريخ ${formatDate(d.uploadedAt)}${d.uploadedBy ? ' بواسطة '+d.uploadedBy : ''}</div>
         </div>
         <a href="${d.dataUrl}" download="${d.name}" class="btn btn-secondary btn-sm">تنزيل</a>
         <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteCaseDoc(${c.id},'${key}',${d.id})">🗑️</button>
@@ -1854,10 +1995,10 @@ function openInvoiceModalForCase(caseId) {
 //  HEARINGS PAGE
 // ═══════════════════════════════════
 function renderHearings() {
-  const sorted = DB.hearings.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const sorted = myScopedHearings().slice().sort((a,b)=>a.date.localeCompare(b.date));
   return `
   <div class="section-header">
-    <div class="section-title">📅 الجلسات</div>
+    <div class="section-title">📅 ${isOfficeOwner() ? 'الجلسات' : 'جلساتي'}</div>
     <button class="btn btn-primary" onclick="openModal('add-hearing-modal');populateHearingModal()">➕ جلسة جديدة</button>
   </div>
   <div class="two-col">
@@ -1886,17 +2027,22 @@ function renderHearings() {
       }).join('')}
     </div>
     <div class="card">
-      <div class="card-title" style="margin-bottom:16px">📆 يوليو 2026</div>
-      ${renderMiniCalendar(2026, 6)}
+      <div class="card-title" style="margin-bottom:16px">📆 ${miniCalHeader()}</div>
+      ${renderMiniCalendar(new Date().getFullYear(), new Date().getMonth())}
     </div>
   </div>`;
 }
-
+function miniCalHeader() {
+  const now = new Date();
+  const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {month:'long',year:'numeric'}).format(now);
+  const greg = new Intl.DateTimeFormat('ar-SA', {month:'long',year:'numeric'}).format(now);
+  return `${hijri} <span class="date-greg">(${greg}م)</span>`;
+}
 function renderMiniCalendar(year, month) {
   const days = ['أح','إث','ثل','أر','خم','جم','سب'];
   const first = new Date(year, month, 1).getDay();
   const total = new Date(year, month+1, 0).getDate();
-  const hearingDays = DB.hearings.map(h => {
+  const hearingDays = myScopedHearings().map(h => {
     const d = new Date(h.date);
     if (d.getFullYear()===year && d.getMonth()===month) return d.getDate();
     return null;
@@ -1922,26 +2068,32 @@ let taskFilterMode = 'all';
 function lawyerUsers() { return DB.users.filter(u => u.perms && u.perms.cases); }
 function setTaskFilter(v) { taskFilterMode = v; document.getElementById('content').innerHTML = iconify(renderTasks()); }
 function renderTasks() {
-  let pending = DB.tasks.filter(t=>!t.done);
-  let done = DB.tasks.filter(t=>t.done);
+  const owner = isOfficeOwner();
+  const scoped = myScopedTasks();
+  let pending = scoped.filter(t=>!t.done);
+  let done = scoped.filter(t=>t.done);
   const lawyers = lawyerUsers();
-  if (taskFilterMode === 'mine') {
-    const me = DB.currentUser.userId;
-    pending = pending.filter(t=>t.assigneeId===me); done = done.filter(t=>t.assigneeId===me);
-  } else if (taskFilterMode !== 'all') {
-    const uid = parseInt(taskFilterMode);
-    pending = pending.filter(t=>t.assigneeId===uid); done = done.filter(t=>t.assigneeId===uid);
+  if (owner) {
+    if (taskFilterMode === 'mine') {
+      const me = DB.currentUser.userId;
+      pending = pending.filter(t=>t.assigneeId===me); done = done.filter(t=>t.assigneeId===me);
+    } else if (taskFilterMode !== 'all') {
+      const uid = parseInt(taskFilterMode);
+      pending = pending.filter(t=>t.assigneeId===uid); done = done.filter(t=>t.assigneeId===uid);
+    }
   }
   const assigneeChip = t => {
     if (!t.assigneeId) return '';
     const u = DB.users.find(x=>x.id===t.assigneeId);
     return `<span class="task-assignee">👤 ${u?u.name:'—'}</span>`;
   };
+  const discussBtn = t => `<button class="task-open-btn" onclick="openTaskDetail(${t.id})">💬 نقاش${(t.comments||[]).length ? ' ('+t.comments.length+')' : ''}</button>`;
   return `
   <div class="section-header">
-    <div class="section-title">✅ المهام <span>(${pending.length} معلقة)</span></div>
+    <div class="section-title">✅ ${owner ? 'المهام' : 'مهامي'} <span>(${pending.length} معلقة)</span></div>
     <button class="btn btn-primary" onclick="openTaskModal()">➕ مهمة جديدة</button>
   </div>
+  ${owner ? `
   <div class="task-filter-bar">
     <span class="text-sm color-gray">عرض:</span>
     <select onchange="setTaskFilter(this.value)">
@@ -1949,45 +2101,162 @@ function renderTasks() {
       <option value="mine" ${taskFilterMode==='mine'?'selected':''}>مهامي</option>
       ${lawyers.map(u=>`<option value="${u.id}" ${taskFilterMode===String(u.id)?'selected':''}>مهام موكلة إلى ${u.name}</option>`).join('')}
     </select>
-  </div>
+  </div>` : ''}
   <div class="two-col">
     <div class="card">
       <div class="card-header"><span class="card-title">🔴 المهام المعلقة</span></div>
       ${pending.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام معلقة ضمن هذا الفلتر</p>' : pending.map(t => `
-        <div class="task-item" id="task-${t.id}">
+        <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
           <div class="task-check" onclick="toggleTask(${t.id})"></div>
-          <div style="flex:1;min-width:0">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail(${t.id})">
             <div class="task-text">${t.title}</div>
             ${t.desc ? `<div class="text-sm color-gray" style="margin-top:3px">${t.desc}</div>` : ''}
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
-              ${t.caseId ? `<span class="text-sm color-gray">📋 ${DB.cases.find(c=>c.id===t.caseId)?.num||''}</span>` : ''}
+              ${t.caseId ? `<span class="text-sm color-gray">📋 ${DB.cases.find(c=>c.id===t.caseId)?.num||'بدون رقم'}</span>` : ''}
               ${assigneeChip(t)}
             </div>
+            ${taskTimelineHTML(t)}
           </div>
           <div style="text-align:left">
-            <span class="task-due">📅 ${t.due}</span>
-            ${t.due ? `<br><button class="btn-ics" onclick="addTaskToCalendar(${t.id})">📅 أضف للتقويم</button>` : ''}
+            ${t.due ? `<span class="task-due">📅 ${formatDate(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar(${t.id})">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
+            ${discussBtn(t)}
           </div>
         </div>`).join('')}
     </div>
     <div class="card">
       <div class="card-header"><span class="card-title">✅ المهام المنجزة</span></div>
       ${done.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام منجزة ضمن هذا الفلتر</p>' : done.map(t => `
-        <div class="task-item" id="task-${t.id}">
+        <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
           <div class="task-check done" onclick="toggleTask(${t.id})"></div>
-          <div style="flex:1;min-width:0">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail(${t.id})">
             <div class="task-text done">${t.title}</div>
             ${assigneeChip(t)}
+            ${taskTimelineHTML(t)}
           </div>
-          <span class="task-due" style="color:var(--gray)">✔ ${t.due}</span>
+          <div style="text-align:left">
+            <span class="task-due" style="color:var(--gray)">✔ ${t.due ? formatDate(t.due) : 'بدون تاريخ استحقاق'}</span><br>
+            ${discussBtn(t)}
+          </div>
         </div>`).join('')}
     </div>
   </div>`;
 }
+function taskTimelineHTML(t) {
+  const dayMs = 86400000;
+  const today = new Date(new Date().toDateString());
+  const start = t.createdAt ? new Date(t.createdAt) : null;
+  const plural = (n, one) => n === 1 ? one : (one === 'يوم' ? 'يوماً' : one);
+  if (t.done) {
+    if (!start) return '';
+    const end = t.completedAt ? new Date(t.completedAt) : today;
+    const days = Math.max(0, Math.round((end-start)/dayMs));
+    return `<div class="task-timeline"><div class="task-timeline-label"><span class="done-ok">✅ أُنجزت خلال <b>${days}</b> ${plural(days,'يوم')}</span></div></div>`;
+  }
+  if (!start) return '';
+  const elapsedDays = Math.max(0, Math.round((today-start)/dayMs));
+  if (!t.due) {
+    return `<div class="task-timeline"><div class="task-timeline-label"><span>🕐 جارية منذ <b>${elapsedDays}</b> ${plural(elapsedDays,'يوم')}</span></div></div>`;
+  }
+  const due = new Date(t.due);
+  const totalDays = Math.max(1, Math.round((due-start)/dayMs));
+  const remainingDays = Math.round((due-today)/dayMs);
+  const pct = Math.min(100, Math.max(4, (elapsedDays/totalDays)*100));
+  const isOverdue = remainingDays < 0;
+  const rightLabel = isOverdue
+    ? `<span class="overdue">⚠ متأخرة ${Math.abs(remainingDays)} ${plural(Math.abs(remainingDays),'يوم')}</span>`
+    : `<span>متبقٍ <b>${remainingDays}</b> ${plural(remainingDays,'يوم')}</span>`;
+  return `<div class="task-timeline">
+    <div class="task-timeline-label"><span>منذ ${elapsedDays} ${plural(elapsedDays,'يوم')}</span>${rightLabel}</div>
+    <div class="task-timeline-bar"><div class="${isOverdue?'overdue':''}" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════
+//  TASK DETAIL MODAL — النقاش والمرفقات
+// ═══════════════════════════════════
+let taskDetailState = { taskId: null, pendingAttachment: null };
+function openTaskDetail(id) {
+  const t = DB.tasks.find(x=>x.id===id); if (!t) return;
+  t.comments = t.comments || [];
+  taskDetailState = { taskId: id, pendingAttachment: null };
+  renderTaskDetail();
+  openModal('task-detail-modal');
+}
+function refreshTaskDetailIfOpen() {
+  if (document.getElementById('task-detail-modal').style.display === 'flex') renderTaskDetail();
+}
+function renderTaskDetail() {
+  const t = DB.tasks.find(x=>x.id===taskDetailState.taskId); if (!t) return;
+  const c = t.caseId ? DB.cases.find(x=>x.id===t.caseId) : null;
+  const assignee = t.assigneeId ? DB.users.find(u=>u.id===t.assigneeId) : null;
+  document.getElementById('td-title').textContent = t.title;
+  document.getElementById('td-body').innerHTML = iconify(`
+    ${t.desc ? `<p style="color:var(--gray-light);font-size:13.5px;margin-bottom:14px;line-height:1.7">${t.desc}</p>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      ${c ? `<span class="badge badge-new">📋 ${c.num || 'بدون رقم'} — ${c.title}</span>` : ''}
+      ${assignee ? `<span class="badge badge-new">👤 ${assignee.name}</span>` : ''}
+    </div>
+    ${taskTimelineHTML(t)}
+    <div class="td-comments-title">💬 النقاش (${t.comments.length})</div>
+    <div class="td-comments">
+      ${t.comments.length===0 ? '<p class="color-gray text-sm">لا توجد تعليقات بعد — ابدأ النقاش أدناه</p>' : t.comments.map(cm => `
+        <div class="td-comment">
+          <div class="td-avatar">${(cm.authorName||'?').charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="td-comment-head"><b>${cm.authorName}</b><span class="color-gray text-sm">${cm.time}</span></div>
+            ${cm.text ? `<div class="td-comment-text">${cm.text}</div>` : ''}
+            ${cm.attachment ? `<div><a href="${cm.attachment.dataUrl}" download="${cm.attachment.name}" class="td-attachment">📎 ${cm.attachment.name} <span class="color-gray text-sm">(${formatBytes(cm.attachment.size)})</span></a></div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>
+  `);
+  document.getElementById('td-pending-attachment').innerHTML = taskDetailState.pendingAttachment
+    ? iconify(`<span class="assignee-chip">📎 ${taskDetailState.pendingAttachment.name} <button onclick="clearTaskPendingAttachment()">×</button></span>`) : '';
+}
+function triggerTaskAttach() { document.getElementById('task-attach-input').click(); }
+function handleTaskAttachUpload(ev) {
+  const file = ev.target.files[0]; ev.target.value = '';
+  if (!file) return;
+  if (file.size > 8*1024*1024) { alert('حجم الملف كبير جداً — الحد الأقصى 8 ميغابايت'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    taskDetailState.pendingAttachment = { id: Date.now(), name: file.name, size: file.size, dataUrl: reader.result };
+    renderTaskDetail();
+  };
+  reader.readAsDataURL(file);
+}
+function clearTaskPendingAttachment() { taskDetailState.pendingAttachment = null; renderTaskDetail(); }
+function sendTaskComment() {
+  const t = DB.tasks.find(x=>x.id===taskDetailState.taskId); if (!t) return;
+  const ta = document.getElementById('td-comment-input');
+  const text = ta.value.trim();
+  const attachment = taskDetailState.pendingAttachment;
+  if (!text && !attachment) return;
+  t.comments = t.comments || [];
+  t.comments.push({
+    id: Date.now(), authorId: DB.currentUser.userId, authorName: DB.currentUser.name,
+    text, attachment, time: new Date().toLocaleString('ar-SA', {dateStyle:'medium', timeStyle:'short'}),
+  });
+  const otherPartyId = DB.currentUser.userId === t.assigneeId ? t.creatorId : t.assigneeId;
+  if (otherPartyId && otherPartyId !== DB.currentUser.userId) {
+    DB.notifications.unshift({
+      id: DB.nextId.notifications++,
+      title: 'تعليق جديد على مهمة',
+      desc: `${DB.currentUser.name} علّق على مهمة: ${t.title}`,
+      time: 'الآن', read:false, forUserId: otherPartyId,
+    });
+  }
+  try { save(); } catch(e) { t.comments.pop(); alert('تعذّر حفظ التعليق — الحجم كبير على مساحة التخزين المتاحة في المتصفح'); return; }
+  ta.value = ''; taskDetailState.pendingAttachment = null;
+  renderTaskDetail();
+  buildSidebar();
+}
 function initTaskChecks() {}
 function toggleTask(id) {
   const t = DB.tasks.find(x=>x.id===id); if(!t) return;
-  t.done = !t.done; save();
+  t.done = !t.done;
+  t.completedAt = t.done ? new Date().toISOString().split('T')[0] : null;
+  save();
   navTo('tasks');
   buildSidebar();
 }
@@ -2000,8 +2269,8 @@ function openTaskModal() {
   taskModalState = { assigneeId: null };
   document.getElementById('task-title').value = '';
   document.getElementById('task-desc').value = '';
-  document.getElementById('task-due').value = new Date().toISOString().split('T')[0];
-  document.getElementById('task-case').innerHTML = '<option value="">بدون قضية محددة</option>' + DB.cases.map(c=>`<option value="${c.id}">${c.num} — ${c.title}</option>`).join('');
+  document.getElementById('task-due').value = '';
+  document.getElementById('task-case').innerHTML = '<option value="">بدون قضية محددة</option>' + myScopedCases().map(c=>`<option value="${c.id}">${c.num || 'بدون رقم'} — ${c.title}</option>`).join('');
   document.getElementById('task-assignee-chip').innerHTML = '';
   const dd = document.getElementById('task-mention-dropdown'); dd.classList.remove('open'); dd.innerHTML = '';
   openModal('task-modal');
@@ -2047,7 +2316,11 @@ function saveTask() {
   const due = document.getElementById('task-due').value;
   const caseId = parseInt(document.getElementById('task-case').value) || null;
   const assigneeId = taskModalState.assigneeId;
-  DB.tasks.push({ id: DB.nextId.tasks++, title, desc, done:false, due, caseId, assigneeId });
+  DB.tasks.push({
+    id: DB.nextId.tasks++, title, desc, done:false, due, caseId, assigneeId,
+    creatorId: DB.currentUser.userId, createdAt: new Date().toISOString().split('T')[0],
+    completedAt: null, comments: [],
+  });
   if (assigneeId && assigneeId !== DB.currentUser.userId) {
     const assignee = DB.users.find(u=>u.id===assigneeId);
     if (assignee) {
@@ -2066,17 +2339,19 @@ function saveTask() {
 //  CLIENTS PAGE
 // ═══════════════════════════════════
 function renderClients() {
+  const owner = isOfficeOwner();
+  const clientsList = myScopedClients();
   return `
   <div class="section-header">
-    <div class="section-title">👥 الموكلون <span>(${DB.clients.length})</span></div>
+    <div class="section-title">👥 ${owner ? 'الموكلون' : 'موكلوني'} <span>(${clientsList.length})</span></div>
     <button class="btn btn-primary" onclick="openModal('add-client-modal')">➕ موكل جديد</button>
   </div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>البريد</th><th>عدد القضايا</th><th>اسم المستخدم</th><th>إجراءات</th></tr></thead>
       <tbody>
-        ${DB.clients.map(cl => {
-          const caseCount = DB.cases.filter(c=>c.clientId===cl.id).length;
+        ${clientsList.map(cl => {
+          const caseCount = myScopedCases().filter(c=>c.clientId===cl.id).length;
           return `<tr>
             <td><strong>${cl.name}</strong></td>
             <td style="font-family:monospace">${cl.idNum}</td>
@@ -2096,7 +2371,7 @@ function renderClients() {
 }
 function viewClientCases(clientId) {
   const cl = DB.clients.find(c=>c.id===clientId);
-  const cases = DB.cases.filter(c=>c.clientId===clientId);
+  const cases = myScopedCases().filter(c=>c.clientId===clientId);
   document.getElementById('cdm-title').textContent = `قضايا: ${cl.name}`;
   document.getElementById('cdm-body').innerHTML = cases.length === 0
     ? '<p class="color-gray">لا توجد قضايا لهذا الموكل</p>'
@@ -2107,7 +2382,7 @@ function viewClientCases(clientId) {
           <span style="font-weight:700">${c.title}</span>
           <span class="badge badge-${c.status}">${statusLabel(c.status)}</span>
         </div>
-        <div style="color:var(--gray-light);font-size:12px">📋 ${c.num} &nbsp;|&nbsp; 🏛️ ${c.court}</div>
+        <div style="color:var(--gray-light);font-size:12px">📋 ${c.num||'بدون رقم'} &nbsp;|&nbsp; 🏛️ ${c.court}</div>
       </div>`).join(''));
   openModal('case-detail-modal');
 }
@@ -2168,17 +2443,16 @@ function openInvoiceDetail(id) {
   document.getElementById('ivd-title').textContent = `عقد ${inv.ref} — ${cl?cl.name:''}`;
   document.getElementById('ivd-body').innerHTML = iconify(`
     <div style="margin-bottom:14px;font-size:13px;color:var(--gray-light)">
-      تاريخ العقد: ${inv.date} — الإجمالي: <b style="color:var(--gold)">${invTotal(inv).toLocaleString()} ر.س</b>
+      تاريخ العقد: ${formatDate(inv.date)} — الإجمالي: <b style="color:var(--gold)">${invTotal(inv).toLocaleString()} ر.س</b>
       — المُحصَّل: <b style="color:#1E7E34">${invPaidAmount(inv).toLocaleString()} ر.س</b>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>#</th><th>بند الدفعة</th><th>المبلغ (ر.س)</th><th>الاستحقاق</th><th>الحالة</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>بند الدفعة</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead>
       <tbody>
         ${inv.installments.map((s,i)=>`<tr>
           <td style="color:var(--gray)">${i+1}</td>
           <td>${s.label}</td>
-          <td style="font-weight:700;color:var(--gold)">${(+s.amount).toLocaleString()}</td>
-          <td>${s.due||'—'}</td>
+          <td style="font-weight:700;color:var(--gold)">${instAmountDisplay(s.amount)}</td>
           <td><span class="badge ${s.paid?'badge-active':'badge-urgent'}">${s.paid?'مسدَّدة':'مستحقة'}</span></td>
           <td>${!s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment(${inv.id},${i})">✓ تسديد</button>`:''}</td>
         </tr>`).join('')}
@@ -2235,7 +2509,7 @@ function renderReports() {
         ['إجمالي القضايا', DB.cases.length, '⚖️'],
         ['القضايا الجارية', DB.cases.filter(c=>c.status==='active').length, '🟢'],
         ['القضايا المعلقة', DB.cases.filter(c=>c.status==='pending').length, '🟡'],
-        ['المكسوبة', DB.cases.filter(c=>c.status==='won').length, '🏆'],
+        ['القضايا المغلقة', DB.cases.filter(c=>c.status==='closed').length, '🔒'],
         ['الموكلون', DB.clients.length, '👥'],
         ['الجلسات القادمة', DB.hearings.filter(h=>new Date(h.date)>=new Date()).length, '📅'],
         ['المهام المعلقة', DB.tasks.filter(t=>!t.done).length, '✅'],
@@ -2419,7 +2693,7 @@ function renderClientPortal() {
             ${c.updates.length === 0 ? '<p class="text-sm color-gray">لا توجد مستجدات</p>' :
               c.updates.slice().reverse().slice(0,3).map(u => `
               <div style="padding:10px;background:var(--dark-3);border-radius:8px;margin-bottom:8px;border-right:3px solid var(--gold)">
-                <div style="font-size:11px;color:var(--gray);margin-bottom:3px">${u.date}</div>
+                <div style="font-size:11px;color:var(--gray);margin-bottom:3px">${formatDate(u.date)}</div>
                 <div style="font-size:13px">${u.text}</div>
               </div>`).join('')}
           </div>
@@ -2501,7 +2775,7 @@ function renderClientDocs() {
             <div class="doc-icon">📄</div>
             <div style="flex:1;min-width:0">
               <div class="doc-name">${d.name}</div>
-              <div class="doc-meta">${d.kind} — ${formatBytes(d.size)} — بتاريخ ${d.uploadedAt}</div>
+              <div class="doc-meta">${d.kind} — ${formatBytes(d.size)} — بتاريخ ${formatDate(d.uploadedAt)}</div>
             </div>
             <a href="${d.dataUrl}" download="${d.name}" class="btn btn-secondary btn-sm">تنزيل</a>
           </div>`).join('')}
@@ -2510,6 +2784,7 @@ function renderClientDocs() {
 }
 
 function renderClientContact() {
+  const my = DB.clientMessages.filter(m=>m.clientId===DB.currentUser.clientId).slice().reverse();
   return `
   <div class="section-title" style="margin-bottom:20px">📞 التواصل مع المكتب</div>
   <div class="two-col">
@@ -2523,14 +2798,131 @@ function renderClientContact() {
       <div style="margin-top:16px;padding:14px;background:rgba(163,136,80,.08);border-radius:10px;font-size:13px;color:var(--gray-light)">
         ساعات العمل: الأحد – الخميس، 8 صباحاً – 5 مساءً
       </div>
+      <a href="https://wa.me/966537475000" target="_blank" rel="noopener"
+        style="margin-top:14px;width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">
+        💬 تواصل عبر واتساب
+      </a>
     </div>
     <div class="card">
-      <div class="card-title" style="margin-bottom:16px">✉️ إرسال رسالة</div>
-      <div class="form-group-v"><label>الموضوع</label><input type="text" placeholder="موضوع الرسالة" /></div>
-      <div class="form-group-v"><label>الرسالة</label><textarea placeholder="اكتب رسالتك هنا..." style="min-height:120px"></textarea></div>
-      <button class="btn btn-primary" onclick="alert('تم إرسال رسالتك، سيتواصل معك فريق المكتب قريباً ✓')">📤 إرسال</button>
+      <div class="card-title" style="margin-bottom:16px">✉️ إرسال رسالة جديدة</div>
+      <div class="form-group-v"><label>الموضوع</label><input type="text" id="ctc-subject" placeholder="موضوع الرسالة" /></div>
+      <div class="form-group-v"><label>الرسالة</label><textarea id="ctc-text" placeholder="اكتب رسالتك هنا..." style="min-height:100px"></textarea></div>
+      <button class="btn btn-primary" onclick="sendClientMessage()">📤 إرسال</button>
+      ${my.length ? `
+      <div class="td-comments-title">مراسلاتي السابقة</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${my.map(t => `
+          <div onclick="openTicket(${t.id})" style="cursor:pointer;padding:12px 14px;background:var(--dark-3);border-radius:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:13px">${t.subject||'بدون عنوان'}</div>
+              <div class="text-sm color-gray">${t.messages.length} رسالة — آخر رد: ${t.messages[t.messages.length-1].time}</div>
+            </div>
+            <span class="badge ${t.status==='open'?'badge-active':'badge-closed'}" style="flex-shrink:0">${t.status==='open'?'مفتوحة':'مغلقة'}</span>
+          </div>`).join('')}
+      </div>` : ''}
     </div>
   </div>`;
+}
+function sendClientMessage() {
+  const subject = document.getElementById('ctc-subject').value.trim();
+  const text = document.getElementById('ctc-text').value.trim();
+  if (!text) { alert('يرجى كتابة نص الرسالة'); return; }
+  const cu = DB.currentUser;
+  DB.clientMessages.unshift({
+    id: DB.nextId.clientMessages++, clientId: cu.clientId, subject, status:'open',
+    createdAt: new Date().toISOString().split('T')[0],
+    messages: [{ from:'client', authorName: cu.name, text, time: new Date().toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'}) }],
+  });
+  DB.notifications.unshift({
+    id: DB.nextId.notifications++, title:'رسالة جديدة من موكل',
+    desc:`${cu.name}: ${subject || text.slice(0,40)}`, time:'الآن', read:false,
+  });
+  save();
+  navTo('client-contact');
+}
+function renderTicketsAdmin() {
+  const owner = isOfficeOwner();
+  const tickets = myScopedTickets().slice().reverse();
+  return `
+  <div class="section-header">
+    <div class="section-title">💬 ${owner?'رسائل الموكلين':'رسائل موكليّ'} <span>(${tickets.filter(t=>t.status==='open').length} مفتوحة)</span></div>
+  </div>
+  ${tickets.length===0 ? '<div class="card"><p class="color-gray text-sm">لا توجد رسائل من الموكلين بعد</p></div>' : tickets.map(t => {
+    const cl = DB.clients.find(c=>c.id===t.clientId);
+    const last = t.messages[t.messages.length-1];
+    return `
+    <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTicket(${t.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div style="min-width:0">
+          <div style="font-weight:700;font-size:14px">${t.subject || 'بدون عنوان'}</div>
+          <div class="text-sm color-gray" style="margin-top:3px">👤 ${cl?cl.name:'—'} — ${t.messages.length} رسالة</div>
+          <div class="text-sm color-gray" style="margin-top:3px">آخر رسالة (${last.from==='client'?'من الموكل':'من المكتب'}): ${last.text.slice(0,80)}${last.text.length>80?'…':''}</div>
+        </div>
+        <span class="badge ${t.status==='open'?'badge-active':'badge-closed'}">${t.status==='open'?'مفتوحة':'مغلقة'}</span>
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+let ticketModalState = { ticketId: null };
+function openTicket(id) {
+  ticketModalState = { ticketId: id };
+  renderTicketThread();
+  openModal('ticket-modal');
+}
+function renderTicketThread() {
+  const t = DB.clientMessages.find(x=>x.id===ticketModalState.ticketId); if (!t) return;
+  const cl = DB.clients.find(c=>c.id===t.clientId);
+  const isAdmin = DB.currentUser.type === 'admin';
+  document.getElementById('tk-title').textContent = t.subject || 'تذكرة تواصل';
+  document.getElementById('tk-body').innerHTML = iconify(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <span class="badge badge-new">👤 ${cl?cl.name:'—'}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${t.status==='open'?'badge-active':'badge-closed'}">${t.status==='open'?'مفتوحة':'مغلقة'}</span>
+        ${isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="toggleTicketStatus(${t.id})">${t.status==='open'?'إغلاق التذكرة':'إعادة فتح التذكرة'}</button>` : ''}
+      </div>
+    </div>
+    <div class="td-comments">
+      ${t.messages.map(m => `
+        <div class="td-comment">
+          <div class="td-avatar" style="${m.from==='office'?'background:var(--white)':''}">${(m.authorName||'?').charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="td-comment-head"><b>${m.authorName}</b>${m.from==='office'?' <span class="color-gray text-sm">(المكتب)</span>':''}<span class="color-gray text-sm">${m.time}</span></div>
+            <div class="td-comment-text">${m.text}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  `);
+}
+function toggleTicketStatus(id) {
+  const t = DB.clientMessages.find(x=>x.id===id); if (!t) return;
+  t.status = t.status === 'open' ? 'closed' : 'open';
+  save(); renderTicketThread();
+  if (currentPage === 'client-tickets') renderPage('client-tickets');
+  buildSidebar();
+}
+function sendTicketReply() {
+  const t = DB.clientMessages.find(x=>x.id===ticketModalState.ticketId); if (!t) return;
+  const ta = document.getElementById('tk-reply-input');
+  const text = ta.value.trim(); if (!text) return;
+  const isAdmin = DB.currentUser.type === 'admin';
+  t.messages.push({
+    from: isAdmin ? 'office' : 'client', authorName: DB.currentUser.name, text,
+    time: new Date().toLocaleString('ar-SA', {dateStyle:'medium', timeStyle:'short'}),
+  });
+  t.status = 'open';
+  if (!isAdmin) {
+    DB.notifications.unshift({
+      id: DB.nextId.notifications++, title:'رد جديد من موكل',
+      desc:`${DB.currentUser.name}: ${text.slice(0,40)}`, time:'الآن', read:false,
+    });
+  }
+  save();
+  ta.value = '';
+  renderTicketThread();
+  if (currentPage === 'client-tickets') renderPage('client-tickets');
+  if (currentPage === 'client-contact') renderPage('client-contact');
+  buildSidebar();
 }
 
 // ═══════════════════════════════════
@@ -2544,9 +2936,28 @@ function populateCaseModal() {
   const lawyers = DB.users.filter(u => u.perms && u.perms.cases);
   if (lawyers.length) document.getElementById('new-case-lawyer').innerHTML = lawyers.map(u=>`<option>${u.name}</option>`).join('');
 }
+let caseModalEditId = null;
+function openCaseModal(id) {
+  caseModalEditId = id || null;
+  populateCaseModal();
+  const c = id ? DB.cases.find(x=>x.id===id) : null;
+  document.getElementById('case-modal-title').textContent = c ? '✏️ تعديل القضية' : '➕ إضافة قضية جديدة';
+  document.getElementById('case-modal-save-btn').textContent = c ? '💾 حفظ التعديلات' : '💾 حفظ القضية';
+  document.getElementById('new-case-num').value = c ? c.num : '';
+  document.getElementById('new-case-title').value = c ? c.title : '';
+  document.getElementById('new-case-type').value = c ? c.type : 'تجارية';
+  document.getElementById('new-case-client').value = c ? (c.clientId||'') : '';
+  document.getElementById('new-case-court').value = c ? c.court : '';
+  document.getElementById('new-case-dept').value = c ? c.dept : '';
+  if (c) document.getElementById('new-case-lawyer').value = c.lawyer;
+  document.getElementById('new-case-opponent').value = c ? c.opponent : '';
+  document.getElementById('new-case-hearing').value = c ? (c.nextHearing||'') : '';
+  document.getElementById('new-case-notes').value = c ? c.notes : '';
+  openModal('add-case-modal');
+}
 function populateHearingModal() {
   const sel = document.getElementById('nh-case');
-  sel.innerHTML = '<option value="">اختر القضية</option>' + DB.cases.map(c=>`<option value="${c.id}">${c.num} — ${c.title}</option>`).join('');
+  sel.innerHTML = '<option value="">اختر القضية</option>' + myScopedCases().map(c=>`<option value="${c.id}">${c.num || 'بدون رقم'} — ${c.title}</option>`).join('');
 }
 function populateInvoiceModal() {
   document.getElementById('inv-client').innerHTML = '<option value="">اختر الموكل</option>' + DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
@@ -2556,9 +2967,8 @@ function populateInvoiceModal() {
   document.getElementById('inv-notes').value = '';
   document.getElementById('inv-cases-box').innerHTML = '<span class="color-gray text-sm">اختر الموكل أولاً لعرض قضاياه</span>';
   document.getElementById('inv-installments').innerHTML = '';
-  addInstRow('دفعة أولى عند توقيع العقد – غير مستردة');
-  addInstRow('الدفعة الثانية بعد صدور الحكم');
-  updateInvTotal();
+  addInstRow();
+  addInstRow();
 }
 function invClientChanged() {
   const cid = parseInt(document.getElementById('inv-client').value);
@@ -2566,32 +2976,32 @@ function invClientChanged() {
   const cs = DB.cases.filter(c=>c.clientId===cid);
   box.innerHTML = cs.length ? cs.map(c=>`
     <label class="inv-case-item"><input type="checkbox" class="inv-case-chk" value="${c.id}" checked />
-      <span><b style="color:var(--gold)">${c.num}</b> — ${c.title} <span class="color-gray text-sm">(${c.court})</span></span>
+      <span><b style="color:var(--gold)">${c.num || 'بدون رقم'}</b> — ${c.title} <span class="color-gray text-sm">(${c.court})</span></span>
     </label>`).join('')
     : '<span class="color-gray text-sm">لا توجد قضايا مسجلة لهذا الموكل — أضف القضية أولاً من صفحة القضايا</span>';
 }
-function addInstRow(label, amount, due) {
+const ORDINAL_AR = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];
+function ordinalInstLabel(n) { return 'الدفعة ' + (ORDINAL_AR[n-1] || ('رقم ' + n)); }
+function renumberInstRows() {
+  document.querySelectorAll('#inv-installments .inst-label-auto').forEach((el,i) => { el.textContent = ordinalInstLabel(i+1); });
+}
+function addInstRow(amount) {
   const box = document.getElementById('inv-installments');
   const row = document.createElement('div');
   row.className = 'inst-row';
-  row.innerHTML = iconify(`
-    <input type="text" class="inst-label" placeholder="بند الدفعة (مثال: عند توقيع العقد)" value="${label||''}" />
-    <input type="number" class="inst-amount" placeholder="المبلغ" min="0" oninput="updateInvTotal()" value="${amount||''}" />
-    <input type="date" class="inst-due" value="${due||''}" />
-    <button class="inst-del" title="حذف الدفعة" onclick="this.parentElement.remove();updateInvTotal()">🗑</button>`);
+  row.innerHTML = `
+    <div class="inst-label-auto"></div>
+    <input type="text" class="inst-amount" placeholder="المبلغ — رقم أو نص حر (مثال: 10000 أو 50% من قيمة الحكم)" value="${amount||''}" />
+    <button class="inst-del" title="حذف الدفعة" onclick="this.parentElement.remove();renumberInstRows()">${ic('trash',15)}</button>`;
   box.appendChild(row);
-}
-function updateInvTotal() {
-  const t = [...document.querySelectorAll('#inv-installments .inst-amount')].reduce((s,i)=>s+(parseFloat(i.value)||0),0);
-  document.getElementById('inv-total').textContent = t.toLocaleString();
+  renumberInstRows();
 }
 
-function saveNewCase() {
+function saveCaseModal() {
   const num = document.getElementById('new-case-num').value.trim();
   const title = document.getElementById('new-case-title').value.trim();
-  if (!num || !title) { alert('يرجى إدخال رقم القضية والموضوع'); return; }
-  DB.cases.push({
-    id: DB.nextId.cases++,
+  if (!title) { alert('يرجى إدخال موضوع القضية'); return; }
+  const fields = {
     num, title,
     type: document.getElementById('new-case-type').value,
     clientId: parseInt(document.getElementById('new-case-client').value)||null,
@@ -2600,10 +3010,21 @@ function saveNewCase() {
     lawyer: document.getElementById('new-case-lawyer').value,
     opponent: document.getElementById('new-case-opponent').value,
     nextHearing: document.getElementById('new-case-hearing').value || null,
-    status: 'active', progress: 10, notes: document.getElementById('new-case-notes').value,
-    updates: [{ date: new Date().toISOString().split('T')[0], text: 'تم قيد القضية في سجلات المكتب', status:'active' }],
-    documents: { agency: [], papers: [] },
-  });
+    notes: document.getElementById('new-case-notes').value,
+  };
+  if (caseModalEditId) {
+    const c = DB.cases.find(x=>x.id===caseModalEditId);
+    if (c) Object.assign(c, fields);
+  } else {
+    DB.cases.push({
+      id: DB.nextId.cases++,
+      ...fields,
+      status: 'active', progress: 10,
+      updates: [{ date: new Date().toISOString().split('T')[0], text: 'تم قيد القضية في سجلات المكتب', status:'active' }],
+      documents: { agency: [], papers: [] },
+    });
+  }
+  caseModalEditId = null;
   save(); closeModal('add-case-modal',{}); navTo('cases'); buildSidebar();
 }
 
@@ -2663,13 +3084,11 @@ function saveInvoiceContract(print) {
   if (!clientId) { alert('يرجى اختيار الموكل'); return; }
   const caseIds = [...document.querySelectorAll('.inv-case-chk:checked')].map(c=>parseInt(c.value));
   if (!caseIds.length) { alert('يرجى اختيار قضية واحدة على الأقل من القضايا المتمثلة'); return; }
-  const insts = [...document.querySelectorAll('#inv-installments .inst-row')].map(r=>({
-    label: r.querySelector('.inst-label').value.trim() || 'دفعة أتعاب',
-    amount: parseFloat(r.querySelector('.inst-amount').value)||0,
-    due: r.querySelector('.inst-due').value,
-    paid: false,
-  })).filter(i=>i.amount>0);
-  if (!insts.length) { alert('يرجى إدخال دفعة واحدة على الأقل بمبلغ صحيح'); return; }
+  const insts = [...document.querySelectorAll('#inv-installments .inst-row')]
+    .map(r => r.querySelector('.inst-amount').value.trim())
+    .filter(amount => amount !== '')
+    .map((amount,i) => ({ label: ordinalInstLabel(i+1), amount, paid: false }));
+  if (!insts.length) { alert('يرجى إدخال دفعة واحدة على الأقل'); return; }
   const id = DB.nextId.invoices++;
   const inv = {
     id,
@@ -2726,10 +3145,13 @@ function buildContractHTML(inv) {
   const cases = (inv.caseIds||[]).map(id=>DB.cases.find(c=>c.id===id)).filter(Boolean);
   const dt = contractDates(inv.date);
   const total = invTotal(inv);
-  const casesTxt = cases.map((c,i)=>`${i+1}- الترافع والمدافعة أمام ${c.court} في القضية رقم (${c.num}) — ${c.title}`).join('؛ ');
-  const instsList = inv.installments.map(s =>
-    `<li>مبلغ (${(+s.amount).toLocaleString('ar-SA')} ريال) ${tafqit(s.amount)} ريال — ${s.label}${s.due ? ` — تستحق بتاريخ ${s.due}` : ''}.</li>`
-  ).join('');
+  const casesTxt = cases.map((c,i)=>`${i+1}- الترافع والمدافعة أمام ${c.court} في القضية${c.num ? ' رقم (' + c.num + ')' : ''} — ${c.title}`).join('؛ ');
+  const instsList = inv.installments.map(s => {
+    const amt = isPureNumericAmount(s.amount)
+      ? `مبلغ (${parseInstAmount(s.amount).toLocaleString('ar-SA')} ريال) ${tafqit(parseInstAmount(s.amount))} ريال`
+      : (String(s.amount||'').trim() || 'مبلغ يُحدَّد لاحقاً');
+    return `<li>${amt} — ${s.label}.</li>`;
+  }).join('');
   const page1 = `
     <h1>( عقد أتعاب محاماة )</h1>
     <p>إنه في يوم ${dt.weekday} الموافق ${dt.hijri ? dt.hijri + 'هـ (' + dt.greg + 'م)' : dt.greg + 'م'} ب${inv.city} تم الاتفاق بين كل من:</p>
@@ -2774,7 +3196,7 @@ function buildContractHTML(inv) {
 function openContractPDF(id) {
   const inv = DB.invoices.find(i=>i.id===id); if (!inv) return;
   const { page1, page2 } = buildContractHTML(inv);
-  const bg = location.origin + '/assets/letterhead.png';
+  const bg = location.href.replace(/[^/]*$/, '') + 'assets/letterhead.png';
   const w = window.open('', '_blank');
   if (!w) { alert('يرجى السماح بالنوافذ المنبثقة في المتصفح لإصدار ملف الـ PDF'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
@@ -2834,7 +3256,7 @@ function renderClientInvoices() {
       <div class="card" style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:12px;color:var(--gold);margin-bottom:4px">🧾 عقد أتعاب رقم ${inv.ref} — بتاريخ ${inv.date}</div>
+            <div style="font-size:12px;color:var(--gold);margin-bottom:4px">🧾 عقد أتعاب رقم ${inv.ref} — بتاريخ ${formatDate(inv.date)}</div>
             <div style="font-size:16px;font-weight:800">${cases.map(c=>c.num + ' — ' + c.title).join(' • ') || 'أتعاب قانونية'}</div>
           </div>
           <span class="badge ${stBadge[st]}" style="font-size:13px;padding:6px 14px">${stLabel[st]}</span>
@@ -2847,13 +3269,12 @@ function renderClientInvoices() {
           <div class="progress-bar"><div class="progress-fill" style="width:${t ? (p/t*100) : 0}%"></div></div>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>#</th><th>بند الدفعة</th><th>المبلغ (ر.س)</th><th>الاستحقاق</th><th>الحالة</th></tr></thead>
+          <thead><tr><th>#</th><th>بند الدفعة</th><th>المبلغ</th><th>الحالة</th></tr></thead>
           <tbody>
             ${inv.installments.map((s,i)=>`<tr>
               <td style="color:var(--gray)">${i+1}</td>
               <td>${s.label}</td>
-              <td style="font-weight:700;color:var(--gold)">${(+s.amount).toLocaleString()}</td>
-              <td>${s.due||'—'}</td>
+              <td style="font-weight:700;color:var(--gold)">${instAmountDisplay(s.amount)}</td>
               <td><span class="badge ${s.paid?'badge-active':'badge-urgent'}">${s.paid?'مسدَّدة':'مستحقة'}</span></td>
             </tr>`).join('')}
           </tbody>
@@ -2896,8 +3317,8 @@ function markNotifRead(id) {
 function globalSearch(q) {
   if (!q || q.length < 2) return;
   const results = [
-    ...DB.cases.filter(c=>c.title.includes(q)||c.num.includes(q)).map(c=>({type:'قضية',title:c.title,click:()=>openCaseDetail(c.id)})),
-    ...DB.clients.filter(c=>c.name.includes(q)).map(c=>({type:'موكل',title:c.name,click:()=>viewClientCases(c.id)})),
+    ...myScopedCases().filter(c=>c.title.includes(q)||c.num.includes(q)).map(c=>({type:'قضية',title:c.title,click:()=>openCaseDetail(c.id)})),
+    ...myScopedClients().filter(c=>c.name.includes(q)).map(c=>({type:'موكل',title:c.name,click:()=>viewClientCases(c.id)})),
   ];
   // simple alert for now, proper dropdown would need more DOM work
   if (results.length === 1) { results[0].click(); document.getElementById('search-input').value=''; }
@@ -2909,9 +3330,23 @@ function globalSearch(q) {
 function statusLabel(s) {
   return {active:'جارية',pending:'معلقة',closed:'مغلقة',won:'مكسوبة',lost:'مخسورة',new:'جديدة'}[s]||s;
 }
+// تنسيق التاريخ: هجري (الأساس) + ميلادي (فرعي) — يُستخدم في كل عرض للتواريخ بالموقع
 function formatDate(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  const date = new Date(String(d).length <= 10 ? d + 'T12:00:00' : d);
+  if (isNaN(date)) return '—';
+  const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {year:'numeric',month:'long',day:'numeric'}).format(date);
+  const greg = new Intl.DateTimeFormat('ar-SA', {year:'numeric',month:'long',day:'numeric'}).format(date);
+  return `${hijri} <span class="date-greg">(${greg}م)</span>`;
+}
+// نسخة مختصرة رقمية (لعناصر ضيقة المساحة كخلايا الجداول)
+function formatDateShort(d) {
+  if (!d) return '—';
+  const date = new Date(String(d).length <= 10 ? d + 'T12:00:00' : d);
+  if (isNaN(date)) return '—';
+  const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+  const greg = new Intl.DateTimeFormat('ar-SA', {year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+  return `${hijri} <span class="date-greg">(${greg}م)</span>`;
 }
 
 // close notification panel on outside click
