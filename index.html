@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @font-face {
   font-family: 'Alharf';
@@ -1099,6 +1100,18 @@ tbody td { padding:13px 16px; font-size:13px; }
 </div>
 
 <script>
+// ═══════════════════════════════════
+//  الاتصال بقاعدة البيانات
+//  المفتاح أدناه عام بطبيعته وآمن للنشر: الحماية مفروضة داخل قاعدة البيانات
+//  عبر سياسات RLS، لا عبر إخفاء المفتاح.
+// ═══════════════════════════════════
+const SUPABASE_URL = 'https://javmazwxrdkylewhjahu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_-CohC6ascOspnmDlToGCoQ_xYGFJxJ2';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// البريد الاصطناعي: الموقع يستخدم اسم مستخدم ورمزاً سرياً، ونظام المصادقة يتطلب بريداً
+const AUTH_DOMAIN = '@zahemlaw.app';
+const emailFor = username => String(username||'').trim().toLowerCase() + AUTH_DOMAIN;
+
 // ═══════════════════════════════════
 //  SVG ICON SYSTEM (بدل الإيموجي)
 // ═══════════════════════════════════
