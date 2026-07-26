@@ -1354,7 +1354,147 @@ function invPaidAmount(inv) { return (inv.installments||[]).filter(i=>i.paid).re
 function invStatus(inv) { const t=invTotal(inv), p=invPaidAmount(inv); return t>0&&p>=t ? 'paid' : (p>0 ? 'partial' : 'unpaid'); }
 function syncInvoiceDerived(inv) { inv.amount = invTotal(inv); inv.paid = invStatus(inv)==='paid'; }
 
-function save() { try { localStorage.setItem('alzahim_db', JSON.stringify(DB)); } catch(e){} }
+// أثناء نقل طبقة البيانات: عمليات الكتابة لم تُربط بقاعدة البيانات بعد.
+// تُنبَّه بوضوح بدل أن تبدو محفوظة ثم تختفي عند التحديث.
+const WRITES_CONNECTED = false;
+let writeWarned = false;
+function save() {
+  if (!WRITES_CONNECTED) {
+    if (!writeWarned) {
+      writeWarned = true;
+      alert('هذه نسخة تحت التطوير: الإضافات والتعديلات لا تُحفَظ في قاعدة البيانات بعد.\n'
+          + 'استخدم النسخة المنشورة للعمل الفعلي حتى يكتمل الربط.');
+    }
+    return;
+  }
+  try { localStorage.setItem('alzahim_db', JSON.stringify(DB)); } catch(e){}
+}
+
+// ═══════════════════════════════════
+//  قراءة البيانات من قاعدة البيانات
+//  تُحوَّل صفوف القاعدة إلى نفس الشكل الذي تتوقعه شاشات الموقع،
+//  فتبقى كل دوال العرض كما هي دون تغيير.
+//  سياسات RLS هي التي تحدد ما يُرجَع لكل حساب — لا تُصفَّى هنا.
+// ═══════════════════════════════════
+function dbError(where, error) {
+  if (!error) return false;
+  console.error('[' + where + ']', error);
+  return true;
+}
+async function loadFromDatabase() {
+  const [staff, clients, cases, updates, docs, hearings, tasks, comments,
+         invoices, invCases, insts, tickets, tmsgs, notifs] = await Promise.all([
+    sb.from('staff').select('*'),
+    sb.from('clients').select('*'),
+    sb.from('cases').select('*'),
+    sb.from('case_updates').select('*').order('date'),
+    sb.from('case_documents').select('*'),
+    sb.from('hearings').select('*').order('date'),
+    sb.from('tasks').select('*').order('created_at'),
+    sb.from('task_comments').select('*').order('created_at'),
+    sb.from('invoices').select('*').order('date'),
+    sb.from('invoice_cases').select('*'),
+    sb.from('installments').select('*').order('sort'),
+    sb.from('tickets').select('*').order('created_at'),
+    sb.from('ticket_messages').select('*').order('created_at'),
+    sb.from('notifications').select('*').order('created_at', { ascending: false }),
+  ]);
+  const anyErr = [['staff',staff],['clients',clients],['cases',cases],['case_updates',updates],
+    ['case_documents',docs],['hearings',hearings],['tasks',tasks],['task_comments',comments],
+    ['invoices',invoices],['invoice_cases',invCases],['installments',insts],
+    ['tickets',tickets],['ticket_messages',tmsgs],['notifications',notifs]
+  ].map(([n,r]) => dbError(n, r.error)).some(Boolean);
+
+  DB.users = (staff.data || []).map(s => ({
+    id: s.id, name: s.name, user: s.username, role: s.role,
+    perms: s.perms || {}, avatar: s.avatar_path || '',
+  }));
+  DB.clients = (clients.data || []).map(c => ({
+    id: c.id, name: c.name, idNum: c.id_num || '', phone: c.phone || '', email: c.email || '',
+    user: c.username || '', nationality: c.nationality || '', notes: c.notes || '',
+    avatar: c.avatar_path || '', authUserId: c.auth_user_id || null,
+  }));
+
+  const updatesByCase = groupBy(updates.data || [], u => u.case_id);
+  const docsByCase    = groupBy(docs.data || [], d => d.case_id);
+  DB.cases = (cases.data || []).map(c => {
+    const lawyer = (staff.data || []).find(s => s.id === c.lawyer_id);
+    const cd = docsByCase[c.id] || [];
+    return {
+      id: c.id, num: c.num || '', title: c.title, type: c.type,
+      clientId: c.client_id, court: c.court || '', dept: c.dept || '',
+      lawyerId: c.lawyer_id, lawyer: lawyer ? lawyer.name : '',
+      opponent: c.opponent || '', nextHearing: c.next_hearing,
+      status: c.status, progress: c.progress, notes: c.notes || '',
+      updates: (updatesByCase[c.id] || []).map(u => ({ id: u.id, date: u.date, text: u.text, status: u.status })),
+      documents: {
+        agency: cd.filter(d => d.kind === 'agency').map(mapDoc),
+        papers: cd.filter(d => d.kind === 'papers').map(mapDoc),
+      },
+    };
+  });
+
+  DB.hearings = (hearings.data || []).map(h => ({
+    id: h.id, caseId: h.case_id, date: h.date, time: h.time || '',
+    court: h.court || '', purpose: h.purpose || '', notes: h.notes || '',
+  }));
+
+  const commentsByTask = groupBy(comments.data || [], c => c.task_id);
+  DB.tasks = (tasks.data || []).map(t => ({
+    id: t.id, title: t.title, desc: t.description || '', done: t.done, due: t.due || '',
+    caseId: t.case_id, assigneeId: t.assignee_id, creatorId: t.creator_id,
+    createdAt: t.created_at ? t.created_at.split('T')[0] : null, completedAt: t.completed_at,
+    comments: (commentsByTask[t.id] || []).map(c => ({
+      id: c.id, authorId: c.author_id, authorName: c.author_name, text: c.text || '',
+      time: fmtStamp(c.created_at),
+      attachment: c.attachment_path ? { name: c.attachment_name, size: c.attachment_size, path: c.attachment_path } : null,
+    })),
+  }));
+
+  const instByInv  = groupBy(insts.data || [], i => i.invoice_id);
+  const casesByInv = groupBy(invCases.data || [], r => r.invoice_id);
+  DB.invoices = (invoices.data || []).map(inv => {
+    const o = {
+      id: inv.id, ref: inv.ref, clientId: inv.client_id, date: inv.date,
+      city: inv.city, notes: inv.notes || '',
+      caseIds: (casesByInv[inv.id] || []).map(r => r.case_id),
+      installments: (instByInv[inv.id] || []).map(s => ({ id: s.id, label: s.label, amount: s.amount, paid: s.paid })),
+    };
+    syncInvoiceDerived(o);
+    return o;
+  });
+
+  const msgsByTicket = groupBy(tmsgs.data || [], m => m.ticket_id);
+  DB.clientMessages = (tickets.data || []).map(t => ({
+    id: t.id, clientId: t.client_id, subject: t.subject || '', status: t.status,
+    createdAt: t.created_at ? t.created_at.split('T')[0] : null,
+    messages: (msgsByTicket[t.id] || []).map(m => ({
+      from: m.from_side, authorName: m.author_name, text: m.text, time: fmtStamp(m.created_at),
+    })),
+  }));
+
+  DB.notifications = (notifs.data || []).map(n => ({
+    id: n.id, title: n.title, desc: n.description || '',
+    forUserId: n.for_staff_id, read: n.read, time: fmtStamp(n.created_at),
+  }));
+
+  if (anyErr) alert('تعذّر تحميل بعض البيانات — تحقق من الاتصال بالإنترنت وأعد تحديث الصفحة');
+  return !anyErr;
+}
+function groupBy(arr, keyFn) {
+  const out = {};
+  for (const item of arr) { const k = keyFn(item); (out[k] = out[k] || []).push(item); }
+  return out;
+}
+function mapDoc(d) {
+  return { id: d.id, name: d.name, size: d.size, path: d.storage_path,
+           uploadedAt: d.uploaded_at, uploadedBy: d.uploaded_by || '' };
+}
+function fmtStamp(ts) {
+  if (!ts) return '';
+  try { return new Date(ts).toLocaleString('ar-SA', { dateStyle:'medium', timeStyle:'short' }); }
+  catch(e) { return ''; }
+}
 function load() {
   try {
     const d = localStorage.getItem('alzahim_db');
@@ -1396,12 +1536,9 @@ function load() {
   if (!DB.nextId.notifications) DB.nextId.notifications = Math.max(0, ...DB.notifications.map(n=>n.id)) + 1;
   if (!DB.clientMessages) DB.clientMessages = [];
   if (!DB.nextId.clientMessages) DB.nextId.clientMessages = Math.max(0, ...DB.clientMessages.map(m=>m.id)) + 1;
-  // إبقاء جلسة الدخول قائمة عبر التحديثات، مع التحقق أن المستخدم/الموكل ما زال موجوداً
-  if (DB.currentUser) {
-    const u = DB.currentUser;
-    const stillValid = u.type === 'admin' ? DB.users.some(x=>x.id===u.userId) : DB.clients.some(x=>x.id===u.clientId);
-    if (!stillValid) DB.currentUser = null;
-  }
+  // الهوية تأتي من نظام المصادقة فقط. أي جلسة محفوظة في المتصفح تُطرَح،
+  // فلا يُعتمد على بيانات محلية قابلة للتعديل لتحديد من المستخدم وما صلاحياته.
+  DB.currentUser = null;
 }
 load();
 
@@ -1420,26 +1557,76 @@ function setLoginType(t) {
   document.querySelectorAll('.login-tab').forEach((el,i) => el.classList.toggle('active', (t==='admin'&&i===0)||(t==='client'&&i===1)));
   document.getElementById('login-label-id').textContent = t === 'admin' ? 'رقم المستخدم / البريد الإلكتروني' : 'رقم الهوية / اسم المستخدم';
 }
-function doLogin() {
+function loginBusy(on, msg) {
+  const btn = document.querySelector('.btn-login');
+  if (!btn) return;
+  btn.disabled = !!on;
+  btn.textContent = on ? (msg || 'جارٍ الدخول…') : 'دخول';
+}
+// تسجيل الدخول: يتحقق الخادم من اسم المستخدم والرمز، فإن كان الحساب جديداً
+// يُسجَّل في نظام المصادقة من متصفح صاحبه ثم يُستكمل سطره في قاعدة البيانات.
+// بهذه الطريقة لا يُحتاج أي مفتاح إداري في المتصفح.
+async function doLogin() {
   const u = document.getElementById('login-user').value.trim();
   const p = document.getElementById('login-pass').value.trim();
-  if (DB.loginType === 'admin') {
-    const usr = DB.users.find(x => (x.user === u || x.name === u) && x.pass === p);
-    if (usr) {
-      DB.currentUser = { type:'admin', userId:usr.id, name:usr.name, role:usr.role, initials:usr.name.charAt(0), perms:{...usr.perms} };
-      save(); startApp();
-    } else { alert('بيانات الدخول غير صحيحة'); }
-  } else {
-    const cl = DB.clients.find(c => (c.user === u || c.idNum === u) && c.pass === p);
-    if (cl) {
-      DB.currentUser = { type:'client', clientId: cl.id, name: cl.name, role:'موكل', initials: cl.name.charAt(0) };
-      save(); startApp();
-    } else { alert('بيانات الدخول غير صحيحة'); }
+  if (!u || !p) { alert('يرجى إدخال اسم المستخدم والرمز السري'); return; }
+  loginBusy(true);
+  try {
+    const { data: claim, error: claimErr } = await sb.rpc('claim_account', { p_username: u, p_password: p });
+    if (claimErr) throw new Error('بيانات الدخول غير صحيحة');
+    const info = Array.isArray(claim) ? claim[0] : claim;
+    if (!info) throw new Error('بيانات الدخول غير صحيحة');
+
+    const email = info.synthetic_email;
+    if (info.already_registered) {
+      const { error } = await sb.auth.signInWithPassword({ email, password: p });
+      if (error) throw new Error('بيانات الدخول غير صحيحة');
+    } else {
+      loginBusy(true, 'جارٍ تهيئة الحساب…');
+      const { error: upErr } = await sb.auth.signUp({ email, password: p });
+      if (upErr) {
+        // الحساب موجود في نظام المصادقة من محاولة سابقة — نكمل بالدخول العادي
+        const { error } = await sb.auth.signInWithPassword({ email, password: p });
+        if (error) throw new Error('تعذّر إنشاء الحساب: ' + upErr.message);
+      }
+      const { error: finErr } = await sb.rpc('finalize_account', { p_username: u, p_password: p });
+      if (finErr) throw new Error('تعذّر استكمال الحساب: ' + finErr.message);
+    }
+    await afterAuth();
+  } catch (e) {
+    await sb.auth.signOut().catch(()=>{});
+    alert(e.message || 'تعذّر تسجيل الدخول');
+  } finally {
+    loginBusy(false);
   }
 }
-function doLogout() {
+// يُبنى المستخدم الحالي من قاعدة البيانات، ثم تُحمَّل بياناته المصرَّح له بها
+async function afterAuth() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return false;
+
+  const { data: staffRow } = await sb.from('staff').select('*').eq('id', user.id).maybeSingle();
+  if (staffRow) {
+    DB.currentUser = {
+      type: 'admin', userId: staffRow.id, name: staffRow.name, role: staffRow.role,
+      initials: (staffRow.name || '').charAt(0), perms: staffRow.perms || {},
+      avatar: staffRow.avatar_path || '',
+    };
+  } else {
+    const { data: clientRow } = await sb.from('clients').select('*').eq('auth_user_id', user.id).maybeSingle();
+    if (!clientRow) { await sb.auth.signOut(); alert('لا يوجد حساب مرتبط — راجع مكتب المحاماة'); return false; }
+    DB.currentUser = {
+      type: 'client', clientId: clientRow.id, name: clientRow.name, role: 'موكل',
+      initials: (clientRow.name || '').charAt(0), avatar: clientRow.avatar_path || '',
+    };
+  }
+  await loadFromDatabase();
+  startApp();
+  return true;
+}
+async function doLogout() {
+  await sb.auth.signOut().catch(()=>{});
   DB.currentUser = null;
-  save();
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-user').value = '';
@@ -1448,6 +1635,13 @@ function doLogout() {
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
 });
+// استعادة الجلسة عند فتح الصفحة أو تحديثها
+(async function restoreSession() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) await afterAuth();
+  } catch(e) {}
+})();
 
 // ═══════════════════════════════════
 //  الصورة الشخصية للحساب
@@ -3613,8 +3807,8 @@ document.addEventListener('click', e => {
   }
 });
 
-// استئناف الجلسة تلقائياً إن كان المستخدم قد سجّل الدخول سابقاً من هذا المتصفح
-if (DB.currentUser) startApp();
+// استئناف الجلسة يتم عبر restoreSession() من نظام المصادقة، لا من ذاكرة المتصفح —
+// وإلّا لأمكن الدخول ببيانات قديمة محفوظة محلياً دون تحقّق من قاعدة البيانات
 </script>
 </body>
 </html>
