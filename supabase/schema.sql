@@ -548,17 +548,27 @@ $$;
 --  يُفترض استدعاؤها من المتصفح.
 -- ════════════════════════════════════════════════════════════════════
 
--- أمر تهيئة لمرة واحدة يُنفَّذ من SQL Editor فقط.
--- بدون هذا السحب يستطيع أي زائر مجهول استدعاءه — ما دام جدول المكتب فارغاً —
--- فيستبدل حساب المدير بكلمة مرور من عنده ويصبح مدير المكتب
-revoke all on function bootstrap_owner(text, text, text) from anon, authenticated;
+-- ملاحظة جوهرية: PostgreSQL يمنح صلاحية تنفيذ الدالة لـ PUBLIC تلقائياً عند
+-- إنشائها، وكل الأدوار ترث منه. فالسحب من anon و authenticated وحدهما لا يكفي —
+-- تبقى الصلاحية موروثة عبر PUBLIC. لذا يُسحب من PUBLIC صراحةً.
 
--- إنشاء الحسابات لمدير المكتب المسجَّل فقط (الدالة تتحقق أيضاً بنفسها)
-revoke all on function create_pending_account(text, text, text, text, text, jsonb, uuid) from anon;
+-- أمر تهيئة لمرة واحدة يُنفَّذ من SQL Editor فقط.
+-- بدونه يستطيع أي زائر مجهول استدعاءه — ما دام جدول المكتب فارغاً —
+-- فيستبدل حساب المدير بكلمة مرور من عنده ويصبح مدير المكتب
+revoke all on function bootstrap_owner(text, text, text) from public, anon, authenticated;
+
+-- إنشاء الحسابات لمدير المكتب المسجَّل فقط (والدالة تتحقق أيضاً بنفسها)
+revoke all on function create_pending_account(text, text, text, text, text, jsonb, uuid) from public, anon;
+grant execute on function create_pending_account(text, text, text, text, text, jsonb, uuid) to authenticated;
 
 -- جدول الحسابات المعلَّقة: لا يُقرأ ولا يُكتب من المتصفح إطلاقاً.
--- الدوال أعلاه تصل إليه لأنها SECURITY DEFINER فتتجاوز صلاحيات الجدول
-revoke all on table pending_accounts from anon, authenticated;
+-- الدوال أعلاه تصل إليه لأنها SECURITY DEFINER فتُنفَّذ بصلاحيات مالكها
+revoke all on table pending_accounts from public, anon, authenticated;
+
+-- الدوال المستخدَمة داخل سياسات الحماية (is_staff / is_owner / has_perm /
+-- my_client_id / can_see_case) وكذلك claim_account و finalize_account
+-- تبقى متاحة عن قصد: الأولى تُقيَّم بصلاحيات الدور السائل فتحتاجها السياسات،
+-- والأخيرتان هما مسار تسجيل الدخول نفسه ومحميّتان بالتحقق من كلمة المرور.
 
 -- ════════════════════════════════════════════════════════════════════
 --  مساحة تخزين الملفات (المستندات ومرفقات المهام والصور الشخصية)
