@@ -271,6 +271,28 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   font-family:inherit; font-size:13px; width:100%;
 }
 .topbar-search input::placeholder { color:var(--gray); }
+.topbar-search { position:relative; }
+.search-results {
+  position:absolute; top:calc(100% + 6px); right:0; left:0; background:var(--dark-2);
+  border:1px solid var(--gold); border-radius:10px; box-shadow:var(--shadow-pop);
+  z-index:60; max-height:min(60vh,380px); overflow-y:auto; display:none; padding:4px;
+}
+.search-results.open { display:block; }
+.sr-item {
+  display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:7px;
+  cursor:pointer; transition:.12s;
+}
+.sr-item:hover, .sr-item.sel { background:var(--olive-pale); }
+.sr-icon { flex-shrink:0; font-size:14px; }
+.sr-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.sr-main b { font-size:13px; font-weight:600; color:var(--white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sr-sub { font-size:11px; color:var(--gray-light); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sr-sub .date-greg { color:var(--gray); }
+.sr-type {
+  flex-shrink:0; font-size:10px; color:var(--gold-deep); background:var(--olive-pale);
+  border:1px solid var(--border); border-radius:20px; padding:2px 8px;
+}
+.sr-empty { padding:14px 12px; font-size:12.5px; color:var(--gray-light); text-align:center; }
 .topbar-actions { display:flex; align-items:center; gap:10px; }
 .btn-icon {
   width:38px; height:38px; border-radius:8px; border:1px solid var(--border);
@@ -565,6 +587,35 @@ tbody td { padding:13px 16px; font-size:13px; }
 .task-open-btn:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
 .task-open-btn svg { width:12px; height:12px; }
 
+/* ═══════════ QUICK TASK COMPOSER ═══════════ */
+.quick-task { border-bottom:1px solid var(--border); position:relative; }
+.quick-task-trigger {
+  display:flex; align-items:center; gap:9px; padding:12px 14px; cursor:text;
+  color:var(--gray-light); font-size:13px; transition:.15s; border-radius:8px;
+}
+.quick-task-trigger:hover { background:var(--olive-pale); color:var(--gold-deep); }
+.quick-task-trigger .qt-plus {
+  width:20px; height:20px; border-radius:50%; border:1.5px dashed var(--gray);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  font-size:14px; line-height:1; color:var(--gray);
+}
+.quick-task-trigger:hover .qt-plus { border-color:var(--gold); color:var(--gold-deep); border-style:solid; }
+.quick-task-form { padding:12px 14px; position:relative; }
+.quick-task-row { display:flex; gap:8px; align-items:center; }
+.quick-task-row input {
+  flex:1; min-width:0; padding:10px 12px; background:var(--dark-2);
+  border:1px solid var(--gold); border-radius:8px; color:var(--white);
+  font-family:inherit; font-size:13.5px; outline:none;
+}
+.quick-task-row input::placeholder { color:var(--gray); }
+.quick-task-foot {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; flex-wrap:wrap; margin-top:8px;
+}
+.quick-task-foot .qt-hint { font-size:11px; color:var(--gray); }
+.quick-task-foot .task-open-btn { margin-top:0; }
+.quick-task .mention-dropdown { top:auto; margin-top:0; right:14px; left:14px; }
+
 /* ═══════════ TASK TIMELINE ═══════════ */
 .task-timeline { margin-top:8px; }
 .task-timeline-label { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--gray-light); margin-bottom:4px; gap:8px; }
@@ -700,9 +751,22 @@ tbody td { padding:13px 16px; font-size:13px; }
   .hearing-item { flex-wrap:wrap; row-gap:8px; }
 }
 
-@media (max-width: 480px) {
-  .stats-grid { grid-template-columns:1fr; }
-  .verse-text { font-size:13.5px; }
+@media (max-width: 560px) {
+  /* أربع خانات = أربعة مربعات في شاشة واحدة بلا تمرير */
+  .content { padding:12px; }
+  .stats-grid { grid-template-columns:repeat(2,1fr) !important; gap:9px; margin-bottom:14px; }
+  .stats-grid:not([style]) .stat-card {
+    aspect-ratio:1 / 1; padding:8px 6px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:1px;
+  }
+  .stats-grid:not([style]) .stat-icon { margin-bottom:4px; }
+  .stats-grid:not([style]) .stat-icon svg { width:20px; height:20px; }
+  .stats-grid:not([style]) .stat-value { font-size:26px; margin-bottom:0; line-height:1.1; }
+  .stats-grid:not([style]) .stat-label { font-size:11px; line-height:1.35; }
+  .stats-grid:not([style]) .stat-change { font-size:10px; margin-top:3px; }
+  .verse-banner { padding:10px 14px; }
+  .verse-text { font-size:13.5px; line-height:1.7; }
   .login-box { padding:28px 18px; }
 }
 </style>
@@ -814,7 +878,10 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div class="topbar-title" id="page-title">لوحة التحكم</div>
         <div class="topbar-search" id="topbar-search">
           <span style="color:var(--gray)">🔍</span>
-          <input type="text" placeholder="بحث في القضايا، العملاء..." id="search-input" oninput="globalSearch(this.value)" />
+          <input type="text" placeholder="بحث… يتجاوز اختلاف الإملاء" id="search-input" autocomplete="off"
+                 oninput="globalSearch(this.value)" onkeydown="searchKeydown(event)"
+                 onblur="setTimeout(closeSearchResults,120)" />
+          <div class="search-results" id="search-results"></div>
         </div>
         <div class="topbar-actions">
           <button class="btn-icon" onclick="toggleNotif()" title="الإشعارات" id="notif-btn">
@@ -2235,8 +2302,12 @@ function renderDashboard() {
 // ═══════════════════════════════════
 function renderCases(filter='') {
   const scoped = myScopedCases();
+  // بحث متسامح: لا يُشترط تطابق الكلمة حرفياً
   const filtered = filter
-    ? scoped.filter(c => c.title.includes(filter) || c.num.includes(filter) || c.type.includes(filter))
+    ? scoped.filter(c => {
+        const cl = DB.clients.find(x => x.id === c.clientId);
+        return fuzzyMatch(filter, c.title, c.num, c.type, c.court, c.opponent, c.lawyer, cl && cl.name);
+      })
     : scoped;
   return `
   <div class="section-header">
@@ -2667,6 +2738,25 @@ function renderTasks() {
   <div class="two-col">
     <div class="card">
       <div class="card-header"><span class="card-title">🔴 المهام المعلقة</span></div>
+      <div class="quick-task" id="quick-task-box">
+        <div class="quick-task-trigger" id="quick-task-trigger" onclick="openQuickTask()">
+          <span class="qt-plus">+</span>
+          <span>مهمة سريعة… اكتب العنوان و<b>@</b> لتوكيل محامٍ</span>
+        </div>
+        <div class="quick-task-form" id="quick-task-form" style="display:none">
+          <div class="quick-task-row">
+            <input id="quick-task-input" autocomplete="off" placeholder="عنوان المهمة… اكتب @ لتوكيل محامٍ"
+                   oninput="quickMentionInput(event)" onkeydown="quickMentionKeydown(event)">
+            <button class="btn btn-primary btn-sm" onclick="saveQuickTask()">حفظ</button>
+          </div>
+          <div class="mention-dropdown" id="quick-mention-dropdown"></div>
+          <div id="quick-assignee-chip"></div>
+          <div class="quick-task-foot">
+            <span class="qt-hint">Enter للحفظ · Esc للإلغاء</span>
+            <button class="task-open-btn" onclick="quickTaskToModal()">⚙️ تفاصيل أكثر (تايم لاين، وصف، قضية)</button>
+          </div>
+        </div>
+      </div>
       ${pending.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام معلقة ضمن هذا الفلتر</p>' : pending.map(t => `
         <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
           <div class="task-check" onclick="toggleTask('${t.id}')"></div>
@@ -2860,6 +2950,131 @@ async function toggleTask(id) {
 // ═══════════════════════════════════
 //  TASK MODAL + @MENTION ASSIGNMENT
 // ═══════════════════════════════════
+// ── إضافة سريعة للمهام: سطر واحد داخل بطاقة المهام المعلقة ──
+let quickTaskState = { assigneeIds: [], open: false };
+function openQuickTask() {
+  const form = document.getElementById('quick-task-form');
+  const trig = document.getElementById('quick-task-trigger');
+  if (!form) return;
+  form.style.display = 'block'; trig.style.display = 'none';
+  quickTaskState.open = true;
+  renderQuickAssigneeChip();
+  const el = document.getElementById('quick-task-input');
+  el.focus();
+}
+function closeQuickTask() {
+  const form = document.getElementById('quick-task-form');
+  const trig = document.getElementById('quick-task-trigger');
+  if (!form) return;
+  form.style.display = 'none'; trig.style.display = 'flex';
+  document.getElementById('quick-task-input').value = '';
+  quickTaskState = { assigneeIds: [], open: false };
+  renderQuickAssigneeChip();
+  hideQuickMentions();
+}
+function hideQuickMentions() {
+  const dd = document.getElementById('quick-mention-dropdown');
+  if (dd) { dd.classList.remove('open'); dd.innerHTML = ''; }
+}
+function quickMentionInput(ev) {
+  const el = ev.target;
+  const before = el.value.slice(0, el.selectionStart);
+  const m = before.match(/@([\u0600-\u06FF\s]{0,20})$/);
+  const dd = document.getElementById('quick-mention-dropdown');
+  if (!m) { hideQuickMentions(); return; }
+  const q = m[1].trim();
+  const matches = lawyerUsers().filter(u => fuzzyMatch(q, u.name));
+  if (!matches.length) { hideQuickMentions(); return; }
+  dd.innerHTML = matches.map(u => `<div class="mention-item" onmousedown="event.preventDefault();quickSelectMention('${u.id}')"><span class="m-avatar">${u.name.charAt(0)}</span>${u.name}</div>`).join('');
+  dd.classList.add('open');
+}
+function quickMentionKeydown(ev) {
+  if (ev.key === 'Escape') { ev.preventDefault(); hideQuickMentions(); closeQuickTask(); return; }
+  if (ev.key === 'Enter') {
+    const dd = document.getElementById('quick-mention-dropdown');
+    const first = dd && dd.classList.contains('open') ? dd.querySelector('.mention-item') : null;
+    ev.preventDefault();
+    if (first) { first.dispatchEvent(new MouseEvent('mousedown', {bubbles:true})); return; }
+    saveQuickTask();
+  }
+}
+function quickSelectMention(userId) {
+  const u = DB.users.find(x => x.id === userId); if (!u) return;
+  const el = document.getElementById('quick-task-input');
+  const pos = el.selectionStart;
+  const before = el.value.slice(0, pos).replace(/@([\u0600-\u06FF\s]{0,20})$/, '@' + u.name + ' ');
+  el.value = before + el.value.slice(pos);
+  el.setSelectionRange(before.length, before.length);
+  hideQuickMentions();
+  if (!quickTaskState.assigneeIds.includes(u.id)) quickTaskState.assigneeIds.push(u.id);
+  renderQuickAssigneeChip();
+  el.focus();
+}
+function renderQuickAssigneeChip() {
+  const box = document.getElementById('quick-assignee-chip');
+  if (!box) return;
+  const ids = quickTaskState.assigneeIds || [];
+  if (!ids.length) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="assignee-chips"><span class="color-gray text-sm">مُوكَّلة إلى:</span>'
+    + ids.map(id => {
+        const u = DB.users.find(x => x.id === id);
+        return `<span class="assignee-chip">${u?u.name:'—'} <button onclick="clearQuickAssignee('${id}')">×</button></span>`;
+      }).join('') + '</div>';
+}
+function clearQuickAssignee(id) {
+  quickTaskState.assigneeIds = (quickTaskState.assigneeIds || []).filter(x => x !== id);
+  renderQuickAssigneeChip();
+  document.getElementById('quick-task-input').focus();
+}
+// يُنزع اسم المُوكَّل من نص العنوان، فالتوكيل محفوظ في حقل مستقل
+function quickTaskTitle() {
+  let title = document.getElementById('quick-task-input').value;
+  (quickTaskState.assigneeIds || []).forEach(id => {
+    const u = DB.users.find(x => x.id === id);
+    if (u) title = title.split('@' + u.name).join(' ');
+  });
+  return title.replace(/@([\u0600-\u06FF\s]{0,20})$/, ' ').replace(/\s+/g, ' ').trim();
+}
+async function saveQuickTask() {
+  const title = quickTaskTitle();
+  if (!title) { alert('اكتب عنوان المهمة أولاً'); return; }
+  const assigneeIds = [...new Set(quickTaskState.assigneeIds || [])];
+  const ok = await dbWrite('المهمة', async () => {
+    const ins = await sb.from('tasks')
+      .insert({ title, creator_id: DB.currentUser.userId }).select('id').single();
+    if (ins.error) return ins;
+    if (assigneeIds.length) {
+      const link = await sb.from('task_assignees')
+        .insert(assigneeIds.map(id => ({ task_id: ins.data.id, staff_id: id })));
+      if (link.error) return link;
+      const added = assigneeIds.filter(id => id !== DB.currentUser.userId);
+      if (added.length) {
+        return sb.from('notifications').insert(added.map(id => ({
+          title: 'مهمة جديدة مُوكَّلة إليك',
+          description: `${DB.currentUser.name} وكّلك بمهمة: ${title}`,
+          for_staff_id: id,
+        })));
+      }
+    }
+    return { error: null };
+  });
+  if (!ok) return;
+  navTo('tasks'); buildSidebar();
+  // يبقى السطر مفتوحاً لإضافة مهمة تالية بسرعة
+  openQuickTask();
+}
+// الانتقال من السطر السريع إلى نافذة التفاصيل مع الحفاظ على ما كُتب
+function quickTaskToModal() {
+  const title = quickTaskTitle();
+  const ids = [...new Set(quickTaskState.assigneeIds || [])];
+  openTaskModal();
+  document.getElementById('task-title').value = title;
+  taskModalState.assigneeIds = ids;
+  renderTaskAssigneeChip();
+  closeQuickTask();
+  document.getElementById('task-title').focus();
+}
+
 let taskModalState = { assigneeIds: [], editId: null };
 function openTaskModal(id) {
   const t = id ? DB.tasks.find(x=>x.id===id) : null;
@@ -2892,7 +3107,7 @@ function handleTaskMentionInput(ev) {
   const dd = document.getElementById('task-mention-dropdown');
   if (!m) { dd.classList.remove('open'); dd.innerHTML=''; return; }
   const q = m[1].trim();
-  const matches = lawyerUsers().filter(u => !q || u.name.includes(q));
+  const matches = lawyerUsers().filter(u => fuzzyMatch(q, u.name));
   if (!matches.length) { dd.classList.remove('open'); dd.innerHTML=''; return; }
   dd.innerHTML = matches.map(u => `<div class="mention-item" onmousedown="event.preventDefault();selectMention('${u.id}')"><span class="m-avatar">${u.name.charAt(0)}</span>${u.name}</div>`).join('');
   dd.classList.add('open');
@@ -4414,14 +4629,149 @@ async function markNotifRead(id) {
 // ═══════════════════════════════════
 //  GLOBAL SEARCH
 // ═══════════════════════════════════
+// ── بحث متسامح مع اختلاف الإملاء ──
+// يوحّد الهمزات والتاء المربوطة والألف المقصورة والتشكيل والأرقام،
+// ثم يقيس التقارب بمسافة ليفنشتاين فلا يُشترط تطابق الكلمة ١٠٠٪.
+const SEARCH_THRESHOLD = 0.8;
+function normSearch(str) {
+  return String(str == null ? '' : str)
+    .replace(/[ً-ْٰـٓ-ٕ]/g, '') // تشكيل وتطويل
+    .replace(/[أإآٱ]/g, 'ا')          // أ إ آ ٱ → ا
+    .replace(/ى/g, 'ي')                               // ى → ي
+    .replace(/ئ/g, 'ي')                               // ئ → ي
+    .replace(/ؤ/g, 'و')                               // ؤ → و
+    .replace(/ة/g, 'ه')                               // ة → ه
+    .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660)) // ٠١٢ → 012
+    .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06F0))
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')                          // ترقيم وشرطات
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+}
+function levDist(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function levRatio(a, b) {
+  if (!a || !b) return 0;
+  return 1 - levDist(a, b) / Math.max(a.length, b.length);
+}
+function fuzzyScore(q, text) {
+  const nq = normSearch(q), nt = normSearch(text);
+  if (!nq || !nt) return 0;
+  if (nt.includes(nq)) return 1;
+  const qt = nq.split(' ').filter(Boolean);
+  const tt = nt.split(' ').filter(Boolean);
+  // استعلام بعدة كلمات: يكفي أن تقارب كل كلمة إحدى كلمات النص بأي ترتيب
+  if (qt.length > 1 && qt.every(w => tt.some(t => t.includes(w) || levRatio(w, t) >= 0.75))) return 0.95;
+  let best = levRatio(nq, nt);
+  for (const t of tt) {
+    if (t.startsWith(nq)) return 0.97;
+    best = Math.max(best, levRatio(nq, t));
+  }
+  // نافذة منزلقة: تلتقط الخطأ الإملائي وسط عبارة طويلة
+  if (nq.length >= 4) {
+    for (const len of [nq.length - 1, nq.length, nq.length + 1]) {
+      if (len < 2 || len > nt.length) continue;
+      for (let i = 0; i + len <= nt.length; i++) {
+        best = Math.max(best, levRatio(nq, nt.substr(i, len)));
+        if (best >= 0.999) return 1;
+      }
+    }
+  }
+  return best;
+}
+// يطابق إن قارب الاستعلام أيَّ حقل من الحقول الممرَّرة
+function fuzzyMatch(q, ...fields) {
+  if (!q || !normSearch(q)) return true;
+  return fields.some(f => fuzzyScore(q, f) >= SEARCH_THRESHOLD);
+}
+function fuzzyBest(q, ...fields) {
+  return fields.reduce((m, f) => Math.max(m, fuzzyScore(q, f)), 0);
+}
+
+// ── البحث العام في الشريط العلوي ──
+let searchResults = [], searchSel = -1;
+function searchResultsBox() { return document.getElementById('search-results'); }
+function closeSearchResults() {
+  const box = searchResultsBox();
+  if (box) { box.classList.remove('open'); box.innerHTML = ''; }
+  searchResults = []; searchSel = -1;
+}
 function globalSearch(q) {
-  if (!q || q.length < 2) return;
-  const results = [
-    ...myScopedCases().filter(c=>c.title.includes(q)||c.num.includes(q)).map(c=>({type:'قضية',title:c.title,click:()=>openCaseDetail(c.id)})),
-    ...myScopedClients().filter(c=>c.name.includes(q)).map(c=>({type:'موكل',title:c.name,click:()=>viewClientCases(c.id)})),
-  ];
-  // simple alert for now, proper dropdown would need more DOM work
-  if (results.length === 1) { results[0].click(); document.getElementById('search-input').value=''; }
+  const box = searchResultsBox();
+  if (!box) return;
+  if (!q || normSearch(q).length < 2) { closeSearchResults(); return; }
+  const hit = [];
+  myScopedCases().forEach(c => {
+    const cl = DB.clients.find(x => x.id === c.clientId);
+    const sc = fuzzyBest(q, c.title, c.num, c.type, c.court, c.opponent, c.lawyer, cl && cl.name);
+    if (sc >= SEARCH_THRESHOLD) hit.push({ sc, rank:1, icon:'⚖️', type:'قضية', title:c.title,
+      sub:`${c.num || 'بدون رقم'} · ${statusLabel(c.status)}${cl ? ' · ' + cl.name : ''}`,
+      run:() => openCaseDetail(c.id) });
+  });
+  myScopedClients().forEach(c => {
+    const sc = fuzzyBest(q, c.name, c.phone, c.email, c.idNum);
+    if (sc >= SEARCH_THRESHOLD) hit.push({ sc, rank:2, icon:'👥', type:'موكل', title:c.name,
+      sub:c.phone || c.email || '—', run:() => viewClientCases(c.id) });
+  });
+  myScopedTasks().forEach(t => {
+    const sc = fuzzyBest(q, t.title, t.desc);
+    if (sc >= SEARCH_THRESHOLD) hit.push({ sc, rank:3, icon:'✅', type:'مهمة', title:t.title,
+      sub:t.done ? 'منجزة' : 'معلقة', run:() => openTaskDetail(t.id) });
+  });
+  myScopedHearings().forEach(h => {
+    const c = DB.cases.find(x => x.id === h.caseId);
+    const sc = fuzzyBest(q, h.purpose, h.court, h.notes, c && c.title, c && c.num);
+    if (sc >= SEARCH_THRESHOLD) hit.push({ sc, rank:4, icon:'📅', type:'جلسة',
+      title:h.purpose || (c ? c.title : 'جلسة'),
+      sub:`${formatDateText(h.date)}${c ? ' · ' + (c.num || c.title) : ''}`,
+      run:() => c ? openCaseDetail(c.id, 'hearings') : navTo('hearings') });
+  });
+  // الأعلى تقارباً أولاً، وعند التساوي: القضايا ثم الموكلون ثم المهام ثم الجلسات
+  hit.sort((a,b) => b.sc - a.sc || a.rank - b.rank || a.title.localeCompare(b.title,'ar'));
+  searchResults = hit.slice(0, 12); searchSel = -1;
+  if (!searchResults.length) {
+    box.innerHTML = `<div class="sr-empty">لا نتائج تقارب «${escHtml(q)}»</div>`;
+    box.classList.add('open'); return;
+  }
+  box.innerHTML = searchResults.map((r, i) => `
+    <div class="sr-item" data-i="${i}" onmousedown="event.preventDefault();runSearchResult(${i})">
+      <span class="sr-icon">${r.icon}</span>
+      <span class="sr-main"><b>${escHtml(r.title)}</b><span class="sr-sub">${r.sub}</span></span>
+      <span class="sr-type">${r.type}</span>
+    </div>`).join('');
+  box.classList.add('open');
+}
+function runSearchResult(i) {
+  const r = searchResults[i]; if (!r) return;
+  document.getElementById('search-input').value = '';
+  const run = r.run;
+  closeSearchResults();
+  try { run(); } catch (e) { console.error('[البحث]', e); }
+}
+function searchKeydown(ev) {
+  const box = searchResultsBox();
+  if (ev.key === 'Escape') { document.getElementById('search-input').value=''; closeSearchResults(); return; }
+  if (!searchResults.length) { if (ev.key === 'Enter') ev.preventDefault(); return; }
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    searchSel = (searchSel + (ev.key === 'ArrowDown' ? 1 : -1) + searchResults.length) % searchResults.length;
+    box.querySelectorAll('.sr-item').forEach((el,i) => el.classList.toggle('sel', i === searchSel));
+    const cur = box.querySelector('.sr-item.sel'); if (cur) cur.scrollIntoView({block:'nearest'});
+    return;
+  }
+  if (ev.key === 'Enter') { ev.preventDefault(); runSearchResult(searchSel >= 0 ? searchSel : 0); }
 }
 
 // ═══════════════════════════════════
@@ -4429,6 +4779,9 @@ function globalSearch(q) {
 // ═══════════════════════════════════
 function statusLabel(s) {
   return {active:'جارية',pending:'معلقة',closed:'مغلقة',won:'مكسوبة',lost:'مخسورة',new:'جديدة'}[s]||s;
+}
+function escHtml(t) {
+  return String(t == null ? '' : t).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 }
 // تنسيق التاريخ: هجري (الأساس) + ميلادي (فرعي) — يُستخدم في كل عرض للتواريخ بالموقع
 function formatDate(d) {
