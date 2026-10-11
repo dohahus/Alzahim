@@ -601,6 +601,35 @@ tbody td { padding:13px 16px; font-size:13px; }
 .color-gray { color:var(--gray-light); }
 .text-sm { font-size:12px; }
 .date-greg { color:var(--gray-light); font-size:.9em; font-weight:400; }
+.cdm-status {
+  padding:6px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:20px;
+  color:var(--white); font-family:inherit; font-size:13px; font-weight:600; outline:none; cursor:pointer;
+}
+.cdm-status:focus { border-color:var(--gold); }
+.kind-picker { display:flex; gap:10px; }
+.kind-opt { flex:1; }
+.kind-opt input { position:absolute; opacity:0; pointer-events:none; }
+.kind-opt span {
+  display:flex; align-items:center; justify-content:center; gap:8px; padding:12px;
+  border:1.5px solid var(--border); border-radius:9px; cursor:pointer; font-size:13.5px;
+  font-weight:600; color:var(--gray-light); transition:.15s;
+}
+.kind-opt input:checked + span { border-color:var(--gold); color:var(--white); background:var(--olive-pale); }
+.kind-opt span svg { width:17px; height:17px; }
+.update-blocked {
+  background:rgba(168,65,47,.08); border:1px solid rgba(168,65,47,.3); color:var(--red);
+  border-radius:9px; padding:12px 14px; font-size:13px; line-height:1.8; margin-bottom:16px;
+}
+.rp-context {
+  background:var(--dark-3); border:1px solid var(--border); border-radius:9px;
+  padding:12px 14px; margin-bottom:16px; font-size:13px; line-height:1.8;
+}
+.update-report {
+  margin-top:8px; padding:10px 12px; background:var(--dark-3); border-right:3px solid var(--gold);
+  border-radius:0 8px 8px 0; font-size:12.5px; color:var(--gray-light); line-height:1.8;
+}
+.update-report-head { font-size:11px; color:var(--gold-deep); font-weight:700; margin-bottom:4px; }
+.needs-report { font-size:11.5px; color:var(--red); font-weight:600; }
 .date-hijri-preview { margin-top:6px; font-size:12px; color:var(--gold-deep); font-weight:600; min-height:16px; }
 .font-bold { font-weight:700; }
 .flex-center { display:flex; align-items:center; gap:8px; }
@@ -1035,24 +1064,44 @@ tbody td { padding:13px 16px; font-size:13px; }
     </div>
     <div class="modal-body">
       <input type="hidden" id="update-case-id" />
-      <div class="form-group-v"><label>نص المستجد</label>
-        <textarea id="update-text" placeholder="أدخل المستجد أو القرار الصادر..." style="min-height:120px"></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group-v"><label>حالة القضية بعد المستجد</label>
-          <select id="update-status">
-            <option value="active">جارية</option><option value="pending">معلقة</option>
-            <option value="closed">مغلقة</option>
-          </select>
+      <div class="form-group-v"><label>نوع المستجد</label>
+        <div class="kind-picker">
+          <label class="kind-opt"><input type="radio" name="update-kind" value="hearing" checked onchange="updateKindChanged()" /><span>📅 جلسة</span></label>
+          <label class="kind-opt"><input type="radio" name="update-kind" value="task" onchange="updateKindChanged()" /><span>✅ مهمة</span></label>
         </div>
-        <div class="form-group-v"><label>الجلسة القادمة (إن وجدت)</label>
-          <input type="date" id="update-next-hearing" />
+      </div>
+      <div id="update-blocked" class="update-blocked" style="display:none"></div>
+      <div class="form-group-v"><label id="update-text-label">موضوع الجلسة</label>
+        <textarea id="update-text" placeholder="الغرض من الجلسة..." style="min-height:90px"></textarea>
+      </div>
+      <div id="update-hearing-fields">
+        <div class="form-row">
+          <div class="form-group-v"><label>تاريخ الجلسة <span style="color:var(--red)">*</span></label>
+            <input type="date" id="update-hearing-date" onchange="updateDatePreview()" />
+            <div id="update-date-hijri" class="date-hijri-preview"></div>
+          </div>
+          <div class="form-group-v"><label>وقت الجلسة <span style="color:var(--red)">*</span></label>
+            <input type="time" id="update-hearing-time" />
+          </div>
+        </div>
+        <div class="form-group-v"><label>المحكمة</label>
+          <input type="text" id="update-hearing-court" placeholder="اسم المحكمة" />
+        </div>
+      </div>
+      <div id="update-task-fields" style="display:none">
+        <div class="form-row">
+          <div class="form-group-v"><label>المحامي المكلَّف</label>
+            <select id="update-task-assignee"></select>
+          </div>
+          <div class="form-group-v"><label>تاريخ الاستحقاق <span class="color-gray text-sm">(اختياري)</span></label>
+            <input type="date" id="update-task-due" />
+          </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('add-update-modal',event)">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveUpdate()">💾 حفظ المستجد</button>
+      <button class="btn btn-primary" id="update-save-btn" onclick="saveUpdate()">💾 حفظ المستجد</button>
     </div>
   </div>
 </div>
@@ -1142,6 +1191,29 @@ tbody td { padding:13px 16px; font-size:13px; }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('user-modal',event)">إلغاء</button>
       <button class="btn btn-primary" onclick="saveUser()">💾 حفظ المستخدم</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: تقرير المستجد ═══════════════ -->
+<div class="modal-overlay" id="report-modal" style="display:none" onclick="closeModal('report-modal',event)">
+  <div class="modal" style="width:680px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="rp-title">📝 كتابة تقرير</span>
+      <button class="modal-close" onclick="closeModal('report-modal',event)">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="rp-context" class="rp-context"></div>
+      <div class="form-group-v"><label>نص التقرير</label>
+        <textarea id="rp-text" placeholder="ما جرى في الجلسة، والقرار الصادر، والإجراء القادم..." style="min-height:180px"></textarea>
+      </div>
+      <p class="color-gray text-sm">
+        يظهر التقرير للموكل على ورق المكتب الرسمي باسم محرره وبختم المكتب.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('report-modal',event)">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveUpdateReport()">💾 حفظ التقرير</button>
     </div>
   </div>
 </div>
@@ -1485,7 +1557,12 @@ async function loadFromDatabase() {
       lawyerId: c.lawyer_id, lawyer: lawyer ? lawyer.name : '',
       opponent: c.opponent || '', nextHearing: c.next_hearing,
       status: c.status, progress: c.progress, notes: c.notes || '',
-      updates: (updatesByCase[c.id] || []).map(u => ({ id: u.id, date: u.date, text: u.text, status: u.status })),
+      updates: (updatesByCase[c.id] || []).map(u => ({
+        id: u.id, date: u.date, text: u.text, status: u.status,
+        kind: u.kind || 'note', hearingId: u.hearing_id, taskId: u.task_id,
+        createdBy: u.created_by, report: u.report,
+        reportBy: u.report_by, reportAt: u.report_at,
+      })),
       documents: {
         agency: cd.filter(d => d.kind === 'agency').map(mapDoc),
         papers: cd.filter(d => d.kind === 'papers').map(mapDoc),
@@ -2199,6 +2276,8 @@ function renderCases(filter='') {
               <button class="btn btn-secondary btn-sm" onclick="openCaseDetail('${c.id}')">تفاصيل</button>
               <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal('${c.id}')">✏️ تعديل</button>
               <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate('${c.id}')">+ مستجد</button>
+        ${isOfficeOwner() ? `<button class="btn btn-secondary btn-sm" style="margin-right:6px;color:var(--red)" onclick="deleteCase('${c.id}')">🗑️ حذف</button>` : ''}
+              ${isOfficeOwner() ? `<button class="btn btn-secondary btn-sm" style="margin-right:6px;color:var(--red)" onclick="deleteCase('${c.id}')">🗑️ حذف</button>` : ''}
             </td>
           </tr>`;
         }).join('')}
@@ -2227,6 +2306,7 @@ function filterCasesByStatus(status) {
         <button class="btn btn-secondary btn-sm" onclick="openCaseDetail('${c.id}')">تفاصيل</button>
         <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal('${c.id}')">✏️ تعديل</button>
         <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate('${c.id}')">+ مستجد</button>
+        ${isOfficeOwner() ? `<button class="btn btn-secondary btn-sm" style="margin-right:6px;color:var(--red)" onclick="deleteCase('${c.id}')">🗑️ حذف</button>` : ''}
       </td>
     </tr>`;
   }).join(''));
@@ -2266,7 +2346,10 @@ function renderCdmBody() {
     <div class="case-detail-header">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div class="case-num">📋 رقم القضية: <span class="ref-code">${c.num || 'بدون رقم — اضغط تعديل لإضافته'}</span></div>
-        <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openCaseModal('${c.id}')">✏️ تعديل بيانات القضية</button>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openCaseModal('${c.id}')">✏️ تعديل بيانات القضية</button>
+          ${isOfficeOwner() ? `<button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteCase('${c.id}')">🗑️ حذف</button>` : ''}
+        </div>
       </div>
       <div class="case-name">${c.title}</div>
       <div class="case-meta">
@@ -2280,8 +2363,12 @@ function renderCdmBody() {
       <div style="margin-top:10px;font-size:12px;color:var(--gray-light)">تقدم القضية: ${c.progress}%</div>
       <div class="progress-bar"><div class="progress-fill" style="width:${c.progress}%"></div></div>
     </div>
-    <div style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap">
-      <span class="badge badge-${c.status}" style="font-size:13px;padding:6px 14px">${statusLabel(c.status)}</span>
+    <div style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <span class="color-gray text-sm">حالة القضية:</span>
+      <select class="cdm-status" onchange="setCaseStatus('${c.id}', this.value)">
+        ${['active','pending','closed'].map(st =>
+          `<option value="${st}"${c.status===st?' selected':''}>${statusLabel(st)}</option>`).join('')}
+      </select>
       <span class="badge badge-new" style="font-size:13px;padding:6px 14px">${c.type}</span>
       <span style="font-size:13px;padding:6px 14px;background:var(--dark-3);border-radius:20px;color:var(--gray-light)">الدائرة: ${c.dept || 'غير محددة'}</span>
     </div>
@@ -2313,7 +2400,24 @@ function renderCdmUpdates(c) {
         <li class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-date">${formatDate(u.date)}</div>
-          <div class="timeline-text">${u.text}</div>
+          <div class="timeline-text">
+            <span class="badge badge-new">${u.kind === 'hearing' ? '📅 جلسة' : u.kind === 'task' ? '✅ مهمة' : '📝 مستجد'}</span>
+            ${u.text}
+            ${u.createdBy ? `<div class="text-sm color-gray" style="margin-top:3px">أضافه ${u.createdBy}</div>` : ''}
+          </div>
+          ${u.report ? `
+            <div class="update-report">
+              <div class="update-report-head">التقرير — ${u.reportBy || ''}</div>
+              ${u.report}
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="task-open-btn" onclick="openUpdateReport('${c.id}','${u.id}')">✏️ تعديل</button>
+                <button class="task-open-btn" onclick="printUpdateReport('${c.id}','${u.id}')">🖨️ طباعة على ورق المكتب</button>
+              </div>
+            </div>` : `
+            <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              ${u.kind === 'hearing' ? '<span class="needs-report">⚠️ بانتظار التقرير</span>' : ''}
+              <button class="task-open-btn" onclick="openUpdateReport('${c.id}','${u.id}')">📝 كتابة تقرير</button>
+            </div>`}
         </li>`).join('')}
     </ul>`}
     ${c.notes ? `<div class="card" style="margin-top:16px"><div class="card-title" style="margin-bottom:8px">ملاحظات</div><p style="color:var(--gray-light);font-size:13px">${c.notes}</p></div>` : ''}
@@ -3779,29 +3883,245 @@ async function saveNewHearing() {
   navTo('hearings');
 }
 
+// آخر جلسة لم يُكتب عنها تقرير — تمنع إضافة جلسة جديدة
+function pendingHearingUpdate(caseId) {
+  const c = DB.cases.find(x=>x.id===caseId);
+  if (!c) return null;
+  return (c.updates || []).filter(u => u.kind === 'hearing' && !u.report).slice(-1)[0] || null;
+}
 function openAddUpdate(caseId) {
   document.getElementById('update-case-id').value = caseId;
   document.getElementById('update-text').value = '';
+  document.getElementById('update-hearing-date').value = '';
+  document.getElementById('update-hearing-time').value = '';
   const c = DB.cases.find(x=>x.id===caseId);
-  if (c) document.getElementById('update-status').value = c.status;
+  document.getElementById('update-hearing-court').value = c ? (c.court || '') : '';
+  document.getElementById('update-task-due').value = '';
+  document.getElementById('update-task-assignee').innerHTML =
+    '<option value="">بدون تكليف</option>' + lawyerUsers().map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  document.querySelector('input[name="update-kind"][value="hearing"]').checked = true;
+  document.getElementById('update-date-hijri').innerHTML = '';
+  updateKindChanged();
   openModal('add-update-modal');
+}
+function updateKindChanged() {
+  const kind = document.querySelector('input[name="update-kind"]:checked').value;
+  const isHearing = kind === 'hearing';
+  document.getElementById('update-hearing-fields').style.display = isHearing ? 'block' : 'none';
+  document.getElementById('update-task-fields').style.display = isHearing ? 'none' : 'block';
+  document.getElementById('update-text-label').textContent = isHearing ? 'موضوع الجلسة' : 'وصف المهمة';
+  document.getElementById('update-text').placeholder = isHearing ? 'الغرض من الجلسة...' : 'المطلوب إنجازه...';
+
+  // لا تُضاف جلسة جديدة قبل كتابة تقرير عن سابقتها
+  const blocked = isHearing ? pendingHearingUpdate(document.getElementById('update-case-id').value) : null;
+  const box = document.getElementById('update-blocked');
+  if (blocked) {
+    box.style.display = 'block';
+    box.innerHTML = iconify(`⚠️ لا يمكن إضافة جلسة جديدة قبل كتابة تقرير عن الجلسة السابقة:
+      <b>${blocked.text}</b> — ${formatDate(blocked.date)}`);
+  } else {
+    box.style.display = 'none';
+  }
+  document.getElementById('update-save-btn').disabled = !!blocked;
+}
+function updateDatePreview() {
+  const v = document.getElementById('update-hearing-date').value;
+  document.getElementById('update-date-hijri').innerHTML = v ? ic('calendar',13) + ' ' + formatDate(v) : '';
 }
 async function saveUpdate() {
   const caseId = document.getElementById('update-case-id').value;
   const text = document.getElementById('update-text').value.trim();
-  if (!text) { alert('يرجى إدخال نص المستجد'); return; }
-  const status = document.getElementById('update-status').value;
-  const nh = nullIfBlank(document.getElementById('update-next-hearing').value);
+  const kind = document.querySelector('input[name="update-kind"]:checked').value;
+  if (!text) { alert(kind === 'hearing' ? 'يرجى إدخال موضوع الجلسة' : 'يرجى إدخال وصف المهمة'); return; }
+
+  const hDate = document.getElementById('update-hearing-date').value;
+  const hTime = document.getElementById('update-hearing-time').value;
+  if (kind === 'hearing') {
+    if (pendingHearingUpdate(caseId)) { alert('اكتب تقرير الجلسة السابقة أولاً'); return; }
+    if (!hDate || !hTime) { alert('تاريخ الجلسة ووقتها مطلوبان'); return; }
+  }
+  const assignee = document.getElementById('update-task-assignee').value;
+  const tDue = nullIfBlank(document.getElementById('update-task-due').value);
+
   const ok = await dbWrite('المستجد', async () => {
-    const ins = await sb.from('case_updates').insert({ case_id: caseId, text, status });
-    if (ins.error) return ins;
-    const patch = { status };
-    if (nh) patch.next_hearing = nh;
-    return sb.from('cases').update(patch).eq('id', caseId);
+    let hearingId = null, taskId = null;
+    if (kind === 'hearing') {
+      // الجلسة تُنشأ في جدول الجلسات فتظهر في قائمتها دون إضافة يدوية
+      const h = await sb.from('hearings').insert({
+        case_id: caseId, date: hDate, time: hTime,
+        court: nullIfBlank(document.getElementById('update-hearing-court').value),
+        purpose: text,
+      }).select('id').single();
+      if (h.error) return h;
+      hearingId = h.data.id;
+      const up = await sb.from('cases').update({ next_hearing: hDate }).eq('id', caseId);
+      if (up.error) return up;
+    } else {
+      // وكذلك المهمة تظهر في قائمة المهام تلقائياً
+      const c = DB.cases.find(x=>x.id===caseId);
+      const t = await sb.from('tasks').insert({
+        title: text, case_id: caseId, due: tDue,
+        description: c ? `من مستجدات القضية: ${c.title}` : null,
+        creator_id: DB.currentUser.userId,
+      }).select('id').single();
+      if (t.error) return t;
+      taskId = t.data.id;
+      if (assignee) {
+        const link = await sb.from('task_assignees').insert({ task_id: taskId, staff_id: assignee });
+        if (link.error) return link;
+        if (assignee !== DB.currentUser.userId) {
+          await sb.from('notifications').insert({
+            title: 'مهمة جديدة مُوكَّلة إليك',
+            description: `${DB.currentUser.name} وكّلك بمهمة: ${text}`,
+            for_staff_id: assignee,
+          });
+        }
+      }
+    }
+    return sb.from('case_updates').insert({
+      case_id: caseId, text, kind, hearing_id: hearingId, task_id: taskId,
+      date: kind === 'hearing' ? hDate : new Date().toISOString().split('T')[0],
+      created_by: DB.currentUser.name,
+    });
   });
   if (!ok) return;
   closeModal('add-update-modal', {});
+  refreshCdmIfOpen();
   navTo('cases');
+}
+
+// حذف القضية يُسقط معها مستجداتها وجلساتها ومستنداتها — لذا يُعدَّد ما سيُحذف
+// قبل التأكيد، ويُطلب كتابة اسم القضية لأن الحذف لا رجعة فيه
+async function deleteCase(caseId) {
+  const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
+  const hearings = DB.hearings.filter(h => h.caseId === caseId).length;
+  const tasks    = DB.tasks.filter(t => t.caseId === caseId).length;
+  const docs     = (c.documents.agency || []).length + (c.documents.papers || []).length;
+  const invoices = DB.invoices.filter(i => (i.caseIds || []).includes(caseId)).length;
+
+  const lines = [
+    `${(c.updates || []).length} مستجد`,
+    `${hearings} جلسة`,
+    `${docs} مستند`,
+  ];
+  if (tasks)    lines.push(`${tasks} مهمة (تبقى لكن بلا قضية)`);
+  if (invoices) lines.push(`${invoices} عقد أتعاب (يبقى لكن بلا ارتباط بالقضية)`);
+
+  if (!confirm(
+    `حذف القضية «${c.title}» نهائياً؟\n\nسيُحذف معها:\n• ${lines.join('\n• ')}\n\n`
+    + 'لا يمكن التراجع عن هذا الإجراء.'
+  )) return;
+
+  const typed = prompt(`للتأكيد، اكتب موضوع القضية كما هو:\n${c.title}`);
+  if (typed === null) return;
+  if (typed.trim() !== c.title.trim()) { alert('النص غير مطابق — أُلغي الحذف'); return; }
+
+  const paths = [...(c.documents.agency || []), ...(c.documents.papers || [])]
+    .map(d => d.path).filter(Boolean);
+  const ok = await dbWrite('حذف القضية', async () => {
+    const del = await sb.from('cases').delete().eq('id', caseId);
+    if (del.error) return del;
+    // ملفات التخزين لا تُحذف مع صفوف قاعدة البيانات
+    if (paths.length) await sb.storage.from('case-docs').remove(paths).catch(()=>{});
+    return del;
+  });
+  if (!ok) return;
+  if (document.getElementById('case-detail-modal').style.display === 'flex') closeModal('case-detail-modal',{});
+  navTo('cases');
+  buildSidebar();
+}
+
+async function setCaseStatus(caseId, status) {
+  const ok = await dbWrite('حالة القضية', () => sb.from('cases').update({ status }).eq('id', caseId));
+  if (ok) refreshCdmIfOpen();
+}
+
+// ═══════════════════════════════════
+//  تقرير المستجد
+// ═══════════════════════════════════
+let reportUpdateId = null;
+function openUpdateReport(caseId, updateId) {
+  const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
+  const u = (c.updates || []).find(x => x.id === updateId); if (!u) return;
+  reportUpdateId = updateId;
+  document.getElementById('rp-title').textContent = u.report ? '📝 تعديل التقرير' : '📝 كتابة تقرير';
+  document.getElementById('rp-context').innerHTML = iconify(
+    `<b>${u.kind === 'hearing' ? '📅 جلسة' : '✅ مهمة'}:</b> ${u.text}<br>
+     <span class="color-gray">${formatDate(u.date)}${u.createdBy ? ' — أضافها ' + u.createdBy : ''}</span>`);
+  document.getElementById('rp-text').value = u.report || '';
+  openModal('report-modal');
+}
+// يُطبع التقرير على ورق المكتب الرسمي باسم محرره وبختم المكتب
+function printUpdateReport(caseId, updateId) {
+  const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
+  const u = (c.updates || []).find(x => x.id === updateId); if (!u || !u.report) return;
+  const cl = DB.clients.find(x=>x.id===c.clientId);
+  const bg = location.href.replace(/[^/]*$/, '') + 'assets/letterhead.png';
+  const stamp = location.href.replace(/[^/]*$/, '') + 'assets/stamp.png';
+  const w = window.open('', '_blank');
+  if (!w) { alert('يرجى السماح بالنوافذ المنبثقة لإصدار التقرير'); return; }
+  const esc = t => String(t||'').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+  <title>تقرير — ${esc(c.title)}</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; color:#211C10; background:#555; }
+    .page { width:210mm; height:296.5mm; position:relative; background:#fff; margin:10px auto; box-shadow:0 4px 18px rgba(0,0,0,.35); overflow:hidden; }
+    .pagebg { position:absolute; top:0; right:0; width:100%; height:100%; }
+    .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; font-size:13px; line-height:2; }
+    h1 { text-align:center; font-size:19px; color:#7C5F16; margin-bottom:6px; }
+    .sub { text-align:center; font-size:12px; color:#777; margin-bottom:20px; }
+    .meta { background:#F6F6F4; border-radius:8px; padding:12px 14px; margin-bottom:18px; font-size:12.5px; line-height:1.9; }
+    .meta b { color:#7C5F16; }
+    .body { text-align:justify; white-space:pre-wrap; }
+    .sign { position:absolute; bottom:0; right:0; left:0; display:flex; justify-content:space-between; align-items:flex-end; }
+    .sign-by { font-size:12.5px; line-height:1.9; }
+    .sign-by b { display:block; color:#7C5F16; }
+    .stamp { width:34mm; height:34mm; object-fit:contain; opacity:.92; }
+    .stamp-fallback { width:34mm; height:34mm; border:1.5px dashed #BBB; border-radius:50%; display:flex;
+      align-items:center; justify-content:center; font-size:10px; color:#AAA; text-align:center; padding:6px; }
+    .toolbar { position:fixed; top:12px; left:12px; z-index:50; }
+    .toolbar button { padding:11px 22px; border:none; border-radius:8px; cursor:pointer; font-family:inherit;
+      font-size:14px; font-weight:700; background:#A3801C; color:#FFFDF6; box-shadow:0 2px 10px rgba(0,0,0,.4); }
+    @media print { body{background:none} .page{margin:0;box-shadow:none} .toolbar{display:none} }
+  </style></head><body>
+  <div class="toolbar"><button onclick="window.print()">طباعة / حفظ PDF</button></div>
+  <div class="page"><img class="pagebg" src="${bg}">
+    <div class="pagecontent">
+      <h1>تقرير ${u.kind === 'hearing' ? 'جلسة' : 'إنجاز مهمة'}</h1>
+      <div class="sub">${esc(formatDateText(u.date))}</div>
+      <div class="meta">
+        <div><b>القضية:</b> ${esc(c.title)}${c.num ? ' — رقم (' + esc(c.num) + ')' : ''}</div>
+        <div><b>الموكل:</b> ${esc(cl ? cl.name : '—')}</div>
+        ${c.court ? `<div><b>المحكمة:</b> ${esc(c.court)}</div>` : ''}
+        <div><b>الموضوع:</b> ${esc(u.text)}</div>
+      </div>
+      <div class="body">${esc(u.report)}</div>
+      <div class="sign">
+        <div class="sign-by">
+          حرَّره
+          <b>${esc(u.reportBy || '')}</b>
+          مكتب الزاحم للمحاماة والاستشارات القانونية
+        </div>
+        <img class="stamp" src="${stamp}" onerror="this.outerHTML='<div class=\\'stamp-fallback\\'>ختم المكتب</div>'">
+      </div>
+    </div>
+  </div>
+  <scr` + `ipt>window.onload=function(){setTimeout(function(){window.print()},700)}</scr` + `ipt>
+  </body></html>`);
+  w.document.close();
+}
+async function saveUpdateReport() {
+  const text = document.getElementById('rp-text').value.trim();
+  if (!text) { alert('يرجى كتابة نص التقرير'); return; }
+  const ok = await dbWrite('التقرير', () => sb.from('case_updates').update({
+    report: text, report_by: DB.currentUser.name, report_at: new Date().toISOString(),
+  }).eq('id', reportUpdateId));
+  if (!ok) return;
+  reportUpdateId = null;
+  closeModal('report-modal', {});
+  refreshCdmIfOpen();
 }
 
 async function saveInvoiceContract(print) {
@@ -4113,6 +4433,10 @@ function formatDate(d) {
   const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {year:'numeric',month:'long',day:'numeric'}).format(date);
   const greg = new Intl.DateTimeFormat('ar-SA', {year:'numeric',month:'long',day:'numeric'}).format(date);
   return `${hijri} <span class="date-greg">(${greg}م)</span>`;
+}
+// التاريخ كنص صِرف — دوال الطباعة لا تقبل وسوم HTML
+function formatDateText(d) {
+  return String(formatDate(d)).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 }
 // نسخة مختصرة رقمية (لعناصر ضيقة المساحة كخلايا الجداول)
 function formatDateShort(d) {

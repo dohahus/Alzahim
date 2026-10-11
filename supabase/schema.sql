@@ -63,14 +63,31 @@ create table if not exists cases (
   created_at   timestamptz not null default now()
 );
 
+-- المستجد إما جلسة أو مهمة. الجلسة تُنشئ صفاً في جدول الجلسات والمهمة في
+-- جدول المهام، فتظهر في قوائمها تلقائياً بلا إضافة يدوية.
+-- ولا تُضاف جلسة جديدة قبل كتابة تقرير عن سابقتها.
 create table if not exists case_updates (
   id         uuid primary key default gen_random_uuid(),
   case_id    uuid not null references cases(id) on delete cascade,
   date       date not null default current_date,
   text       text not null,
   status     text,
+  kind       text not null default 'note' check (kind in ('hearing','task','note')),
+  hearing_id uuid references hearings(id) on delete set null,
+  task_id    uuid references tasks(id) on delete set null,
+  created_by text,
+  report     text,
+  report_by  text,
+  report_at  timestamptz,
   created_at timestamptz not null default now()
 );
+alter table case_updates add column if not exists kind       text not null default 'note';
+alter table case_updates add column if not exists hearing_id uuid references hearings(id) on delete set null;
+alter table case_updates add column if not exists task_id    uuid references tasks(id) on delete set null;
+alter table case_updates add column if not exists created_by text;
+alter table case_updates add column if not exists report     text;
+alter table case_updates add column if not exists report_by  text;
+alter table case_updates add column if not exists report_at  timestamptz;
 
 -- الوكالة وأوراق القضية — الملف نفسه في Supabase Storage، وهنا بياناته فقط
 create table if not exists case_documents (
