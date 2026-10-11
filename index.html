@@ -2276,7 +2276,6 @@ function renderCases(filter='') {
               <button class="btn btn-secondary btn-sm" onclick="openCaseDetail('${c.id}')">تفاصيل</button>
               <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal('${c.id}')">✏️ تعديل</button>
               <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate('${c.id}')">+ مستجد</button>
-        ${isOfficeOwner() ? `<button class="btn btn-secondary btn-sm" style="margin-right:6px;color:var(--red)" onclick="deleteCase('${c.id}')">🗑️ حذف</button>` : ''}
               ${isOfficeOwner() ? `<button class="btn btn-secondary btn-sm" style="margin-right:6px;color:var(--red)" onclick="deleteCase('${c.id}')">🗑️ حذف</button>` : ''}
             </td>
           </tr>`;
