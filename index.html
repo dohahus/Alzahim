@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @font-face {
   font-family: 'Alharf';
@@ -133,6 +134,13 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   transition:.2s; margin-top:8px; letter-spacing:.2px;
 }
 .btn-login:hover { background:var(--olive-hover); }
+.btn-login:disabled { opacity:.6; cursor:default; }
+.login-link {
+  width:100%; margin-top:12px; background:none; border:none; color:var(--gold-deep);
+  font-family:inherit; font-size:12.5px; cursor:pointer; text-decoration:underline; padding:4px;
+}
+.login-link:hover { color:var(--gold); }
+.login-note { margin-top:14px; font-size:11.5px; color:var(--gray); line-height:1.7; }
 .btn-login:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
   outline:2px solid var(--gold-deep); outline-offset:2px;
 }
@@ -565,7 +573,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 .td-avatar { width:30px; height:30px; border-radius:50%; background:var(--gold); color:#FFFDF6; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .td-comment-head { display:flex; align-items:center; gap:8px; margin-bottom:3px; font-size:12.5px; }
 .td-comment-text { font-size:13px; color:var(--gray-light); line-height:1.6; background:var(--dark-3); border-radius:8px; padding:8px 12px; display:inline-block; }
-.td-attachment { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--gold-deep); background:var(--olive-pale); border-radius:7px; padding:6px 10px; margin-top:5px; text-decoration:none; }
+.td-attachment { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--gold-deep); background:var(--olive-pale); border:none; border-radius:7px; padding:6px 10px; margin-top:5px; text-decoration:none; font-family:inherit; cursor:pointer; }
 .td-attachment:hover { background:var(--gold); color:#FFFDF6; }
 .td-composer { border-top:1px solid var(--border); padding:14px 24px; }
 .td-composer-row { display:flex; gap:8px; align-items:flex-end; }
@@ -665,7 +673,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 <!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
 <div id="login-screen">
   <img class="login-watermark" src="assets/logo-black.png" alt="" />
-  <div class="login-box">
+  <div class="login-box" id="login-box-main">
     <div class="login-logo"><img src="assets/logo-gold.png" alt="شعار الزاحم" /></div>
     <div class="login-office">مكتب الزاحم للمحاماة والاستشارات القانونية</div>
     <div class="login-rule"></div>
@@ -675,14 +683,48 @@ tbody td { padding:13px 16px; font-size:13px; }
       <button class="login-tab" onclick="setLoginType('client')">دخول العميل</button>
     </div>
     <div class="form-group">
-      <label id="login-label-id">رقم المستخدم / البريد الإلكتروني</label>
-      <input type="text" id="login-user" placeholder="أدخل اسم المستخدم" />
+      <label id="login-label-id">اسم المستخدم أو البريد الإلكتروني</label>
+      <input type="text" id="login-user" placeholder="اسم المستخدم أو البريد" autocomplete="username" />
     </div>
     <div class="form-group">
       <label>كلمة المرور</label>
-      <input type="password" id="login-pass" placeholder="••••••••" />
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
     </div>
     <button class="btn-login" onclick="doLogin()">دخول</button>
+    <button class="login-link" onclick="openResetRequest()">نسيت كلمة المرور؟</button>
+  </div>
+
+  <!-- طلب رابط استعادة كلمة المرور -->
+  <div class="login-box" id="reset-request-box" style="display:none">
+    <div class="login-logo"><img src="assets/logo-gold.png" alt="شعار الزاحم" /></div>
+    <div class="login-office">استعادة كلمة المرور</div>
+    <div class="login-rule"></div>
+    <div class="login-sub">أدخل بريدك الإلكتروني المسجَّل في المكتب</div>
+    <div class="form-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="reset-email" placeholder="example@email.com" autocomplete="email" />
+    </div>
+    <button class="btn-login" onclick="sendResetLink()">إرسال رابط الاستعادة</button>
+    <button class="login-link" onclick="closeResetRequest()">رجوع لتسجيل الدخول</button>
+    <p class="login-note">
+      إن لم يكن لحسابك بريد مسجَّل، فلن يصل الرابط — راجع مكتب المحاماة لإعادة ضبط الرمز.
+    </p>
+  </div>
+
+  <!-- تعيين كلمة مرور جديدة بعد فتح رابط الاستعادة -->
+  <div class="login-box" id="reset-set-box" style="display:none">
+    <div class="login-logo"><img src="assets/logo-gold.png" alt="شعار الزاحم" /></div>
+    <div class="login-office">تعيين كلمة مرور جديدة</div>
+    <div class="login-rule"></div>
+    <div class="form-group">
+      <label>كلمة المرور الجديدة</label>
+      <input type="password" id="reset-pass1" placeholder="٦ أحرف على الأقل" autocomplete="new-password" />
+    </div>
+    <div class="form-group">
+      <label>تأكيد كلمة المرور</label>
+      <input type="password" id="reset-pass2" placeholder="أعد كتابتها" autocomplete="new-password" />
+    </div>
+    <button class="btn-login" onclick="applyNewPassword()">حفظ كلمة المرور</button>
   </div>
 </div>
 
@@ -1069,7 +1111,12 @@ tbody td { padding:13px 16px; font-size:13px; }
       </div>
       <div class="form-row">
         <div class="form-group-v"><label>اسم الدخول</label><input type="text" id="um-user" placeholder="username" /></div>
-        <div class="form-group-v"><label>كلمة المرور</label><input type="text" id="um-pass" placeholder="••••••" /></div>
+        <div class="form-group-v"><label>البريد الإلكتروني <span class="color-gray text-sm">(اختياري)</span></label><input type="email" id="um-email" placeholder="example@alzahimlaw.com" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group-v"><label>كلمة المرور</label><input type="text" id="um-pass" placeholder="••••••" />
+          <div id="um-pass-note" class="color-gray text-sm" style="margin-top:6px"></div>
+        </div>
       </div>
       <div class="form-group-v"><label>الصلاحيات — حدد ما يستطيع هذا المستخدم الوصول إليه</label>
         <div class="perms-grid" id="um-perms"></div>
@@ -1110,6 +1157,17 @@ tbody td { padding:13px 16px; font-size:13px; }
 </div>
 
 <script>
+// ═══════════════════════════════════
+//  الاتصال بقاعدة البيانات
+//  المفتاح أدناه عام بطبيعته وآمن للنشر: الحماية مفروضة داخل قاعدة البيانات
+//  عبر سياسات RLS، لا عبر إخفاء المفتاح.
+// ═══════════════════════════════════
+const SUPABASE_URL = 'https://javmazwxrdkylewhjahu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_-CohC6ascOspnmDlToGCoQ_xYGFJxJ2';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// البريد المستخدَم في المصادقة تحدده دالة claim_account في قاعدة البيانات وتعيده
+// عند الدخول، فلا يُبنى هنا — حتى لا يتفرّع التعريف في موضعين فيختلفا
+
 // ═══════════════════════════════════
 //  SVG ICON SYSTEM (بدل الإيموجي)
 // ═══════════════════════════════════
@@ -1315,21 +1373,13 @@ const ROLE_PRESETS = {
   'محاسب':       { cases:false, hearings:false, tasks:true, clients:false, invoices:true, reports:true, settings:false, users:false },
   'سكرتير':      { cases:false, hearings:true, tasks:true, clients:true, invoices:false, reports:false, settings:false, users:false },
 };
-const DEFAULT_USERS = [
-  { id:1, name:'زياد عبدالله الزاحم', user:'admin', pass:'1234', role:'مدير المكتب', perms:{...ROLE_PRESETS['مدير المكتب']} },
-  { id:2, name:'محمد الأحمد', user:'mohammed', pass:'1234', role:'محامي', perms:{...ROLE_PRESETS['محامي']} },
-  { id:3, name:'سارة المطيري', user:'sara', pass:'1234', role:'محامي', perms:{...ROLE_PRESETS['محامي']} },
-  { id:4, name:'خالد العتيبي', user:'khaled', pass:'1234', role:'محامي', perms:{...ROLE_PRESETS['محامي']} },
-  { id:5, name:'منصور القرشي', user:'mansour', pass:'1234', role:'محاسب', perms:{...ROLE_PRESETS['محاسب']} },
-];
-
-// يُرفَع هذا الرقم لتفريغ البيانات التجريبية من المتصفحات التي سبق أن حفظتها
-const DATA_VERSION = 2;
+// الحسابات كلها في قاعدة البيانات وكلمات مرورها مُعمّاة هناك — لا حسابات
+// مكتوبة في الصفحة، فملف الموقع مكشوف لأي زائر.
+// DB هنا مجرد ذاكرة مؤقتة تُملأ من القاعدة بعد تسجيل الدخول.
 let DB = {
-  dataVersion: DATA_VERSION,
   currentUser: null,
   loginType: 'admin',
-  users: DEFAULT_USERS.map(u => ({ ...u, perms:{...u.perms} })),
+  users: [],
   clients: [],
   cases: [],
   hearings: [],
@@ -1337,7 +1387,6 @@ let DB = {
   invoices: [],
   notifications: [],
   clientMessages: [],
-  nextId: { clients:1, cases:1, hearings:1, tasks:1, invoices:1, notifications:1, users:6, clientMessages:1 },
 };
 
 function parseInstAmount(v) {
@@ -1357,56 +1406,178 @@ function invPaidAmount(inv) { return (inv.installments||[]).filter(i=>i.paid).re
 function invStatus(inv) { const t=invTotal(inv), p=invPaidAmount(inv); return t>0&&p>=t ? 'paid' : (p>0 ? 'partial' : 'unpaid'); }
 function syncInvoiceDerived(inv) { inv.amount = invTotal(inv); inv.paid = invStatus(inv)==='paid'; }
 
-function save() { try { localStorage.setItem('alzahim_db', JSON.stringify(DB)); } catch(e){} }
-function load() {
+// لم تعد هناك نسخة محلية من البيانات: كل قراءة وكتابة تمرّ بقاعدة البيانات،
+// فما يراه أي جهاز هو ما فيها فعلاً.
+
+// ═══════════════════════════════════
+//  قراءة البيانات من قاعدة البيانات
+//  تُحوَّل صفوف القاعدة إلى نفس الشكل الذي تتوقعه شاشات الموقع،
+//  فتبقى كل دوال العرض كما هي دون تغيير.
+//  سياسات RLS هي التي تحدد ما يُرجَع لكل حساب — لا تُصفَّى هنا.
+// ═══════════════════════════════════
+function dbError(where, error) {
+  if (!error) return false;
+  console.error('[' + where + ']', error);
+  return true;
+}
+async function loadFromDatabase() {
+  const [staff, clients, cases, updates, docs, hearings, tasks, comments,
+         invoices, invCases, insts, tickets, tmsgs, notifs] = await Promise.all([
+    sb.from('staff').select('*'),
+    sb.from('clients').select('*'),
+    sb.from('cases').select('*'),
+    sb.from('case_updates').select('*').order('date'),
+    sb.from('case_documents').select('*'),
+    sb.from('hearings').select('*').order('date'),
+    sb.from('tasks').select('*').order('created_at'),
+    sb.from('task_comments').select('*').order('created_at'),
+    sb.from('invoices').select('*').order('date'),
+    sb.from('invoice_cases').select('*'),
+    sb.from('installments').select('*').order('sort'),
+    sb.from('tickets').select('*').order('created_at'),
+    sb.from('ticket_messages').select('*').order('created_at'),
+    sb.from('notifications').select('*').order('created_at', { ascending: false }),
+  ]);
+  const anyErr = [['staff',staff],['clients',clients],['cases',cases],['case_updates',updates],
+    ['case_documents',docs],['hearings',hearings],['tasks',tasks],['task_comments',comments],
+    ['invoices',invoices],['invoice_cases',invCases],['installments',insts],
+    ['tickets',tickets],['ticket_messages',tmsgs],['notifications',notifs]
+  ].map(([n,r]) => dbError(n, r.error)).some(Boolean);
+
+  DB.users = (staff.data || []).map(s => ({
+    id: s.id, name: s.name, user: s.username, role: s.role,
+    perms: s.perms || {}, avatar: s.avatar_path || '',
+  }));
+  DB.clients = (clients.data || []).map(c => ({
+    id: c.id, name: c.name, idNum: c.id_num || '', phone: c.phone || '', email: c.email || '',
+    user: c.username || '', nationality: c.nationality || '', notes: c.notes || '',
+    avatar: c.avatar_path || '', authUserId: c.auth_user_id || null,
+  }));
+
+  const updatesByCase = groupBy(updates.data || [], u => u.case_id);
+  const docsByCase    = groupBy(docs.data || [], d => d.case_id);
+  DB.cases = (cases.data || []).map(c => {
+    const lawyer = (staff.data || []).find(s => s.id === c.lawyer_id);
+    const cd = docsByCase[c.id] || [];
+    return {
+      id: c.id, num: c.num || '', title: c.title, type: c.type,
+      clientId: c.client_id, court: c.court || '', dept: c.dept || '',
+      lawyerId: c.lawyer_id, lawyer: lawyer ? lawyer.name : '',
+      opponent: c.opponent || '', nextHearing: c.next_hearing,
+      status: c.status, progress: c.progress, notes: c.notes || '',
+      updates: (updatesByCase[c.id] || []).map(u => ({ id: u.id, date: u.date, text: u.text, status: u.status })),
+      documents: {
+        agency: cd.filter(d => d.kind === 'agency').map(mapDoc),
+        papers: cd.filter(d => d.kind === 'papers').map(mapDoc),
+      },
+    };
+  });
+
+  DB.hearings = (hearings.data || []).map(h => ({
+    id: h.id, caseId: h.case_id, date: h.date, time: h.time || '',
+    court: h.court || '', purpose: h.purpose || '', notes: h.notes || '',
+  }));
+
+  const commentsByTask = groupBy(comments.data || [], c => c.task_id);
+  DB.tasks = (tasks.data || []).map(t => ({
+    id: t.id, title: t.title, desc: t.description || '', done: t.done, due: t.due || '',
+    caseId: t.case_id, assigneeId: t.assignee_id, creatorId: t.creator_id,
+    createdAt: t.created_at ? t.created_at.split('T')[0] : null, completedAt: t.completed_at,
+    comments: (commentsByTask[t.id] || []).map(c => ({
+      id: c.id, authorId: c.author_id, authorName: c.author_name, text: c.text || '',
+      time: fmtStamp(c.created_at),
+      attachment: c.attachment_path ? { name: c.attachment_name, size: c.attachment_size, path: c.attachment_path } : null,
+    })),
+  }));
+
+  const instByInv  = groupBy(insts.data || [], i => i.invoice_id);
+  const casesByInv = groupBy(invCases.data || [], r => r.invoice_id);
+  DB.invoices = (invoices.data || []).map(inv => {
+    const o = {
+      id: inv.id, ref: inv.ref, clientId: inv.client_id, date: inv.date,
+      city: inv.city, notes: inv.notes || '',
+      caseIds: (casesByInv[inv.id] || []).map(r => r.case_id),
+      installments: (instByInv[inv.id] || []).map(s => ({ id: s.id, label: s.label, amount: s.amount, paid: s.paid })),
+    };
+    syncInvoiceDerived(o);
+    return o;
+  });
+
+  const msgsByTicket = groupBy(tmsgs.data || [], m => m.ticket_id);
+  DB.clientMessages = (tickets.data || []).map(t => ({
+    id: t.id, clientId: t.client_id, subject: t.subject || '', status: t.status,
+    createdAt: t.created_at ? t.created_at.split('T')[0] : null,
+    messages: (msgsByTicket[t.id] || []).map(m => ({
+      from: m.from_side, authorName: m.author_name, text: m.text, time: fmtStamp(m.created_at),
+    })),
+  }));
+
+  DB.notifications = (notifs.data || []).map(n => ({
+    id: n.id, title: n.title, desc: n.description || '',
+    forUserId: n.for_staff_id, read: n.read, time: fmtStamp(n.created_at),
+  }));
+
+  if (anyErr) alert('تعذّر تحميل بعض البيانات — تحقق من الاتصال بالإنترنت وأعد تحديث الصفحة');
+  return !anyErr;
+}
+// ═══════════════════════════════════
+//  الكتابة إلى قاعدة البيانات
+//  كل تعديل يُرسَل فوراً، ثم تُعاد قراءة البيانات لتبقى الشاشات مطابقة
+//  لما في القاعدة فعلاً — لا لما نظنه نجح.
+// ═══════════════════════════════════
+let dbBusy = false;
+function setBusy(on) {
+  dbBusy = on;
+  document.body.style.cursor = on ? 'progress' : '';
+}
+// تُغلِّف أي عملية كتابة: تُظهر الخطأ بوضوح بدل أن يبدو التعديل ناجحاً وهو لم يُحفظ
+async function dbWrite(label, fn, opts) {
+  if (dbBusy) return false;
+  setBusy(true);
   try {
-    const d = localStorage.getItem('alzahim_db');
-    if (d) { const p = JSON.parse(d); if (p.cases) DB = p; }
-  } catch(e) {}
-  // تفريغ البيانات التجريبية لمرة واحدة عند بدء الاستخدام الفعلي (تُحفَظ حسابات المكتب)
-  if (DB.dataVersion !== DATA_VERSION) {
-    DB.clients = []; DB.cases = []; DB.hearings = []; DB.tasks = [];
-    DB.invoices = []; DB.notifications = []; DB.clientMessages = [];
-    DB.nextId = Object.assign({}, DB.nextId, { clients:1, cases:1, hearings:1, tasks:1, invoices:1, notifications:1, clientMessages:1 });
-    DB.dataVersion = DATA_VERSION;
-  }
-  // ترقية البيانات المحفوظة من إصدارات سابقة
-  if (!DB.users || !DB.users.length) DB.users = DEFAULT_USERS.map(u => ({ ...u, perms:{...u.perms} }));
-  DB.users.forEach(u => { u.perms = u.perms || {}; });
-  if (!DB.nextId.users) DB.nextId.users = Math.max(0, ...DB.users.map(u=>u.id)) + 1;
-  (DB.invoices||[]).forEach(inv => {
-    if (!inv.installments) {
-      inv.installments = [{ label: inv.desc || 'أتعاب محاماة', amount: inv.amount||0, due: inv.due||'', paid: !!inv.paid }];
-      inv.caseIds = inv.caseId ? [inv.caseId] : [];
-      inv.date = inv.due || new Date().toISOString().split('T')[0];
-      inv.city = inv.city || 'المدينة المنورة';
-      inv.ref = inv.ref || 'INV-' + inv.id;
-      inv.notes = inv.notes || '';
-    }
-    syncInvoiceDerived(inv);
-  });
-  (DB.cases||[]).forEach(c => {
-    c.documents = c.documents || { agency: [], papers: [] };
-    if (c.status === 'won' || c.status === 'lost') c.status = 'closed';
-  });
-  (DB.tasks||[]).forEach(t => {
-    if (t.title === undefined) { t.title = t.text || 'مهمة'; t.desc = t.desc || ''; }
-    t.assigneeId = t.assigneeId || null;
-    t.comments = t.comments || [];
-    t.creatorId = t.creatorId || null;
-    t.createdAt = t.createdAt || null;
-  });
-  if (!DB.nextId.notifications) DB.nextId.notifications = Math.max(0, ...DB.notifications.map(n=>n.id)) + 1;
-  if (!DB.clientMessages) DB.clientMessages = [];
-  if (!DB.nextId.clientMessages) DB.nextId.clientMessages = Math.max(0, ...DB.clientMessages.map(m=>m.id)) + 1;
-  // إبقاء جلسة الدخول قائمة عبر التحديثات، مع التحقق أن المستخدم/الموكل ما زال موجوداً
-  if (DB.currentUser) {
-    const u = DB.currentUser;
-    const stillValid = u.type === 'admin' ? DB.users.some(x=>x.id===u.userId) : DB.clients.some(x=>x.id===u.clientId);
-    if (!stillValid) DB.currentUser = null;
+    const res = await fn();
+    if (res && res.error) throw res.error;
+    if (!opts || opts.reload !== false) await loadFromDatabase();
+    return true;
+  } catch (e) {
+    console.error('[' + label + ']', e);
+    alert(isConnectionError(e)
+      ? CONNECTION_MSG
+      : 'تعذّر حفظ «' + label + '»\n' + (e.message || e.code || 'خطأ غير معروف'));
+    return false;
+  } finally {
+    setBusy(false);
   }
 }
-load();
+// بعد نجاح الحفظ: إعادة رسم الصفحة الحالية والشريط الجانبي
+function refreshUI() {
+  if (currentPage) renderPage(currentPage);
+  buildSidebar();
+}
+const nullIfBlank = v => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? null : s; };
+// القضية تحفظ معرّف المحامي، والشاشات تعرض اسمه
+function lawyerIdByName(name) {
+  const u = DB.users.find(x => x.name === name);
+  return u ? u.id : null;
+}
+
+function groupBy(arr, keyFn) {
+  const out = {};
+  for (const item of arr) { const k = keyFn(item); (out[k] = out[k] || []).push(item); }
+  return out;
+}
+function mapDoc(d) {
+  return { id: d.id, name: d.name, size: d.size, path: d.storage_path,
+           uploadedAt: d.uploaded_at, uploadedBy: d.uploaded_by || '' };
+}
+function fmtStamp(ts) {
+  if (!ts) return '';
+  try { return new Date(ts).toLocaleString('ar-SA', { dateStyle:'medium', timeStyle:'short' }); }
+  catch(e) { return ''; }
+}
+// الهوية تأتي من نظام المصادقة وحده، والبيانات من قاعدة البيانات عبر
+// loadFromDatabase() بعد تسجيل الدخول — لا شيء يُقرأ من ذاكرة المتصفح.
+DB.currentUser = null;
 
 // تحويل الإيموجي الثابت في الهيكل العام (تسجيل الدخول، الشريط الجانبي، الأشرطة العلوية، النوافذ) إلى أيقونات SVG
 ['#login-screen', '.sidebar-footer', '.topbar', '#notif-panel'].forEach(sel => {
@@ -1423,34 +1594,158 @@ function setLoginType(t) {
   document.querySelectorAll('.login-tab').forEach((el,i) => el.classList.toggle('active', (t==='admin'&&i===0)||(t==='client'&&i===1)));
   document.getElementById('login-label-id').textContent = t === 'admin' ? 'رقم المستخدم / البريد الإلكتروني' : 'رقم الهوية / اسم المستخدم';
 }
-function doLogin() {
+function loginBusy(on, msg) {
+  const btn = document.querySelector('.btn-login');
+  if (!btn) return;
+  btn.disabled = !!on;
+  btn.textContent = on ? (msg || 'جارٍ الدخول…') : 'دخول';
+}
+// تسجيل الدخول: يتحقق الخادم من اسم المستخدم والرمز، فإن كان الحساب جديداً
+// يُسجَّل في نظام المصادقة من متصفح صاحبه ثم يُستكمل سطره في قاعدة البيانات.
+// بهذه الطريقة لا يُحتاج أي مفتاح إداري في المتصفح.
+async function doLogin() {
   const u = document.getElementById('login-user').value.trim();
   const p = document.getElementById('login-pass').value.trim();
-  if (DB.loginType === 'admin') {
-    const usr = DB.users.find(x => (x.user === u || x.name === u) && x.pass === p);
-    if (usr) {
-      DB.currentUser = { type:'admin', userId:usr.id, name:usr.name, role:usr.role, initials:usr.name.charAt(0), perms:{...usr.perms} };
-      save(); startApp();
-    } else { alert('بيانات الدخول غير صحيحة'); }
-  } else {
-    const cl = DB.clients.find(c => (c.user === u || c.idNum === u) && c.pass === p);
-    if (cl) {
-      DB.currentUser = { type:'client', clientId: cl.id, name: cl.name, role:'موكل', initials: cl.name.charAt(0) };
-      save(); startApp();
-    } else { alert('بيانات الدخول غير صحيحة'); }
+  if (!u || !p) { alert('يرجى إدخال اسم المستخدم والرمز السري'); return; }
+  loginBusy(true);
+  try {
+    const { data: claim, error: claimErr } = await sb.rpc('claim_account', { p_identifier: u, p_password: p });
+    if (claimErr) {
+      // يُفرَّق بين تعذّر الوصول للخادم وبين خطأ في البيانات، وإلّا ظهر للمستخدم
+      // أن رمزه خاطئ بينما المشكلة في الاتصال أو في توقّف قاعدة البيانات
+      if (isConnectionError(claimErr)) throw new Error(CONNECTION_MSG);
+      throw new Error('بيانات الدخول غير صحيحة');
+    }
+    const info = Array.isArray(claim) ? claim[0] : claim;
+    if (!info) throw new Error('بيانات الدخول غير صحيحة');
+
+    const email = info.auth_email;
+    if (!email) throw new Error('تعذّر تحديد بريد الحساب — راجع إعداد قاعدة البيانات');
+    if (info.already_registered) {
+      const { error } = await sb.auth.signInWithPassword({ email, password: p });
+      if (error) throw new Error('بيانات الدخول غير صحيحة');
+    } else {
+      loginBusy(true, 'جارٍ تهيئة الحساب…');
+      const { error: upErr } = await sb.auth.signUp({ email, password: p });
+      if (upErr) {
+        // الحساب موجود في نظام المصادقة من محاولة سابقة — نكمل بالدخول العادي
+        const { error } = await sb.auth.signInWithPassword({ email, password: p });
+        if (error) throw new Error('تعذّر إنشاء الحساب: ' + upErr.message);
+      }
+    }
+    // تُستدعى في المسارين: لو انقطعت محاولة سابقة بعد التسجيل وقبل الربط،
+    // بقي الحساب معلَّقاً بلا سطر في جداول المكتب. الدالة لا تفعل شيئاً إن كان مكتملاً.
+    const { error: finErr } = await sb.rpc('finalize_account', { p_identifier: u, p_password: p });
+    if (finErr) throw new Error('تعذّر استكمال الحساب: ' + finErr.message);
+    await afterAuth();
+  } catch (e) {
+    await sb.auth.signOut().catch(()=>{});
+    alert(isConnectionError(e) ? CONNECTION_MSG : (e.message || 'تعذّر تسجيل الدخول'));
+  } finally {
+    loginBusy(false);
   }
 }
-function doLogout() {
+const CONNECTION_MSG = 'تعذّر الوصول إلى قاعدة البيانات.\n'
+  + 'تحقق من اتصالك بالإنترنت. فإن كان الاتصال سليماً فقد تكون قاعدة البيانات متوقفة — راجع مزوّد الخدمة.';
+// أخطاء الشبكة لا تحمل رمزاً من الخادم، بخلاف أخطاء البيانات التي يردّها
+function isConnectionError(err) {
+  if (!err) return false;
+  if (err.code && !['', 'PGRST301'].includes(err.code)) return false;
+  const m = (err.message || '') + ' ' + (err.details || '');
+  return /failed to fetch|networkerror|load failed|fetch failed|connection|ENOTFOUND|ERR_NAME/i.test(m);
+}
+// يُبنى المستخدم الحالي من قاعدة البيانات، ثم تُحمَّل بياناته المصرَّح له بها
+async function afterAuth() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return false;
+
+  const { data: staffRow } = await sb.from('staff').select('*').eq('id', user.id).maybeSingle();
+  if (staffRow) {
+    DB.currentUser = {
+      type: 'admin', userId: staffRow.id, name: staffRow.name, role: staffRow.role,
+      initials: (staffRow.name || '').charAt(0), perms: staffRow.perms || {},
+      avatar: staffRow.avatar_path || '',
+    };
+  } else {
+    const { data: clientRow } = await sb.from('clients').select('*').eq('auth_user_id', user.id).maybeSingle();
+    if (!clientRow) { await sb.auth.signOut(); alert('لا يوجد حساب مرتبط — راجع مكتب المحاماة'); return false; }
+    DB.currentUser = {
+      type: 'client', clientId: clientRow.id, name: clientRow.name, role: 'موكل',
+      initials: (clientRow.name || '').charAt(0), avatar: clientRow.avatar_path || '',
+    };
+  }
+  await loadFromDatabase();
+  startApp();
+  return true;
+}
+async function doLogout() {
+  await sb.auth.signOut().catch(()=>{});
   DB.currentUser = null;
-  save();
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
+  showLoginBox('login-box-main');
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
 });
+// ═══════════════════════════════════
+//  استعادة كلمة المرور بالبريد
+//  تعمل للحسابات التي لها بريد حقيقي مسجَّل. أما الحسابات ذات البريد
+//  الاصطناعي (اسم مستخدم فقط) فيعيد المدير ضبط رمزها من الإعدادات.
+// ═══════════════════════════════════
+function showLoginBox(which) {
+  ['login-box-main','reset-request-box','reset-set-box'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (id === which) ? 'block' : 'none';
+  });
+}
+function openResetRequest()  { showLoginBox('reset-request-box'); }
+function closeResetRequest() { showLoginBox('login-box-main'); }
+async function sendResetLink() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email || !email.includes('@')) { alert('يرجى إدخال بريد إلكتروني صحيح'); return; }
+  const btn = document.querySelector('#reset-request-box .btn-login');
+  btn.disabled = true; btn.textContent = 'جارٍ الإرسال…';
+  // العنوان الذي يُعاد إليه المستخدم بعد الضغط على الرابط
+  const redirectTo = location.href.split('#')[0].split('?')[0];
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  btn.disabled = false; btn.textContent = 'إرسال رابط الاستعادة';
+  if (error) { alert('تعذّر الإرسال: ' + error.message); return; }
+  // لا يُكشف ما إن كان البريد مسجَّلاً أم لا
+  alert('إن كان هذا البريد مسجَّلاً لدينا فسيصلك رابط لتعيين كلمة مرور جديدة.\nتحقق من صندوق الوارد ومن مجلد الرسائل غير المرغوبة.');
+  closeResetRequest();
+}
+async function applyNewPassword() {
+  const p1 = document.getElementById('reset-pass1').value;
+  const p2 = document.getElementById('reset-pass2').value;
+  if (p1.length < 6) { alert('كلمة المرور يجب أن تكون ٦ أحرف على الأقل'); return; }
+  if (p1 !== p2) { alert('كلمتا المرور غير متطابقتين'); return; }
+  const btn = document.querySelector('#reset-set-box .btn-login');
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  btn.disabled = false; btn.textContent = 'حفظ كلمة المرور';
+  if (error) { alert('تعذّر حفظ كلمة المرور: ' + error.message); return; }
+  alert('تم تحديث كلمة المرور بنجاح');
+  history.replaceState(null, '', location.pathname);
+  await afterAuth();
+}
+
+// استعادة الجلسة عند فتح الصفحة أو تحديثها،
+// أو عرض شاشة تعيين كلمة المرور إن كان القادم من رابط استعادة
+(async function restoreSession() {
+  try {
+    const hash = location.hash || '';
+    const isRecovery = hash.includes('type=recovery');
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') showLoginBox('reset-set-box');
+    });
+    const { data: { session } } = await sb.auth.getSession();
+    if (isRecovery) { showLoginBox('reset-set-box'); return; }
+    if (session) await afterAuth();
+  } catch(e) {}
+})();
 
 // ═══════════════════════════════════
 //  الصورة الشخصية للحساب
@@ -1479,49 +1774,57 @@ function applyAvatar() {
   }
 }
 function triggerAvatarUpload() { document.getElementById('avatar-upload-input').click(); }
-function handleAvatarUpload(ev) {
+// تُقصّ الصورة مربعةً وتُصغَّر قبل الرفع، فلا تُستهلك مساحة التخزين بصور كبيرة
+function squareThumbnail(file, size) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const side = Math.min(img.width, img.height);
+        canvas.getContext('2d').drawImage(
+          img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, size, size);
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذّر تجهيز الصورة')), 'image/jpeg', 0.85);
+      };
+      img.onerror = () => reject(new Error('تعذّر قراءة الصورة — جرّب صورة أخرى'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('تعذّر قراءة الملف'));
+    reader.readAsDataURL(file);
+  });
+}
+async function handleAvatarUpload(ev) {
   const file = ev.target.files[0]; ev.target.value = '';
   if (!file) return;
   if (!/^image\//.test(file.type)) { alert('يرجى اختيار ملف صورة'); return; }
-  if (file.size > 4*1024*1024) { alert('حجم الصورة كبير — الحد الأقصى 4 ميغابايت'); return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    // تُصغَّر الصورة وتُقصّ دائرياً قبل الحفظ حتى لا تستهلك مساحة التخزين
-    const img = new Image();
-    img.onload = () => {
-      const SIZE = 256;
-      const canvas = document.createElement('canvas');
-      canvas.width = SIZE; canvas.height = SIZE;
-      const ctx = canvas.getContext('2d');
-      const side = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, SIZE, SIZE);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      const rec = currentUserRecord();
-      const prev = rec ? rec.avatar : undefined;
-      if (rec) rec.avatar = dataUrl;
-      DB.currentUser.avatar = dataUrl;
-      try { save(); } catch(e) {
-        if (rec) rec.avatar = prev;
-        delete DB.currentUser.avatar;
-        alert('تعذّر حفظ الصورة — مساحة التخزين في المتصفح ممتلئة');
-        return;
-      }
-      applyAvatar();
-      if (currentPage === 'settings') renderPage('settings');
-      const prev2 = document.getElementById('avatar-preview');
-      if (prev2) { prev2.classList.add('has-photo'); prev2.style.backgroundImage = `url("${dataUrl}")`; }
-    };
-    img.onerror = () => alert('تعذّر قراءة الصورة — جرّب صورة أخرى');
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
+  if (file.size > 10*1024*1024) { alert('حجم الصورة كبير — الحد الأقصى 10 ميغابايت'); return; }
+  const me = DB.currentUser;
+  const ok = await dbWrite('الصورة الشخصية', async () => {
+    const blob = await squareThumbnail(file, 256);
+    // أول مقطع من المسار هو معرّف الحساب، وعليه تعتمد صلاحية الرفع
+    const { data: { user } } = await sb.auth.getUser();
+    const path = `${user.id}/avatar.jpg`;
+    const up = await sb.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if (up.error) return up;
+    const url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+    return me.type === 'admin'
+      ? sb.from('staff').update({ avatar_path: url }).eq('id', me.userId)
+      : sb.from('clients').update({ avatar_path: url }).eq('id', me.clientId);
+  });
+  if (!ok) return;
+  await afterAuth();
+  if (currentPage === 'settings') renderPage('settings');
 }
-function removeAvatar() {
+async function removeAvatar() {
   if (!confirm('إزالة الصورة الشخصية؟')) return;
-  const rec = currentUserRecord();
-  if (rec) delete rec.avatar;
-  if (DB.currentUser) delete DB.currentUser.avatar;
-  save(); applyAvatar();
+  const me = DB.currentUser;
+  const ok = await dbWrite('إزالة الصورة', () => me.type === 'admin'
+    ? sb.from('staff').update({ avatar_path: null }).eq('id', me.userId)
+    : sb.from('clients').update({ avatar_path: null }).eq('id', me.clientId));
+  if (!ok) return;
+  await afterAuth();
   if (currentPage === 'settings') renderPage('settings');
 }
 
@@ -1742,7 +2045,7 @@ function renderDashboard() {
       ${cases.filter(c=>c.status==='active'||c.status==='pending').map(c => {
         const cl = DB.clients.find(x=>x.id===c.clientId);
         return `
-        <div onclick="openCaseDetail(${c.id})" style="padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer">
+        <div onclick="openCaseDetail('${c.id}')" style="padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <span style="font-weight:600;font-size:13px">${c.title}</span>
             <span class="badge badge-${c.status}">${statusLabel(c.status)}</span>
@@ -1788,7 +2091,7 @@ function renderDashboard() {
         </div>
         ${pendingTasks.slice(0,4).map(t => `
           <div class="task-item">
-            <div class="task-check ${t.done?'done':''}" onclick="toggleTask(${t.id})"></div>
+            <div class="task-check ${t.done?'done':''}" onclick="toggleTask('${t.id}')"></div>
             <span class="task-text ${t.done?'done':''}">${t.title}</span>
             <span class="task-due">${t.due ? '📅 '+formatDate(t.due) : ''}</span>
           </div>`).join('')}
@@ -1855,9 +2158,9 @@ function renderCases(filter='') {
             <td>${c.nextHearing ? `<span style="color:var(--gold-light)">${formatDate(c.nextHearing)}</span>` : '<span class="color-gray">—</span>'}</td>
             <td><span class="badge badge-${c.status}">${statusLabel(c.status)}</span></td>
             <td style="white-space:nowrap">
-              <button class="btn btn-secondary btn-sm" onclick="openCaseDetail(${c.id})">تفاصيل</button>
-              <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal(${c.id})">✏️ تعديل</button>
-              <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate(${c.id})">+ مستجد</button>
+              <button class="btn btn-secondary btn-sm" onclick="openCaseDetail('${c.id}')">تفاصيل</button>
+              <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal('${c.id}')">✏️ تعديل</button>
+              <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate('${c.id}')">+ مستجد</button>
             </td>
           </tr>`;
         }).join('')}
@@ -1883,9 +2186,9 @@ function filterCasesByStatus(status) {
       <td>${c.nextHearing ? formatDate(c.nextHearing) : '—'}</td>
       <td><span class="badge badge-${c.status}">${statusLabel(c.status)}</span></td>
       <td style="white-space:nowrap">
-        <button class="btn btn-secondary btn-sm" onclick="openCaseDetail(${c.id})">تفاصيل</button>
-        <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal(${c.id})">✏️ تعديل</button>
-        <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate(${c.id})">+ مستجد</button>
+        <button class="btn btn-secondary btn-sm" onclick="openCaseDetail('${c.id}')">تفاصيل</button>
+        <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openCaseModal('${c.id}')">✏️ تعديل</button>
+        <button class="btn btn-primary btn-sm" style="margin-right:6px" onclick="openAddUpdate('${c.id}')">+ مستجد</button>
       </td>
     </tr>`;
   }).join(''));
@@ -1925,7 +2228,7 @@ function renderCdmBody() {
     <div class="case-detail-header">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div class="case-num">📋 رقم القضية: <span class="ref-code">${c.num || 'بدون رقم — اضغط تعديل لإضافته'}</span></div>
-        <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openCaseModal(${c.id})">✏️ تعديل بيانات القضية</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openCaseModal('${c.id}')">✏️ تعديل بيانات القضية</button>
       </div>
       <div class="case-name">${c.title}</div>
       <div class="case-meta">
@@ -1964,7 +2267,7 @@ function renderCdmUpdates(c) {
   return `
     <div class="card-header" style="margin-bottom:14px;border-bottom:none;padding-bottom:0">
       <span class="card-title">مستجدات القضية</span>
-      <button class="btn btn-primary btn-sm" onclick="closeModal('case-detail-modal',{});openAddUpdate(${c.id})">+ إضافة مستجد</button>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('case-detail-modal',{});openAddUpdate('${c.id}')">+ إضافة مستجد</button>
     </div>
     ${c.updates.length === 0 ? '<p class="color-gray text-sm">لا توجد مستجدات بعد</p>' : `
     <ul class="timeline">
@@ -1980,7 +2283,7 @@ function renderCdmUpdates(c) {
 }
 function renderCdmContract(c, cl) {
   const invs = DB.invoices.filter(inv => (inv.caseIds||[]).includes(c.id));
-  const addBtn = hasPerm('invoices') ? `<button class="btn btn-secondary" onclick="closeModal('case-detail-modal',{});openInvoiceModalForCase(${c.id})">➕ عقد أتعاب لهذه القضية</button>` : '';
+  const addBtn = hasPerm('invoices') ? `<button class="btn btn-secondary" onclick="closeModal('case-detail-modal',{});openInvoiceModalForCase('${c.id}')">➕ عقد أتعاب لهذه القضية</button>` : '';
   if (!invs.length) {
     return `<div class="card" style="text-align:center;padding:36px 20px">
       <div style="color:var(--gray-light);font-size:13px;margin-bottom:16px">لا يوجد عقد أتعاب مرتبط بهذه القضية بعد</div>
@@ -2000,8 +2303,8 @@ function renderCdmContract(c, cl) {
       </div>
       <div class="tabular-num" style="font-size:21px;font-weight:600;color:var(--gold-deep);margin-bottom:14px">${invTotal(inv).toLocaleString()} ر.س</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openInvoiceDetail(${inv.id})">تفاصيل الدفعات</button>
-        <button class="btn btn-primary btn-sm" onclick="openContractPDF(${inv.id})">🖨️ عرض العقد PDF</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openInvoiceDetail('${inv.id}')">تفاصيل الدفعات</button>
+        <button class="btn btn-primary btn-sm" onclick="openContractPDF('${inv.id}')">🖨️ عرض العقد PDF</button>
       </div>
     </div>`; }).join('') + `<div style="text-align:center">${addBtn}</div>`;
 }
@@ -2025,7 +2328,7 @@ function renderCdmPayments(c) {
           <td class="color-gray ref-code">${r.inv.ref}</td>
           <td class="tabular-num" style="font-weight:700;color:var(--gold-deep)">${instAmountDisplay(r.s.amount)}</td>
           <td><span class="badge ${r.s.paid?'badge-active':'badge-urgent'}">${r.s.paid?'مسدَّدة':'مستحقة'}</span></td>
-          <td>${!r.s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment(${r.inv.id},${r.i})">✓ تسديد</button>`:''}</td>
+          <td>${!r.s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment('${r.inv.id}',${r.i})">✓ تسديد</button>`:''}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>`;
@@ -2035,10 +2338,10 @@ function renderCdmDocs(c, key, label, hint) {
   return `
     <div class="card-header" style="margin-bottom:14px;border-bottom:none;padding-bottom:0">
       <span class="card-title">${label}</span>
-      <button class="btn btn-primary btn-sm" onclick="triggerDocUpload(${c.id},'${key}')">⬆ رفع مستند</button>
+      <button class="btn btn-primary btn-sm" onclick="triggerDocUpload('${c.id}','${key}')">⬆ رفع مستند</button>
     </div>
     ${docs.length === 0 ? `
-      <div class="upload-drop" onclick="triggerDocUpload(${c.id},'${key}')">
+      <div class="upload-drop" onclick="triggerDocUpload('${c.id}','${key}')">
         لا توجد مستندات بعد — اضغط لرفع ${hint} <span class="color-gray text-sm">(PDF أو صورة، حتى 8MB)</span>
       </div>` : docs.map(d => `
       <div class="doc-row">
@@ -2047,8 +2350,8 @@ function renderCdmDocs(c, key, label, hint) {
           <div class="doc-name">${d.name}</div>
           <div class="doc-meta">${formatBytes(d.size)} — رُفع بتاريخ ${formatDate(d.uploadedAt)}${d.uploadedBy ? ' بواسطة '+d.uploadedBy : ''}</div>
         </div>
-        <a href="${d.dataUrl}" download="${d.name}" class="btn btn-secondary btn-sm">تنزيل</a>
-        <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteCaseDoc(${c.id},'${key}',${d.id})">🗑️</button>
+        <button class="btn btn-secondary btn-sm" onclick="openStoredFile('case-docs','${d.path}','${d.name}')">تنزيل</button>
+        <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteCaseDoc('${c.id}','${key}','${d.id}')">🗑️</button>
       </div>`).join('')}
   `;
 }
@@ -2057,29 +2360,37 @@ function triggerDocUpload(caseId, key) {
   docUploadTarget = { caseId, key };
   document.getElementById('doc-upload-input').click();
 }
-function handleDocUpload(ev) {
+async function handleDocUpload(ev) {
   const file = ev.target.files[0]; ev.target.value = '';
   if (!file || !docUploadTarget) return;
-  if (file.size > 8*1024*1024) { alert('حجم الملف كبير جداً — الحد الأقصى 8 ميغابايت'); return; }
-  const target = docUploadTarget;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const c = DB.cases.find(x=>x.id===target.caseId); if (!c) return;
-    c.documents = c.documents || { agency: [], papers: [] };
-    c.documents[target.key].push({
-      id: Date.now(), name: file.name, size: file.size, dataUrl: reader.result,
-      uploadedAt: new Date().toISOString().split('T')[0], uploadedBy: DB.currentUser.name,
+  if (file.size > 20*1024*1024) { alert('حجم الملف كبير جداً — الحد الأقصى 20 ميغابايت'); return; }
+  const { caseId, key } = docUploadTarget;
+  // أول مقطع من المسار هو رقم القضية، وعليه تعتمد صلاحية الوصول للملف
+  const path = `${caseId}/${key}/${Date.now()}-${safeFileName(file.name)}`;
+  const ok = await dbWrite('رفع المستند', async () => {
+    const up = await sb.storage.from('case-docs').upload(path, file);
+    if (up.error) return up;
+    const ins = await sb.from('case_documents').insert({
+      case_id: caseId, kind: key, name: file.name, size: file.size,
+      storage_path: path, uploaded_by: DB.currentUser.name,
     });
-    try { save(); } catch(e) { c.documents[target.key].pop(); alert('تعذّر حفظ الملف — الحجم كبير على مساحة التخزين المتاحة في المتصفح'); return; }
-    refreshCdmIfOpen();
-  };
-  reader.readAsDataURL(file);
+    // لا يُترك الملف يتيماً في التخزين إن فشل تسجيله
+    if (ins.error) await sb.storage.from('case-docs').remove([path]).catch(()=>{});
+    return ins;
+  });
+  if (ok) refreshCdmIfOpen();
 }
-function deleteCaseDoc(caseId, key, docId) {
+async function deleteCaseDoc(caseId, key, docId) {
   const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
-  if (!confirm('هل أنت متأكد من حذف هذا المستند؟')) return;
-  c.documents[key] = c.documents[key].filter(d=>d.id!==docId);
-  save(); refreshCdmIfOpen();
+  const doc = (c.documents[key] || []).find(d => d.id === docId);
+  if (!confirm(`حذف المستند «${doc ? doc.name : ''}» نهائياً؟`)) return;
+  const ok = await dbWrite('حذف المستند', async () => {
+    const del = await sb.from('case_documents').delete().eq('id', docId);
+    if (del.error) return del;
+    if (doc && doc.path) await sb.storage.from('case-docs').remove([doc.path]).catch(()=>{});
+    return del;
+  });
+  if (ok) refreshCdmIfOpen();
 }
 function formatBytes(n) {
   if (n < 1024) return n + ' B';
@@ -2091,7 +2402,7 @@ function openInvoiceModalForCase(caseId) {
   openModal('add-invoice-modal'); populateInvoiceModal();
   document.getElementById('inv-client').value = c.clientId;
   invClientChanged();
-  document.querySelectorAll('.inv-case-chk').forEach(chk => { chk.checked = (parseInt(chk.value) === caseId); });
+  document.querySelectorAll('.inv-case-chk').forEach(chk => { chk.checked = (chk.value === caseId); });
 }
 
 // ═══════════════════════════════════
@@ -2125,7 +2436,7 @@ function renderHearings() {
           <div>
             <div class="hearing-time">${h.time}</div>
             ${isPast ? '<div style="font-size:11px;color:var(--gray);margin-top:4px">منتهية</div>' : '<div style="font-size:11px;color:var(--green);margin-top:4px">قادمة</div>'}
-            ${!isPast ? `<button class="btn-ics" onclick="addHearingToCalendar(${h.id})">📅 أضف للتقويم</button>` : ''}
+            ${!isPast ? `<button class="btn-ics" onclick="addHearingToCalendar('${h.id}')">📅 أضف للتقويم</button>` : ''}
           </div>
         </div>`;
       }).join('')}
@@ -2182,7 +2493,7 @@ function renderTasks() {
       const me = DB.currentUser.userId;
       pending = pending.filter(t=>t.assigneeId===me); done = done.filter(t=>t.assigneeId===me);
     } else if (taskFilterMode !== 'all') {
-      const uid = parseInt(taskFilterMode);
+      const uid = taskFilterMode;
       pending = pending.filter(t=>t.assigneeId===uid); done = done.filter(t=>t.assigneeId===uid);
     }
   }
@@ -2191,10 +2502,10 @@ function renderTasks() {
     const u = DB.users.find(x=>x.id===t.assigneeId);
     return `<span class="task-assignee">👤 ${u?u.name:'—'}</span>`;
   };
-  const discussBtn = t => `<button class="task-open-btn" onclick="openTaskDetail(${t.id})">💬 نقاش${(t.comments||[]).length ? ' ('+t.comments.length+')' : ''}</button>`;
+  const discussBtn = t => `<button class="task-open-btn" onclick="openTaskDetail('${t.id}')">💬 نقاش${(t.comments||[]).length ? ' ('+t.comments.length+')' : ''}</button>`;
   const rowActions = t => `
-    <button class="task-open-btn" onclick="event.stopPropagation();openTaskModal(${t.id})">✏️ تعديل</button>
-    <button class="task-open-btn" style="color:var(--red)" onclick="event.stopPropagation();deleteTask(${t.id})">🗑️ حذف</button>`;
+    <button class="task-open-btn" onclick="event.stopPropagation();openTaskModal('${t.id}')">✏️ تعديل</button>
+    <button class="task-open-btn" style="color:var(--red)" onclick="event.stopPropagation();deleteTask('${t.id}')">🗑️ حذف</button>`;
   return `
   <div class="section-header">
     <div class="section-title">✅ ${owner ? 'المهام' : 'مهامي'} <span>(${pending.length} معلقة)</span></div>
@@ -2214,8 +2525,8 @@ function renderTasks() {
       <div class="card-header"><span class="card-title">🔴 المهام المعلقة</span></div>
       ${pending.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام معلقة ضمن هذا الفلتر</p>' : pending.map(t => `
         <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
-          <div class="task-check" onclick="toggleTask(${t.id})"></div>
-          <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail(${t.id})">
+          <div class="task-check" onclick="toggleTask('${t.id}')"></div>
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail('${t.id}')">
             <div class="task-text">${t.title}</div>
             ${t.desc ? `<div class="text-sm color-gray" style="margin-top:3px">${t.desc}</div>` : ''}
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
@@ -2225,7 +2536,7 @@ function renderTasks() {
             ${taskTimelineHTML(t)}
           </div>
           <div style="text-align:left">
-            ${t.due ? `<span class="task-due">📅 ${formatDate(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar(${t.id})">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
+            ${t.due ? `<span class="task-due">📅 ${formatDate(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
             ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
@@ -2234,8 +2545,8 @@ function renderTasks() {
       <div class="card-header"><span class="card-title">✅ المهام المنجزة</span></div>
       ${done.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام منجزة ضمن هذا الفلتر</p>' : done.map(t => `
         <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
-          <div class="task-check done" onclick="toggleTask(${t.id})"></div>
-          <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail(${t.id})">
+          <div class="task-check done" onclick="toggleTask('${t.id}')"></div>
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail('${t.id}')">
             <div class="task-text done">${t.title}</div>
             ${assigneeChip(t)}
             ${taskTimelineHTML(t)}
@@ -2305,8 +2616,8 @@ function renderTaskDetail() {
         ${assignee ? `<span class="badge badge-new">👤 ${assignee.name}</span>` : ''}
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn btn-secondary btn-sm" onclick="closeModal('task-detail-modal',{});openTaskModal(${t.id})">✏️ تعديل</button>
-        <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteTask(${t.id})">🗑️ حذف</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('task-detail-modal',{});openTaskModal('${t.id}')">✏️ تعديل</button>
+        <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteTask('${t.id}')">🗑️ حذف</button>
       </div>
     </div>
     ${taskTimelineHTML(t)}
@@ -2318,7 +2629,7 @@ function renderTaskDetail() {
           <div style="flex:1;min-width:0">
             <div class="td-comment-head"><b>${cm.authorName}</b><span class="color-gray text-sm">${cm.time}</span></div>
             ${cm.text ? `<div class="td-comment-text">${cm.text}</div>` : ''}
-            ${cm.attachment ? `<div><a href="${cm.attachment.dataUrl}" download="${cm.attachment.name}" class="td-attachment">📎 ${cm.attachment.name} <span class="color-gray text-sm">(${formatBytes(cm.attachment.size)})</span></a></div>` : ''}
+            ${cm.attachment ? `<div><button class="td-attachment" onclick="openStoredFile('task-files','${cm.attachment.path}','${cm.attachment.name}')">📎 ${cm.attachment.name} <span class="color-gray text-sm">(${formatBytes(cm.attachment.size)})</span></button></div>` : ''}
           </div>
         </div>`).join('')}
     </div>
@@ -2330,46 +2641,71 @@ function triggerTaskAttach() { document.getElementById('task-attach-input').clic
 function handleTaskAttachUpload(ev) {
   const file = ev.target.files[0]; ev.target.value = '';
   if (!file) return;
-  if (file.size > 8*1024*1024) { alert('حجم الملف كبير جداً — الحد الأقصى 8 ميغابايت'); return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    taskDetailState.pendingAttachment = { id: Date.now(), name: file.name, size: file.size, dataUrl: reader.result };
-    renderTaskDetail();
-  };
-  reader.readAsDataURL(file);
+  if (file.size > 20*1024*1024) { alert('حجم الملف كبير جداً — الحد الأقصى 20 ميغابايت'); return; }
+  // يُحتفَظ بالملف نفسه ليُرفَع عند الإرسال، بدل تحويله إلى نص داخل الصفحة
+  taskDetailState.pendingAttachment = { name: file.name, size: file.size, file };
+  renderTaskDetail();
 }
 function clearTaskPendingAttachment() { taskDetailState.pendingAttachment = null; renderTaskDetail(); }
-function sendTaskComment() {
+async function sendTaskComment() {
   const t = DB.tasks.find(x=>x.id===taskDetailState.taskId); if (!t) return;
   const ta = document.getElementById('td-comment-input');
   const text = ta.value.trim();
-  const attachment = taskDetailState.pendingAttachment;
-  if (!text && !attachment) return;
-  t.comments = t.comments || [];
-  t.comments.push({
-    id: Date.now(), authorId: DB.currentUser.userId, authorName: DB.currentUser.name,
-    text, attachment, time: new Date().toLocaleString('ar-SA', {dateStyle:'medium', timeStyle:'short'}),
-  });
+  const att = taskDetailState.pendingAttachment;
+  if (!text && !att) return;
   const otherPartyId = DB.currentUser.userId === t.assigneeId ? t.creatorId : t.assigneeId;
-  if (otherPartyId && otherPartyId !== DB.currentUser.userId) {
-    DB.notifications.unshift({
-      id: DB.nextId.notifications++,
-      title: 'تعليق جديد على مهمة',
-      desc: `${DB.currentUser.name} علّق على مهمة: ${t.title}`,
-      time: 'الآن', read:false, forUserId: otherPartyId,
+
+  const ok = await dbWrite('التعليق', async () => {
+    let path = null;
+    if (att) {
+      // الملف يُرفع إلى مساحة التخزين، ويُحفَظ مساره فقط في قاعدة البيانات
+      path = `${t.id}/${Date.now()}-${safeFileName(att.name)}`;
+      const up = await sb.storage.from('task-files').upload(path, att.file);
+      if (up.error) return up;
+    }
+    const ins = await sb.from('task_comments').insert({
+      task_id: t.id, author_id: DB.currentUser.userId, author_name: DB.currentUser.name,
+      text: nullIfBlank(text),
+      attachment_name: att ? att.name : null,
+      attachment_size: att ? att.size : null,
+      attachment_path: path,
     });
-  }
-  try { save(); } catch(e) { t.comments.pop(); alert('تعذّر حفظ التعليق — الحجم كبير على مساحة التخزين المتاحة في المتصفح'); return; }
+    if (ins.error) return ins;
+    if (otherPartyId && otherPartyId !== DB.currentUser.userId) {
+      return sb.from('notifications').insert({
+        title: 'تعليق جديد على مهمة',
+        description: `${DB.currentUser.name} علّق على مهمة: ${t.title}`,
+        for_staff_id: otherPartyId,
+      });
+    }
+    return ins;
+  });
+  if (!ok) return;
   ta.value = ''; taskDetailState.pendingAttachment = null;
   renderTaskDetail();
   buildSidebar();
 }
+// أسماء الملفات العربية أو ذات الرموز تكسر مسارات التخزين
+function safeFileName(name) {
+  const dot = String(name || '').lastIndexOf('.');
+  const ext = dot > -1 ? name.slice(dot).replace(/[^.\w]/g, '') : '';
+  return Math.random().toString(36).slice(2, 10) + ext;
+}
+// روابط التخزين خاصة: تُطلَب بصلاحية المستخدم وتنتهي بعد مدة قصيرة
+async function openStoredFile(bucket, path, downloadName) {
+  if (!path) return;
+  const { data, error } = await sb.storage.from(bucket).createSignedUrl(path, 60, { download: downloadName || true });
+  if (error) { alert('تعذّر فتح الملف: ' + error.message); return; }
+  window.open(data.signedUrl, '_blank');
+}
 function initTaskChecks() {}
-function toggleTask(id) {
+async function toggleTask(id) {
   const t = DB.tasks.find(x=>x.id===id); if(!t) return;
-  t.done = !t.done;
-  t.completedAt = t.done ? new Date().toISOString().split('T')[0] : null;
-  save();
+  const done = !t.done;
+  const ok = await dbWrite('حالة المهمة', () => sb.from('tasks').update({
+    done, completed_at: done ? new Date().toISOString().split('T')[0] : null,
+  }).eq('id', id));
+  if (!ok) return;
   navTo('tasks');
   buildSidebar();
 }
@@ -2392,11 +2728,11 @@ function openTaskModal(id) {
   const dd = document.getElementById('task-mention-dropdown'); dd.classList.remove('open'); dd.innerHTML = '';
   openModal('task-modal');
 }
-function deleteTask(id) {
+async function deleteTask(id) {
   const t = DB.tasks.find(x=>x.id===id); if (!t) return;
   if (!confirm(`هل أنت متأكد من حذف المهمة «${t.title}»؟`)) return;
-  DB.tasks = DB.tasks.filter(x=>x.id!==id);
-  save();
+  const ok = await dbWrite('حذف المهمة', () => sb.from('tasks').delete().eq('id', id));
+  if (!ok) return;
   if (document.getElementById('task-detail-modal').style.display === 'flex') closeModal('task-detail-modal',{});
   navTo('tasks'); buildSidebar();
 }
@@ -2410,7 +2746,7 @@ function handleTaskMentionInput(ev) {
   const q = m[1].trim();
   const matches = lawyerUsers().filter(u => !q || u.name.includes(q));
   if (!matches.length) { dd.classList.remove('open'); dd.innerHTML=''; return; }
-  dd.innerHTML = matches.map(u => `<div class="mention-item" onmousedown="event.preventDefault();selectMention(${u.id})"><span class="m-avatar">${u.name.charAt(0)}</span>${u.name}</div>`).join('');
+  dd.innerHTML = matches.map(u => `<div class="mention-item" onmousedown="event.preventDefault();selectMention('${u.id}')"><span class="m-avatar">${u.name.charAt(0)}</span>${u.name}</div>`).join('');
   dd.classList.add('open');
 }
 function handleTaskMentionKeydown(ev) {
@@ -2434,38 +2770,37 @@ function renderTaskAssigneeChip() {
   box.innerHTML = `<span class="assignee-chip">مُوكَّلة إلى: ${u?u.name:'—'} <button onclick="clearTaskAssignee()">×</button></span>`;
 }
 function clearTaskAssignee() { taskModalState.assigneeId = null; renderTaskAssigneeChip(); }
-function saveTask() {
+async function saveTask() {
   const title = document.getElementById('task-title').value.trim();
   if (!title) { alert('يرجى إدخال عنوان المهمة'); return; }
   const desc = document.getElementById('task-desc').value.trim();
   const due = document.getElementById('task-due').value;
-  const caseId = parseInt(document.getElementById('task-case').value) || null;
+  const caseId = document.getElementById('task-case').value || null;
   const assigneeId = taskModalState.assigneeId;
   const editing = taskModalState.editId ? DB.tasks.find(x=>x.id===taskModalState.editId) : null;
   const prevAssignee = editing ? editing.assigneeId : null;
-  if (editing) {
-    Object.assign(editing, { title, desc, due, caseId, assigneeId });
-  } else {
-    DB.tasks.push({
-      id: DB.nextId.tasks++, title, desc, done:false, due, caseId, assigneeId,
-      creatorId: DB.currentUser.userId, createdAt: new Date().toISOString().split('T')[0],
-      completedAt: null, comments: [],
-    });
-  }
-  // يُرسَل الإشعار عند التوكيل الجديد فقط، لا عند كل تعديل على مهمة موكَّلة مسبقاً
-  if (assigneeId && assigneeId !== DB.currentUser.userId && assigneeId !== prevAssignee) {
-    const assignee = DB.users.find(u=>u.id===assigneeId);
-    if (assignee) {
-      DB.notifications.unshift({
-        id: DB.nextId.notifications++,
+  const row = {
+    title, description: nullIfBlank(desc), due: nullIfBlank(due),
+    case_id: caseId || null, assignee_id: assigneeId || null,
+  };
+  const ok = await dbWrite('المهمة', async () => {
+    const res = editing
+      ? await sb.from('tasks').update(row).eq('id', editing.id)
+      : await sb.from('tasks').insert({ ...row, creator_id: DB.currentUser.userId });
+    if (res.error) return res;
+    // يُرسَل الإشعار عند التوكيل الجديد فقط، لا عند كل تعديل على مهمة موكَّلة مسبقاً
+    if (assigneeId && assigneeId !== DB.currentUser.userId && assigneeId !== prevAssignee) {
+      return sb.from('notifications').insert({
         title: editing ? 'مهمة مُوكَّلة إليك' : 'مهمة جديدة مُوكَّلة إليك',
-        desc: `${DB.currentUser.name} وكّلك بمهمة: ${title}`,
-        time: 'الآن', read:false, forUserId: assigneeId,
+        description: `${DB.currentUser.name} وكّلك بمهمة: ${title}`,
+        for_staff_id: assigneeId,
       });
     }
-  }
+    return res;
+  });
+  if (!ok) return;
   taskModalState.editId = null;
-  save(); closeModal('task-modal',{}); navTo('tasks'); buildSidebar();
+  closeModal('task-modal',{}); navTo('tasks'); buildSidebar();
   refreshTaskDetailIfOpen();
 }
 
@@ -2495,8 +2830,8 @@ function renderClients() {
             <td><span class="badge badge-new">${caseCount} قضية</span></td>
             <td style="color:var(--gold)">${cl.user}</td>
             <td>
-              <button class="btn btn-secondary btn-sm" onclick="viewClientCases(${cl.id})">قضاياه</button>
-              <button class="btn btn-danger btn-sm" style="margin-right:6px" onclick="deleteClient(${cl.id})">حذف</button>
+              <button class="btn btn-secondary btn-sm" onclick="viewClientCases('${cl.id}')">قضاياه</button>
+              <button class="btn btn-danger btn-sm" style="margin-right:6px" onclick="deleteClient('${cl.id}')">حذف</button>
             </td>
           </tr>`;
         }).join('')}
@@ -2511,7 +2846,7 @@ function viewClientCases(clientId) {
   document.getElementById('cdm-body').innerHTML = cases.length === 0
     ? '<p class="color-gray">لا توجد قضايا لهذا الموكل</p>'
     : iconify(cases.map(c => `
-      <div onclick="closeModal('case-detail-modal',{});openCaseDetail(${c.id})"
+      <div onclick="closeModal('case-detail-modal',{});openCaseDetail('${c.id}')"
         style="padding:14px;background:var(--dark-3);border-radius:10px;margin-bottom:10px;cursor:pointer;border:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-weight:700">${c.title}</span>
@@ -2521,9 +2856,15 @@ function viewClientCases(clientId) {
       </div>`).join(''));
   openModal('case-detail-modal');
 }
-function deleteClient(id) {
-  if (!confirm('هل أنت متأكد من حذف هذا الموكل؟')) return;
-  DB.clients = DB.clients.filter(c=>c.id!==id); save(); navTo('clients');
+async function deleteClient(id) {
+  const cl = DB.clients.find(c => c.id === id);
+  const cases = DB.cases.filter(c => c.clientId === id).length;
+  const warn = cases
+    ? `\n\nتنبيه: لهذا الموكل ${cases} قضية. حذفه يحذف فواتيره ومراسلاته، وتبقى قضاياه بلا موكل.`
+    : '';
+  if (!confirm(`حذف الموكل «${cl ? cl.name : ''}»؟${warn}`)) return;
+  const ok = await dbWrite('حذف الموكل', () => sb.from('clients').delete().eq('id', id));
+  if (ok) navTo('clients');
 }
 
 // ═══════════════════════════════════
@@ -2564,8 +2905,8 @@ function renderInvoices() {
             <td class="color-gray">${paidCnt} / ${inv.installments.length}</td>
             <td><span class="badge ${stBadge[st]}">${stLabel[st]}</span></td>
             <td style="white-space:nowrap">
-              <button class="btn btn-secondary btn-sm" onclick="openInvoiceDetail(${inv.id})">📄 الدفعات</button>
-              <button class="btn btn-primary btn-sm" onclick="openContractPDF(${inv.id})">🖨️ العقد PDF</button>
+              <button class="btn btn-secondary btn-sm" onclick="openInvoiceDetail('${inv.id}')">📄 الدفعات</button>
+              <button class="btn btn-primary btn-sm" onclick="openContractPDF('${inv.id}')">🖨️ العقد PDF</button>
             </td>
           </tr>`;
         }).join('')}
@@ -2590,19 +2931,21 @@ function openInvoiceDetail(id) {
           <td>${s.label}</td>
           <td style="font-weight:700;color:var(--gold)">${instAmountDisplay(s.amount)}</td>
           <td><span class="badge ${s.paid?'badge-active':'badge-urgent'}">${s.paid?'مسدَّدة':'مستحقة'}</span></td>
-          <td>${!s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment(${inv.id},${i})">✓ تسديد</button>`:''}</td>
+          <td>${!s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment('${inv.id}',${i})">✓ تسديد</button>`:''}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px">
-      <button class="btn btn-primary" onclick="openContractPDF(${inv.id})">🖨️ عرض / طباعة عقد الأتعاب PDF</button>
+      <button class="btn btn-primary" onclick="openContractPDF('${inv.id}')">🖨️ عرض / طباعة عقد الأتعاب PDF</button>
     </div>`);
   openModal('invoice-detail-modal');
 }
-function payInstallment(invId, idx) {
-  const inv = DB.invoices.find(i=>i.id===invId); if(!inv||!inv.installments[idx]) return;
-  inv.installments[idx].paid = true;
-  syncInvoiceDerived(inv); save();
+async function payInstallment(invId, idx) {
+  const inv = DB.invoices.find(i=>i.id===invId); if(!inv) return;
+  const inst = inv.installments[idx]; if (!inst) return;
+  const ok = await dbWrite('تسديد الدفعة',
+    () => sb.from('installments').update({ paid: true }).eq('id', inst.id));
+  if (!ok) return;
   if (document.getElementById('invoice-detail-modal').style.display === 'flex') openInvoiceDetail(invId);
   refreshCdmIfOpen();
   if (currentPage === 'invoices') renderPage('invoices');
@@ -2735,8 +3078,8 @@ function renderSettings() {
             <td>${u.role}</td>
             <td style="max-width:260px">${PERM_DEFS.filter(([k])=>u.perms[k]).map(([k,l])=>`<span class="perm-chip">${l}</span>`).join('') || '<span class="color-gray text-sm">بدون صلاحيات</span>'}</td>
             <td style="white-space:nowrap">
-              <button class="btn btn-secondary btn-sm" onclick="openUserModal(${u.id})">✏️ تعديل</button>
-              <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteUser(${u.id})">🗑️ حذف</button>
+              <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.id}')">✏️ تعديل</button>
+              <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteUser('${u.id}')">🗑️ حذف</button>
             </td>
           </tr>`).join('')}
         </tbody>
@@ -2764,8 +3107,8 @@ function renderSettings() {
               <td><span class="badge badge-new">${DB.cases.filter(c=>c.clientId===cl.id).length} قضية</span></td>
               <td><span class="badge ${active?'badge-active':'badge-closed'}">${active?'حساب مُفعَّل':'بدون حساب'}</span></td>
               <td style="white-space:nowrap">
-                <button class="btn btn-secondary btn-sm" onclick="openClientAccountModal(${cl.id})">✏️ ${active?'تعديل':'إنشاء'}</button>
-                ${active ? `<button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="revokeClientAccount(${cl.id})">🔒 إلغاء الحساب</button>` : ''}
+                <button class="btn btn-secondary btn-sm" onclick="openClientAccountModal('${cl.id}')">✏️ ${active?'تعديل':'إنشاء'}</button>
+                ${active ? `<button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="revokeClientAccount('${cl.id}')">🔒 إلغاء الحساب</button>` : ''}
               </td>
             </tr>`;
           }).join('')}
@@ -2784,24 +3127,34 @@ function openClientAccountModal(clientId) {
   document.getElementById('ca-pass').value = cl ? (cl.pass||'') : '';
   openModal('client-account-modal');
 }
-function saveClientAccount() {
-  const clientId = parseInt(document.getElementById('ca-client').value);
+async function saveClientAccount() {
+  const clientId = document.getElementById('ca-client').value;
   if (!clientId) { alert('يرجى اختيار الموكل'); return; }
   const user = document.getElementById('ca-user').value.trim();
   const pass = document.getElementById('ca-pass').value.trim();
-  if (!user || !pass) { alert('يرجى إدخال اسم المستخدم والرمز السري'); return; }
-  // اسم الدخول يجب ألّا يتعارض مع موكل آخر أو مع أحد حسابات المكتب
+  if (!user) { alert('يرجى إدخال اسم المستخدم'); return; }
+  if (pass.length < 6) { alert('الرمز السري يجب أن يكون ٦ أحرف على الأقل'); return; }
+  // تُفحَص التعارضات هنا للرسالة الواضحة، وتُفحَص مرة أخرى في قاعدة البيانات
   if (DB.clients.some(c => c.user === user && c.id !== clientId)) { alert('اسم المستخدم مستخدم لموكل آخر — اختر اسماً غيره'); return; }
   if (DB.users.some(u => u.user === user)) { alert('اسم المستخدم مستخدم لأحد حسابات المكتب — اختر اسماً غيره'); return; }
-  const cl = DB.clients.find(c=>c.id===clientId); if (!cl) return;
-  cl.user = user; cl.pass = pass;
-  save(); closeModal('client-account-modal',{}); navTo('settings');
+  const cl = DB.clients.find(c=>c.id===clientId);
+  const ok = await dbWrite('حساب الموكل', () => sb.rpc('create_pending_account', {
+    p_username: user, p_password: pass, p_kind: 'client',
+    p_name: cl ? cl.name : user, p_role: null, p_perms: {},
+    p_client_id: clientId, p_email: cl ? (cl.email || null) : null,
+  }));
+  if (!ok) return;
+  alert(`أُنشئ حساب بوابة العميل لـ «${cl ? cl.name : ''}».\nيدخل من تبويب «دخول العميل» باسم «${user}» والرمز الذي وضعته.`);
+  closeModal('client-account-modal',{});
+  navTo('settings');
 }
-function revokeClientAccount(clientId) {
+async function revokeClientAccount(clientId) {
   const cl = DB.clients.find(c=>c.id===clientId); if (!cl) return;
   if (!confirm(`إلغاء حساب بوابة العميل الخاص بـ «${cl.name}»؟ لن يتمكن من الدخول بعدها.`)) return;
-  cl.user = ''; cl.pass = '';
-  save(); navTo('settings');
+  // فكّ الارتباط بحساب الدخول؛ بيانات الموكل وقضاياه تبقى كما هي
+  const ok = await dbWrite('إلغاء الحساب', () => sb.from('clients')
+    .update({ username: null, auth_user_id: null }).eq('id', clientId));
+  if (ok) navTo('settings');
 }
 function renderPermChecks(perms) {
   document.getElementById('um-perms').innerHTML = PERM_DEFS.map(([k,l]) => `
@@ -2817,48 +3170,61 @@ function openUserModal(id) {
   document.getElementById('um-id').value = u ? u.id : '';
   document.getElementById('um-name').value = u ? u.name : '';
   document.getElementById('um-user').value = u ? u.user : '';
-  document.getElementById('um-pass').value = u ? u.pass : '';
+  document.getElementById('um-email').value = u ? (u.email || '') : '';
   document.getElementById('um-role').value = u ? u.role : 'محامي';
+  // كلمة المرور مُعمّاة في نظام الحسابات ولا يمكن عرضها ولا تعديلها من هنا
+  const pass = document.getElementById('um-pass');
+  pass.value = '';
+  pass.disabled = !!u;
+  pass.placeholder = u ? '——' : '••••••';
+  document.getElementById('um-pass-note').textContent = u
+    ? 'لا تُعرَض كلمة المرور ولا تُغيَّر من هنا — يغيّرها صاحب الحساب عبر «نسيت كلمة المرور».'
+    : 'رمز الدخول الأول. يستطيع صاحبه تغييره لاحقاً.';
   renderPermChecks(u ? u.perms : ROLE_PRESETS['محامي']);
   openModal('user-modal');
 }
-function saveUser() {
-  const id = parseInt(document.getElementById('um-id').value) || null;
+async function saveUser() {
+  const id = document.getElementById('um-id').value || null;
   const name = document.getElementById('um-name').value.trim();
   const user = document.getElementById('um-user').value.trim();
   const pass = document.getElementById('um-pass').value.trim();
-  if (!name || !user || !pass) { alert('يرجى تعبئة الاسم واسم الدخول وكلمة المرور'); return; }
+  if (!name || !user) { alert('يرجى تعبئة الاسم واسم الدخول'); return; }
+  if (!id && pass.length < 6) { alert('كلمة المرور يجب أن تكون ٦ أحرف على الأقل'); return; }
   if (DB.users.some(x => x.user === user && x.id !== id)) { alert('اسم الدخول مستخدم مسبقاً — اختر اسماً آخر'); return; }
   const perms = {};
   document.querySelectorAll('.um-perm').forEach(c => { perms[c.value] = c.checked; });
   const role = document.getElementById('um-role').value;
+  const email = nullIfBlank((document.getElementById('um-email') || {}).value);
+  let ok;
   if (id) {
     const u = DB.users.find(x=>x.id===id); if (!u) return;
     if (u.perms.users && !perms.users && DB.users.filter(x=>x.perms.users).length === 1) {
       alert('لا يمكن سحب صلاحية إدارة المستخدمين من آخر مدير في النظام'); return;
     }
-    Object.assign(u, { name, user, pass, role, perms });
-    if (DB.currentUser.userId === id) {
-      DB.currentUser.name = name; DB.currentUser.role = role; DB.currentUser.perms = {...perms};
-      DB.currentUser.initials = name.charAt(0);
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role;
-      applyAvatar();
-      buildSidebar();
-    }
+    // كلمة المرور محفوظة مُعمّاة في نظام الحسابات ولا تُعدَّل من هنا —
+    // يغيّرها صاحبها عبر «نسيت كلمة المرور»
+    ok = await dbWrite('المستخدم', () => sb.from('staff')
+      .update({ name, username: user, email, role, perms }).eq('id', id));
+    if (ok && DB.currentUser.userId === id) await afterAuth();
   } else {
-    DB.users.push({ id: DB.nextId.users++, name, user, pass, role, perms });
+    // الحساب الجديد يُسجَّل في متصفح صاحبه عند أول دخول، فيُحفظ هنا معلَّقاً
+    ok = await dbWrite('المستخدم', () => sb.rpc('create_pending_account', {
+      p_username: user, p_password: pass, p_kind: 'staff',
+      p_name: name, p_role: role, p_perms: perms, p_client_id: null, p_email: email,
+    }));
+    if (ok) alert(`أُنشئ حساب «${name}».\nيدخل باسم المستخدم «${user}»${email ? ' أو ببريده' : ''} والرمز الذي وضعته.`);
   }
-  save(); closeModal('user-modal',{});
+  if (!ok) return;
+  closeModal('user-modal',{});
   navTo('settings');
 }
-function deleteUser(id) {
+async function deleteUser(id) {
   const u = DB.users.find(x=>x.id===id); if (!u) return;
   if (DB.currentUser.userId === id) { alert('لا يمكنك حذف حسابك الذي سجّلت الدخول به'); return; }
   if (u.perms.users && DB.users.filter(x=>x.perms.users).length === 1) { alert('لا يمكن حذف آخر مدير يملك صلاحية إدارة المستخدمين'); return; }
   if (!confirm(`هل أنت متأكد من حذف المستخدم «${u.name}»؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
-  DB.users = DB.users.filter(x=>x.id!==id);
-  save(); navTo('settings');
+  const ok = await dbWrite('حذف المستخدم', () => sb.from('staff').delete().eq('id', id));
+  if (ok) navTo('settings');
 }
 
 // ═══════════════════════════════════
@@ -2962,7 +3328,7 @@ function renderClientHearings() {
         <div>
           <div class="hearing-time">${h.time}</div>
           <div style="font-size:11px;color:${isPast?'var(--gray)':'var(--green)'};margin-top:4px">${isPast?'منتهية':'قادمة'}</div>
-          ${!isPast ? `<button class="btn-ics" onclick="addHearingToCalendar(${h.id})">📅 أضف للتقويم</button>` : ''}
+          ${!isPast ? `<button class="btn-ics" onclick="addHearingToCalendar('${h.id}')">📅 أضف للتقويم</button>` : ''}
         </div>
       </div>`;
     }).join('')}`;
@@ -2988,7 +3354,7 @@ function renderClientDocs() {
               <div class="doc-name">${d.name}</div>
               <div class="doc-meta">${d.kind} — ${formatBytes(d.size)} — بتاريخ ${formatDate(d.uploadedAt)}</div>
             </div>
-            <a href="${d.dataUrl}" download="${d.name}" class="btn btn-secondary btn-sm">تنزيل</a>
+            <button class="btn btn-secondary btn-sm" onclick="openStoredFile('case-docs','${d.path}','${d.name}')">تنزيل</button>
           </div>`).join('')}
       </div>`;
     }).join('')}`;
@@ -3023,7 +3389,7 @@ function renderClientContact() {
       <div class="td-comments-title">مراسلاتي السابقة</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${my.map(t => `
-          <div onclick="openTicket(${t.id})" style="cursor:pointer;padding:12px 14px;background:var(--dark-3);border-radius:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div onclick="openTicket('${t.id}')" style="cursor:pointer;padding:12px 14px;background:var(--dark-3);border-radius:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px">
             <div style="min-width:0">
               <div style="font-weight:600;font-size:13px">${t.subject||'بدون عنوان'}</div>
               <div class="text-sm color-gray">${t.messages.length} رسالة — آخر رد: ${t.messages[t.messages.length-1].time}</div>
@@ -3034,22 +3400,27 @@ function renderClientContact() {
     </div>
   </div>`;
 }
-function sendClientMessage() {
+async function sendClientMessage() {
   const subject = document.getElementById('ctc-subject').value.trim();
   const text = document.getElementById('ctc-text').value.trim();
   if (!text) { alert('يرجى كتابة نص الرسالة'); return; }
   const cu = DB.currentUser;
-  DB.clientMessages.unshift({
-    id: DB.nextId.clientMessages++, clientId: cu.clientId, subject, status:'open',
-    createdAt: new Date().toISOString().split('T')[0],
-    messages: [{ from:'client', authorName: cu.name, text, time: new Date().toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'}) }],
+  const ok = await dbWrite('الرسالة', async () => {
+    const ins = await sb.from('tickets')
+      .insert({ client_id: cu.clientId, subject: nullIfBlank(subject) })
+      .select('id').single();
+    if (ins.error) return ins;
+    const msg = await sb.from('ticket_messages').insert({
+      ticket_id: ins.data.id, from_side: 'client', author_name: cu.name, text,
+    });
+    if (msg.error) return msg;
+    // إشعار بلا for_staff_id يظهر لكل حسابات المكتب
+    return sb.from('notifications').insert({
+      title: 'رسالة جديدة من موكل',
+      description: `${cu.name}: ${subject || text.slice(0,40)}`,
+    });
   });
-  DB.notifications.unshift({
-    id: DB.nextId.notifications++, title:'رسالة جديدة من موكل',
-    desc:`${cu.name}: ${subject || text.slice(0,40)}`, time:'الآن', read:false,
-  });
-  save();
-  navTo('client-contact');
+  if (ok) navTo('client-contact');
 }
 function renderTicketsAdmin() {
   const owner = isOfficeOwner();
@@ -3062,7 +3433,7 @@ function renderTicketsAdmin() {
     const cl = DB.clients.find(c=>c.id===t.clientId);
     const last = t.messages[t.messages.length-1];
     return `
-    <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTicket(${t.id})">
+    <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTicket('${t.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div style="min-width:0">
           <div style="font-weight:700;font-size:14px">${t.subject || 'بدون عنوان'}</div>
@@ -3090,7 +3461,7 @@ function renderTicketThread() {
       <span class="badge badge-new">👤 ${cl?cl.name:'—'}</span>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge ${t.status==='open'?'badge-active':'badge-closed'}">${t.status==='open'?'مفتوحة':'مغلقة'}</span>
-        ${isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="toggleTicketStatus(${t.id})">${t.status==='open'?'إغلاق التذكرة':'إعادة فتح التذكرة'}</button>` : ''}
+        ${isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="toggleTicketStatus('${t.id}')">${t.status==='open'?'إغلاق التذكرة':'إعادة فتح التذكرة'}</button>` : ''}
       </div>
     </div>
     <div class="td-comments">
@@ -3105,30 +3476,35 @@ function renderTicketThread() {
     </div>
   `);
 }
-function toggleTicketStatus(id) {
+async function toggleTicketStatus(id) {
   const t = DB.clientMessages.find(x=>x.id===id); if (!t) return;
-  t.status = t.status === 'open' ? 'closed' : 'open';
-  save(); renderTicketThread();
+  const ok = await dbWrite('حالة التذكرة', () => sb.from('tickets')
+    .update({ status: t.status === 'open' ? 'closed' : 'open' }).eq('id', id));
+  if (!ok) return;
+  renderTicketThread();
   if (currentPage === 'client-tickets') renderPage('client-tickets');
   buildSidebar();
 }
-function sendTicketReply() {
+async function sendTicketReply() {
   const t = DB.clientMessages.find(x=>x.id===ticketModalState.ticketId); if (!t) return;
   const ta = document.getElementById('tk-reply-input');
   const text = ta.value.trim(); if (!text) return;
   const isAdmin = DB.currentUser.type === 'admin';
-  t.messages.push({
-    from: isAdmin ? 'office' : 'client', authorName: DB.currentUser.name, text,
-    time: new Date().toLocaleString('ar-SA', {dateStyle:'medium', timeStyle:'short'}),
-  });
-  t.status = 'open';
-  if (!isAdmin) {
-    DB.notifications.unshift({
-      id: DB.nextId.notifications++, title:'رد جديد من موكل',
-      desc:`${DB.currentUser.name}: ${text.slice(0,40)}`, time:'الآن', read:false,
+  const ok = await dbWrite('الرد', async () => {
+    const ins = await sb.from('ticket_messages').insert({
+      ticket_id: t.id, from_side: isAdmin ? 'office' : 'client',
+      author_name: DB.currentUser.name, text,
     });
-  }
-  save();
+    if (ins.error) return ins;
+    // الرد يعيد فتح التذكرة إن كانت مغلقة
+    const up = await sb.from('tickets').update({ status: 'open' }).eq('id', t.id);
+    if (up.error || isAdmin) return up;
+    return sb.from('notifications').insert({
+      title: 'رد جديد من موكل',
+      description: `${DB.currentUser.name}: ${text.slice(0,40)}`,
+    });
+  });
+  if (!ok) return;
   ta.value = '';
   renderTicketThread();
   if (currentPage === 'client-tickets') renderPage('client-tickets');
@@ -3188,7 +3564,7 @@ function updateInvDatePreview() {
   el.innerHTML = v ? ic('calendar',13) + ' ' + formatDate(v) : '';
 }
 function invClientChanged() {
-  const cid = parseInt(document.getElementById('inv-client').value);
+  const cid = document.getElementById('inv-client').value;
   const box = document.getElementById('inv-cases-box');
   const cs = DB.cases.filter(c=>c.clientId===cid);
   box.innerHTML = cs.length ? cs.map(c=>`
@@ -3214,67 +3590,74 @@ function addInstRow(amount) {
   renumberInstRows();
 }
 
-function saveCaseModal() {
-  const num = document.getElementById('new-case-num').value.trim();
+async function saveCaseModal() {
   const title = document.getElementById('new-case-title').value.trim();
   if (!title) { alert('يرجى إدخال موضوع القضية'); return; }
-  const fields = {
-    num, title,
+  const row = {
+    num: nullIfBlank(document.getElementById('new-case-num').value),
+    title,
     type: document.getElementById('new-case-type').value,
-    clientId: parseInt(document.getElementById('new-case-client').value)||null,
-    court: document.getElementById('new-case-court').value,
-    dept: document.getElementById('new-case-dept').value,
-    lawyer: document.getElementById('new-case-lawyer').value,
-    opponent: document.getElementById('new-case-opponent').value,
-    nextHearing: document.getElementById('new-case-hearing').value || null,
-    notes: document.getElementById('new-case-notes').value,
+    client_id: nullIfBlank(document.getElementById('new-case-client').value),
+    court: nullIfBlank(document.getElementById('new-case-court').value),
+    dept: nullIfBlank(document.getElementById('new-case-dept').value),
+    lawyer_id: lawyerIdByName(document.getElementById('new-case-lawyer').value),
+    opponent: nullIfBlank(document.getElementById('new-case-opponent').value),
+    next_hearing: nullIfBlank(document.getElementById('new-case-hearing').value),
+    notes: nullIfBlank(document.getElementById('new-case-notes').value),
   };
-  if (caseModalEditId) {
-    const c = DB.cases.find(x=>x.id===caseModalEditId);
-    if (c) Object.assign(c, fields);
-  } else {
-    DB.cases.push({
-      id: DB.nextId.cases++,
-      ...fields,
-      status: 'active', progress: 10,
-      updates: [{ date: new Date().toISOString().split('T')[0], text: 'تم قيد القضية في سجلات المكتب', status:'active' }],
-      documents: { agency: [], papers: [] },
+  const editId = caseModalEditId;
+  const ok = await dbWrite('القضية', async () => {
+    if (editId) return sb.from('cases').update(row).eq('id', editId);
+    const ins = await sb.from('cases').insert(row).select('id').single();
+    if (ins.error) return ins;
+    return sb.from('case_updates').insert({
+      case_id: ins.data.id, text: 'تم قيد القضية في سجلات المكتب', status: 'active',
     });
-  }
+  });
+  if (!ok) return;
   caseModalEditId = null;
-  save(); closeModal('add-case-modal',{}); navTo('cases'); buildSidebar();
+  closeModal('add-case-modal', {});
+  navTo('cases');
+  buildSidebar();
 }
 
-function saveNewClient() {
+async function saveNewClient() {
   const name = document.getElementById('nc-name').value.trim();
   if (!name) { alert('يرجى إدخال اسم الموكل'); return; }
-  DB.clients.push({
-    id: DB.nextId.clients++, name,
-    idNum: document.getElementById('nc-id').value,
-    phone: document.getElementById('nc-phone').value,
-    email: document.getElementById('nc-email').value,
-    user: document.getElementById('nc-user').value,
-    pass: document.getElementById('nc-pass').value,
-    nationality: document.getElementById('nc-nationality').value,
-    notes: document.getElementById('nc-notes').value,
-  });
-  save(); closeModal('add-client-modal',{}); navTo('clients');
+  // حساب بوابة العميل يُنشأ من صفحة الإعدادات، لا من هنا — كلمة المرور
+  // لا تُحفَظ في جدول الموكلين إطلاقاً بل تُعمَّى في نظام الحسابات
+  const ok = await dbWrite('الموكل', () => sb.from('clients').insert({
+    name,
+    id_num: nullIfBlank(document.getElementById('nc-id').value),
+    phone: nullIfBlank(document.getElementById('nc-phone').value),
+    email: nullIfBlank(document.getElementById('nc-email').value),
+    nationality: nullIfBlank(document.getElementById('nc-nationality').value),
+    notes: nullIfBlank(document.getElementById('nc-notes').value),
+  }));
+  if (!ok) return;
+  closeModal('add-client-modal', {});
+  navTo('clients');
 }
 
-function saveNewHearing() {
-  const caseId = parseInt(document.getElementById('nh-case').value);
+async function saveNewHearing() {
+  const caseId = document.getElementById('nh-case').value;
   const date = document.getElementById('nh-date').value;
   if (!caseId || !date) { alert('يرجى اختيار القضية والتاريخ'); return; }
-  DB.hearings.push({
-    id: DB.nextId.hearings++, caseId, date,
-    time: document.getElementById('nh-time').value,
-    court: document.getElementById('nh-court').value,
-    purpose: document.getElementById('nh-purpose').value,
-    notes: document.getElementById('nh-notes').value,
+  const ok = await dbWrite('الجلسة', async () => {
+    const ins = await sb.from('hearings').insert({
+      case_id: caseId, date,
+      time: nullIfBlank(document.getElementById('nh-time').value),
+      court: nullIfBlank(document.getElementById('nh-court').value),
+      purpose: nullIfBlank(document.getElementById('nh-purpose').value),
+      notes: nullIfBlank(document.getElementById('nh-notes').value),
+    });
+    if (ins.error) return ins;
+    // موعد الجلسة القادمة على القضية يتبع آخر جلسة مُضافة
+    return sb.from('cases').update({ next_hearing: date }).eq('id', caseId);
   });
-  const c = DB.cases.find(x=>x.id===caseId);
-  if (c) c.nextHearing = date;
-  save(); closeModal('add-hearing-modal',{}); navTo('hearings');
+  if (!ok) return;
+  closeModal('add-hearing-modal', {});
+  navTo('hearings');
 }
 
 function openAddUpdate(caseId) {
@@ -3284,43 +3667,55 @@ function openAddUpdate(caseId) {
   if (c) document.getElementById('update-status').value = c.status;
   openModal('add-update-modal');
 }
-function saveUpdate() {
-  const caseId = parseInt(document.getElementById('update-case-id').value);
+async function saveUpdate() {
+  const caseId = document.getElementById('update-case-id').value;
   const text = document.getElementById('update-text').value.trim();
   if (!text) { alert('يرجى إدخال نص المستجد'); return; }
-  const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
-  c.updates.push({ date: new Date().toISOString().split('T')[0], text, status: document.getElementById('update-status').value });
-  c.status = document.getElementById('update-status').value;
-  const nh = document.getElementById('update-next-hearing').value;
-  if (nh) c.nextHearing = nh;
-  save(); closeModal('add-update-modal',{}); navTo('cases');
+  const status = document.getElementById('update-status').value;
+  const nh = nullIfBlank(document.getElementById('update-next-hearing').value);
+  const ok = await dbWrite('المستجد', async () => {
+    const ins = await sb.from('case_updates').insert({ case_id: caseId, text, status });
+    if (ins.error) return ins;
+    const patch = { status };
+    if (nh) patch.next_hearing = nh;
+    return sb.from('cases').update(patch).eq('id', caseId);
+  });
+  if (!ok) return;
+  closeModal('add-update-modal', {});
+  navTo('cases');
 }
 
-function saveInvoiceContract(print) {
-  const clientId = parseInt(document.getElementById('inv-client').value);
+async function saveInvoiceContract(print) {
+  const clientId = document.getElementById('inv-client').value;
   if (!clientId) { alert('يرجى اختيار الموكل'); return; }
-  const caseIds = [...document.querySelectorAll('.inv-case-chk:checked')].map(c=>parseInt(c.value));
+  const caseIds = [...document.querySelectorAll('.inv-case-chk:checked')].map(c=>c.value);
   if (!caseIds.length) { alert('يرجى اختيار قضية واحدة على الأقل من القضايا المتمثلة'); return; }
   const insts = [...document.querySelectorAll('#inv-installments .inst-row')]
     .map(r => r.querySelector('.inst-amount').value.trim())
     .filter(amount => amount !== '')
-    .map((amount,i) => ({ label: ordinalInstLabel(i+1), amount, paid: false }));
+    .map((amount,i) => ({ label: ordinalInstLabel(i+1), amount, sort: i }));
   if (!insts.length) { alert('يرجى إدخال دفعة واحدة على الأقل'); return; }
-  const id = DB.nextId.invoices++;
-  const inv = {
-    id,
-    ref: document.getElementById('inv-ref').value.trim() || (new Date().getFullYear() + '-' + String(id).padStart(3,'0')),
-    caseIds, clientId,
-    date: document.getElementById('inv-date').value || new Date().toISOString().split('T')[0],
-    city: document.getElementById('inv-city').value.trim() || 'المدينة المنورة',
-    notes: document.getElementById('inv-notes').value.trim(),
-    installments: insts,
-  };
-  syncInvoiceDerived(inv);
-  DB.invoices.push(inv); save();
+  // رقم العقد يتسلسل على عدد العقود القائمة إن لم يُكتب يدوياً
+  const ref = document.getElementById('inv-ref').value.trim()
+    || (new Date().getFullYear() + '-' + String(DB.invoices.length + 1).padStart(3,'0'));
+  let newId = null;
+  const ok = await dbWrite('عقد الأتعاب', async () => {
+    const ins = await sb.from('invoices').insert({
+      ref, client_id: clientId,
+      date: document.getElementById('inv-date').value || new Date().toISOString().split('T')[0],
+      city: document.getElementById('inv-city').value.trim() || 'المدينة المنورة',
+      notes: nullIfBlank(document.getElementById('inv-notes').value),
+    }).select('id').single();
+    if (ins.error) return ins;
+    newId = ins.data.id;
+    const link = await sb.from('invoice_cases').insert(caseIds.map(cid => ({ invoice_id: newId, case_id: cid })));
+    if (link.error) return link;
+    return sb.from('installments').insert(insts.map(s => ({ ...s, invoice_id: newId })));
+  });
+  if (!ok) return;
   closeModal('add-invoice-modal',{});
   navTo('invoices');
-  if (print) openContractPDF(id);
+  if (print && newId) openContractPDF(newId);
 }
 
 // ═══════════════════════════════════
@@ -3538,7 +3933,7 @@ function renderClientInvoices() {
           </tbody>
         </table></div>
         <div style="display:flex;justify-content:flex-end;margin-top:14px">
-          <button class="btn btn-primary" onclick="openContractPDF(${inv.id})">📄 عرض / تحميل عقد الأتعاب PDF</button>
+          <button class="btn btn-primary" onclick="openContractPDF('${inv.id}')">📄 عرض / تحميل عقد الأتعاب PDF</button>
         </div>
       </div>`;
     }).join('')}`;
@@ -3552,7 +3947,7 @@ function renderNotifications() {
   const me = DB.currentUser;
   const visible = DB.notifications.filter(n => !n.forUserId || (me && n.forUserId===me.userId));
   list.innerHTML = visible.length ? visible.map(n => `
-    <div class="notif-item ${n.read?'':'unread'}" onclick="markNotifRead(${n.id})">
+    <div class="notif-item ${n.read?'':'unread'}" onclick="markNotifRead('${n.id}')">
       <div class="notif-title">${n.title}</div>
       <div class="notif-desc">${n.desc}</div>
       <div class="notif-time">${n.time}</div>
@@ -3561,12 +3956,15 @@ function renderNotifications() {
 function toggleNotif() {
   document.getElementById('notif-panel').classList.toggle('open');
 }
-function markNotifRead(id) {
-  const n = DB.notifications.find(x=>x.id===id); if(n) n.read=true; save();
-  const me = DB.currentUser;
-  const unread = DB.notifications.filter(n=>!n.read && (!n.forUserId || (me && n.forUserId===me.userId))).length;
-  document.getElementById('notif-dot').style.display = unread ? 'block' : 'none';
+async function markNotifRead(id) {
+  const n = DB.notifications.find(x=>x.id===id); if (n) n.read = true;
   renderNotifications();
+  const me = DB.currentUser;
+  const unread = DB.notifications.filter(x=>!x.read && (!x.forUserId || (me && x.forUserId===me.userId))).length;
+  document.getElementById('notif-dot').style.display = unread ? 'block' : 'none';
+  // لا تُعاد قراءة كل البيانات لأجل إشعار واحد
+  const { error } = await sb.from('notifications').update({ read: true }).eq('id', id);
+  if (error) console.error('[الإشعار]', error);
 }
 
 // ═══════════════════════════════════
@@ -3616,8 +4014,8 @@ document.addEventListener('click', e => {
   }
 });
 
-// استئناف الجلسة تلقائياً إن كان المستخدم قد سجّل الدخول سابقاً من هذا المتصفح
-if (DB.currentUser) startApp();
+// استئناف الجلسة يتم عبر restoreSession() من نظام المصادقة، لا من ذاكرة المتصفح —
+// وإلّا لأمكن الدخول ببيانات قديمة محفوظة محلياً دون تحقّق من قاعدة البيانات
 </script>
 </body>
 </html>

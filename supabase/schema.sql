@@ -20,11 +20,14 @@ create table if not exists staff (
   id          uuid primary key references auth.users(id) on delete cascade,
   name        text not null,
   username    text not null unique,
+  email       text,
   role        text not null default 'محامي',
   perms       jsonb not null default '{}'::jsonb,
   avatar_path text,
   created_at  timestamptz not null default now()
 );
+-- لقواعد البيانات المُنشأة قبل إضافة البريد
+alter table staff add column if not exists email text;
 
 -- الموكلون. auth_user_id يُملأ عند أول دخول للموكل من بوابة العميل
 create table if not exists clients (
@@ -177,7 +180,7 @@ create table if not exists office_settings (
   license text not null default '38/321',
   phone   text not null default '0148482131',
   mobile  text not null default '+966537475000',
-  email   text not null default 'abdullah@zahemlaw.com',
+  email   text not null default 'Abdullah@alzahimlaw.com',
   address text not null default 'طريق الملك عبدالله | الدائري الثاني | مقابل سوق بن داود'
 );
 insert into office_settings (id) values (1) on conflict (id) do nothing;
@@ -189,11 +192,13 @@ create table if not exists pending_accounts (
   password_hash text not null,
   kind          text not null check (kind in ('staff','client')),
   name          text not null,
+  email         text,
   role          text,
   perms         jsonb default '{}'::jsonb,
   client_id     uuid references clients(id) on delete cascade,
   created_at    timestamptz not null default now()
 );
+alter table pending_accounts add column if not exists email text;
 
 -- ════════════════════════════════════════════════════════════════════
 --  دوال مساعدة للحماية
@@ -435,10 +440,22 @@ create policy office_update on office_settings for update using (has_perm('setti
 --  بهذه الطريقة لا تُستخدم مفاتيح الإدارة في المتصفح ولا تُستبدل جلسة المدير.
 -- ════════════════════════════════════════════════════════════════════
 
+-- البريد المستخدَم في نظام المصادقة: البريد الحقيقي إن وُجد (فتعمل استعادة
+-- كلمة المرور)، وإلّا بريد اصطناعي من اسم المستخدم (فلا استعادة، ويعيد المدير ضبطها)
+create or replace function auth_email_for(p_username text, p_email text)
+returns text language sql immutable as $$
+  select case
+    when p_email is not null and btrim(p_email) <> '' then lower(btrim(p_email))
+    else lower(btrim(p_username)) || '@alzahimlaw.app'
+  end;
+$$;
+
+drop function if exists create_pending_account(text, text, text, text, text, jsonb, uuid);
 create or replace function create_pending_account(
   p_username text, p_password text, p_kind text,
   p_name text, p_role text default null,
-  p_perms jsonb default '{}'::jsonb, p_client_id uuid default null
+  p_perms jsonb default '{}'::jsonb, p_client_id uuid default null,
+  p_email text default null
 ) returns void
   language plpgsql security definer set search_path = public, extensions as $$
 begin
@@ -449,57 +466,73 @@ begin
      or exists (select 1 from clients where username = p_username and id is distinct from p_client_id) then
     raise exception 'اسم المستخدم مستخدم مسبقاً';
   end if;
-  insert into pending_accounts (username, password_hash, kind, name, role, perms, client_id)
-  values (p_username, crypt(p_password, gen_salt('bf')), p_kind, p_name, p_role, p_perms, p_client_id)
+  if p_email is not null and btrim(p_email) <> '' then
+    if exists (select 1 from staff where lower(email) = lower(btrim(p_email)))
+       or exists (select 1 from clients where lower(email) = lower(btrim(p_email)) and id is distinct from p_client_id) then
+      raise exception 'البريد الإلكتروني مستخدم لحساب آخر';
+    end if;
+  end if;
+  insert into pending_accounts (username, password_hash, kind, name, email, role, perms, client_id)
+  values (p_username, crypt(p_password, gen_salt('bf')), p_kind, p_name,
+          nullif(btrim(coalesce(p_email,'')),''), p_role, p_perms, p_client_id)
   on conflict (username) do update
     set password_hash = excluded.password_hash, kind = excluded.kind, name = excluded.name,
-        role = excluded.role, perms = excluded.perms, client_id = excluded.client_id;
+        email = excluded.email, role = excluded.role, perms = excluded.perms,
+        client_id = excluded.client_id;
 end;
 $$;
 
 -- الحساب الأول للمكتب: يعمل مرة واحدة فقط ما دام جدول المكتب فارغاً،
 -- لأن إنشاء الحسابات العادية يتطلب وجود مدير مسبقاً
-create or replace function bootstrap_owner(p_username text, p_password text, p_name text)
-returns void
+drop function if exists bootstrap_owner(text, text, text);
+create or replace function bootstrap_owner(
+  p_username text, p_password text, p_name text, p_email text default null
+) returns void
   language plpgsql security definer set search_path = public, extensions as $$
 begin
   if exists (select 1 from staff) then
     raise exception 'تم إنشاء حساب المكتب مسبقاً — تُنشأ بقية الحسابات من صفحة الإعدادات';
   end if;
-  insert into pending_accounts (username, password_hash, kind, name, role, perms)
-  values (p_username, crypt(p_password, gen_salt('bf')), 'staff', p_name, 'مدير المكتب',
+  insert into pending_accounts (username, password_hash, kind, name, email, role, perms)
+  values (p_username, crypt(p_password, gen_salt('bf')), 'staff', p_name,
+    nullif(btrim(coalesce(p_email,'')),''), 'مدير المكتب',
     '{"cases":true,"hearings":true,"tasks":true,"clients":true,"invoices":true,"reports":true,"settings":true,"users":true}'::jsonb)
   on conflict (username) do update
-    set password_hash = excluded.password_hash, perms = excluded.perms, role = excluded.role, name = excluded.name;
+    set password_hash = excluded.password_hash, perms = excluded.perms,
+        role = excluded.role, name = excluded.name, email = excluded.email;
 end;
 $$;
 
--- يتحقق من اسم المستخدم وكلمة المرور ويعيد البريد الاصطناعي المستخدَم داخلياً.
--- لا يكشف كلمة المرور ولا أي بيانات أخرى.
-create or replace function claim_account(p_username text, p_password text)
-returns table (synthetic_email text, kind text, already_registered boolean)
+-- يتحقق من المُعرِّف (اسم مستخدم أو بريد أو رقم هوية) وكلمة المرور،
+-- ويعيد البريد المستخدَم في نظام المصادقة. لا يكشف كلمة المرور.
+drop function if exists claim_account(text, text);
+create or replace function claim_account(p_identifier text, p_password text)
+returns table (auth_email text, kind text, already_registered boolean)
   language plpgsql security definer set search_path = public, extensions as $$
 declare
+  v_id      text := lower(btrim(p_identifier));
   v_pending pending_accounts;
   v_staff   staff;
   v_client  clients;
 begin
-  select * into v_pending from pending_accounts where username = p_username;
+  select * into v_pending from pending_accounts
+   where lower(username) = v_id or lower(email) = v_id;
   if v_pending.username is not null
      and v_pending.password_hash = crypt(p_password, v_pending.password_hash) then
-    return query select p_username || '@zahemlaw.app', v_pending.kind, false;
+    return query select auth_email_for(v_pending.username, v_pending.email), v_pending.kind, false;
     return;
   end if;
 
   -- حساب مُسجَّل مسبقاً: يُترك التحقق من كلمة المرور لنظام المصادقة
-  select * into v_staff from staff where username = p_username;
+  select * into v_staff from staff where lower(username) = v_id or lower(email) = v_id;
   if v_staff.id is not null then
-    return query select p_username || '@zahemlaw.app', 'staff'::text, true;
+    return query select auth_email_for(v_staff.username, v_staff.email), 'staff'::text, true;
     return;
   end if;
-  select * into v_client from clients where username = p_username;
+  select * into v_client from clients
+   where lower(username) = v_id or lower(email) = v_id or lower(id_num) = v_id;
   if v_client.id is not null then
-    return query select p_username || '@zahemlaw.app', 'client'::text, true;
+    return query select auth_email_for(v_client.username, v_client.email), 'client'::text, true;
     return;
   end if;
 
@@ -512,32 +545,49 @@ $$;
 -- بدون ذلك يستطيع أي حساب مسجَّل (موكل مثلاً) استدعاء الدالة باسم مستخدم مديرٍ
 -- معلَّق فيُدرج نفسه في جدول المكتب بصلاحيات كاملة
 drop function if exists finalize_account(text);
-create or replace function finalize_account(p_username text, p_password text)
+drop function if exists finalize_account(text, text);
+create or replace function finalize_account(p_identifier text, p_password text)
 returns void
   language plpgsql security definer set search_path = public, extensions as $$
-declare v_pending pending_accounts;
+declare
+  v_id      text := lower(btrim(p_identifier));
+  v_pending pending_accounts;
 begin
-  select * into v_pending from pending_accounts where username = p_username;
-  if v_pending.username is null then return; end if;
   if auth.uid() is null then
     raise exception 'يجب تسجيل الدخول أولاً';
   end if;
+  -- يُبحَث بنفس معايير claim_account (اسم مستخدم أو بريد)، وإلّا نجحت المصادقة
+  -- بالبريد ثم لم يُربَط الحساب فيبقى معلَّقاً بلا سطر في جداول المكتب
+  select * into v_pending from pending_accounts
+   where lower(username) = v_id or lower(email) = v_id;
+
+  if v_pending.username is null then
+    -- الحساب مكتمل أصلاً: ليس خطأً
+    if exists (select 1 from staff where id = auth.uid())
+       or exists (select 1 from clients where auth_user_id = auth.uid()) then
+      return;
+    end if;
+    -- لا حساب معلَّق ولا سطر مكتمل: يجب أن يظهر الخطأ بدل الخروج بصمت
+    raise exception 'لا يوجد حساب معلَّق بهذا المعرّف';
+  end if;
+
   if v_pending.password_hash <> crypt(p_password, v_pending.password_hash) then
     raise exception 'بيانات الدخول غير صحيحة';
   end if;
 
   if v_pending.kind = 'staff' then
-    insert into staff (id, name, username, role, perms)
-    values (auth.uid(), v_pending.name, v_pending.username,
+    insert into staff (id, name, username, email, role, perms)
+    values (auth.uid(), v_pending.name, v_pending.username, v_pending.email,
             coalesce(v_pending.role,'محامي'), coalesce(v_pending.perms,'{}'::jsonb))
     on conflict (id) do update set name = excluded.name, username = excluded.username,
-            role = excluded.role, perms = excluded.perms;
+            email = excluded.email, role = excluded.role, perms = excluded.perms;
   else
-    update clients set auth_user_id = auth.uid(), username = v_pending.username
+    update clients set auth_user_id = auth.uid(), username = v_pending.username,
+           email = coalesce(v_pending.email, email)
     where id = v_pending.client_id;
   end if;
 
-  delete from pending_accounts where username = p_username;
+  delete from pending_accounts where username = v_pending.username;
 end;
 $$;
 
@@ -555,11 +605,11 @@ $$;
 -- أمر تهيئة لمرة واحدة يُنفَّذ من SQL Editor فقط.
 -- بدونه يستطيع أي زائر مجهول استدعاءه — ما دام جدول المكتب فارغاً —
 -- فيستبدل حساب المدير بكلمة مرور من عنده ويصبح مدير المكتب
-revoke all on function bootstrap_owner(text, text, text) from public, anon, authenticated;
+revoke all on function bootstrap_owner(text, text, text, text) from public, anon, authenticated;
 
 -- إنشاء الحسابات لمدير المكتب المسجَّل فقط (والدالة تتحقق أيضاً بنفسها)
-revoke all on function create_pending_account(text, text, text, text, text, jsonb, uuid) from public, anon;
-grant execute on function create_pending_account(text, text, text, text, text, jsonb, uuid) to authenticated;
+revoke all on function create_pending_account(text, text, text, text, text, jsonb, uuid, text) from public, anon;
+grant execute on function create_pending_account(text, text, text, text, text, jsonb, uuid, text) to authenticated;
 
 -- جدول الحسابات المعلَّقة: لا يُقرأ ولا يُكتب من المتصفح إطلاقاً.
 -- الدوال أعلاه تصل إليه لأنها SECURITY DEFINER فتُنفَّذ بصلاحيات مالكها
