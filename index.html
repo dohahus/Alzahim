@@ -3989,39 +3989,45 @@ async function saveUpdate() {
   navTo('cases');
 }
 
-// حذف القضية يُسقط معها مستجداتها وجلساتها ومستنداتها — لذا يُعدَّد ما سيُحذف
-// قبل التأكيد، ويُطلب كتابة اسم القضية لأن الحذف لا رجعة فيه
+// حذف القضية يُسقط معها مستجداتها وجلساتها ومهامها ومستنداتها.
+// الموكل لا يُمسّ: الارتباط من القضية إليه، وقد تكون له قضايا أخرى.
 async function deleteCase(caseId) {
   const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
-  const hearings = DB.hearings.filter(h => h.caseId === caseId).length;
-  const tasks    = DB.tasks.filter(t => t.caseId === caseId).length;
-  const docs     = (c.documents.agency || []).length + (c.documents.papers || []).length;
+  const cl       = DB.clients.find(x=>x.id===c.clientId);
+  const hearings = DB.hearings.filter(h => h.caseId === caseId);
+  const tasks    = DB.tasks.filter(t => t.caseId === caseId);
+  const docs     = [...(c.documents.agency || []), ...(c.documents.papers || [])];
   const invoices = DB.invoices.filter(i => (i.caseIds || []).includes(caseId)).length;
 
   const lines = [
     `${(c.updates || []).length} مستجد`,
-    `${hearings} جلسة`,
-    `${docs} مستند`,
+    `${hearings.length} جلسة`,
+    `${tasks.length} مهمة`,
+    `${docs.length} مستند`,
   ];
-  if (tasks)    lines.push(`${tasks} مهمة (تبقى لكن بلا قضية)`);
-  if (invoices) lines.push(`${invoices} عقد أتعاب (يبقى لكن بلا ارتباط بالقضية)`);
+  if (invoices) lines.push(`${invoices} عقد أتعاب (يبقى محفوظاً لكن بلا ارتباط بالقضية)`);
 
   if (!confirm(
     `حذف القضية «${c.title}» نهائياً؟\n\nسيُحذف معها:\n• ${lines.join('\n• ')}\n\n`
+    + `لن يُحذف الموكل${cl ? ` «${cl.name}»` : ''} ولا قضاياه الأخرى.\n\n`
     + 'لا يمكن التراجع عن هذا الإجراء.'
   )) return;
 
-  const typed = prompt(`للتأكيد، اكتب موضوع القضية كما هو:\n${c.title}`);
-  if (typed === null) return;
-  if (typed.trim() !== c.title.trim()) { alert('النص غير مطابق — أُلغي الحذف'); return; }
+  // ملفات التخزين لا تُحذف مع صفوف قاعدة البيانات
+  const casePaths = docs.map(d => d.path).filter(Boolean);
+  const taskPaths = tasks.flatMap(t => (t.comments || [])
+    .map(cm => cm.attachment && cm.attachment.path).filter(Boolean));
 
-  const paths = [...(c.documents.agency || []), ...(c.documents.papers || [])]
-    .map(d => d.path).filter(Boolean);
   const ok = await dbWrite('حذف القضية', async () => {
+    // المهام مرتبطة بالقضية ارتباطاً يُبقيها عند حذفها، فتُحذف صراحةً
+    if (tasks.length) {
+      const dt = await sb.from('tasks').delete().in('id', tasks.map(t => t.id));
+      if (dt.error) return dt;
+    }
     const del = await sb.from('cases').delete().eq('id', caseId);
     if (del.error) return del;
-    // ملفات التخزين لا تُحذف مع صفوف قاعدة البيانات
-    if (paths.length) await sb.storage.from('case-docs').remove(paths).catch(()=>{});
+    if (casePaths.length) await sb.storage.from('case-docs').remove(casePaths).catch(()=>{});
+    if (taskPaths.length) await sb.storage.from('task-files').remove(taskPaths).catch(()=>{});
     return del;
   });
   if (!ok) return;
