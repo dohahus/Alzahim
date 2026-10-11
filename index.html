@@ -1160,9 +1160,8 @@ tbody td { padding:13px 16px; font-size:13px; }
 const SUPABASE_URL = 'https://javmazwxrdkylewhjahu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_-CohC6ascOspnmDlToGCoQ_xYGFJxJ2';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-// البريد الاصطناعي: الموقع يستخدم اسم مستخدم ورمزاً سرياً، ونظام المصادقة يتطلب بريداً
-const AUTH_DOMAIN = '@zahemlaw.app';
-const emailFor = username => String(username||'').trim().toLowerCase() + AUTH_DOMAIN;
+// البريد المستخدَم في المصادقة تحدده دالة claim_account في قاعدة البيانات وتعيده
+// عند الدخول، فلا يُبنى هنا — حتى لا يتفرّع التعريف في موضعين فيختلفا
 
 // ═══════════════════════════════════
 //  SVG ICON SYSTEM (بدل الإيموجي)
@@ -3021,7 +3020,7 @@ function renderSettings() {
       </div>
       <div>
         <div class="form-group-v"><label>جوال</label><input type="text" value="+966537475000" /></div>
-        <div class="form-group-v"><label>البريد الإلكتروني</label><input type="email" value="abdullah@zahemlaw.com" /></div>
+        <div class="form-group-v"><label>البريد الإلكتروني</label><input type="email" value="Abdullah@alzahimlaw.com" /></div>
         <div class="form-group-v"><label>الموقع</label><input type="text" value="طريق الملك عبدالله | الدائري الثاني | مقابل سوق بن داود" /></div>
       </div>
     </div>
@@ -3314,7 +3313,7 @@ function renderClientContact() {
   <div class="two-col">
     <div class="card">
       <div class="card-title" style="margin-bottom:16px">📋 معلومات الاتصال</div>
-      ${[['📞 هاتف','0148482131'],['📱 جوال','+966537475000'],['📧 بريد','abdullah@zahemlaw.com'],['📍 الموقع','طريق الملك عبدالله | الدائري الثاني']].map(([l,v]) => `
+      ${[['📞 هاتف','0148482131'],['📱 جوال','+966537475000'],['📧 بريد','Abdullah@alzahimlaw.com'],['📍 الموقع','طريق الملك عبدالله | الدائري الثاني']].map(([l,v]) => `
         <div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
           <span style="font-size:13px;flex:1">${l}</span>
           <span style="color:var(--gold);font-size:13px">${v}</span>

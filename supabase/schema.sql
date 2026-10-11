@@ -180,7 +180,7 @@ create table if not exists office_settings (
   license text not null default '38/321',
   phone   text not null default '0148482131',
   mobile  text not null default '+966537475000',
-  email   text not null default 'abdullah@zahemlaw.com',
+  email   text not null default 'Abdullah@alzahimlaw.com',
   address text not null default 'طريق الملك عبدالله | الدائري الثاني | مقابل سوق بن داود'
 );
 insert into office_settings (id) values (1) on conflict (id) do nothing;
@@ -446,7 +446,7 @@ create or replace function auth_email_for(p_username text, p_email text)
 returns text language sql immutable as $$
   select case
     when p_email is not null and btrim(p_email) <> '' then lower(btrim(p_email))
-    else lower(btrim(p_username)) || '@zahemlaw.app'
+    else lower(btrim(p_username)) || '@alzahimlaw.app'
   end;
 $$;
 
