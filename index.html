@@ -1651,9 +1651,11 @@ async function doLogin() {
         const { error } = await sb.auth.signInWithPassword({ email, password: p });
         if (error) throw new Error('تعذّر إنشاء الحساب: ' + upErr.message);
       }
-      const { error: finErr } = await sb.rpc('finalize_account', { p_username: u, p_password: p });
-      if (finErr) throw new Error('تعذّر استكمال الحساب: ' + finErr.message);
     }
+    // تُستدعى في المسارين: لو انقطعت محاولة سابقة بعد التسجيل وقبل الربط،
+    // بقي الحساب معلَّقاً بلا سطر في جداول المكتب. الدالة لا تفعل شيئاً إن كان مكتملاً.
+    const { error: finErr } = await sb.rpc('finalize_account', { p_identifier: u, p_password: p });
+    if (finErr) throw new Error('تعذّر استكمال الحساب: ' + finErr.message);
     await afterAuth();
   } catch (e) {
     await sb.auth.signOut().catch(()=>{});

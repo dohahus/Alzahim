@@ -545,16 +545,32 @@ $$;
 -- بدون ذلك يستطيع أي حساب مسجَّل (موكل مثلاً) استدعاء الدالة باسم مستخدم مديرٍ
 -- معلَّق فيُدرج نفسه في جدول المكتب بصلاحيات كاملة
 drop function if exists finalize_account(text);
-create or replace function finalize_account(p_username text, p_password text)
+drop function if exists finalize_account(text, text);
+create or replace function finalize_account(p_identifier text, p_password text)
 returns void
   language plpgsql security definer set search_path = public, extensions as $$
-declare v_pending pending_accounts;
+declare
+  v_id      text := lower(btrim(p_identifier));
+  v_pending pending_accounts;
 begin
-  select * into v_pending from pending_accounts where username = p_username;
-  if v_pending.username is null then return; end if;
   if auth.uid() is null then
     raise exception 'يجب تسجيل الدخول أولاً';
   end if;
+  -- يُبحَث بنفس معايير claim_account (اسم مستخدم أو بريد)، وإلّا نجحت المصادقة
+  -- بالبريد ثم لم يُربَط الحساب فيبقى معلَّقاً بلا سطر في جداول المكتب
+  select * into v_pending from pending_accounts
+   where lower(username) = v_id or lower(email) = v_id;
+
+  if v_pending.username is null then
+    -- الحساب مكتمل أصلاً: ليس خطأً
+    if exists (select 1 from staff where id = auth.uid())
+       or exists (select 1 from clients where auth_user_id = auth.uid()) then
+      return;
+    end if;
+    -- لا حساب معلَّق ولا سطر مكتمل: يجب أن يظهر الخطأ بدل الخروج بصمت
+    raise exception 'لا يوجد حساب معلَّق بهذا المعرّف';
+  end if;
+
   if v_pending.password_hash <> crypt(p_password, v_pending.password_hash) then
     raise exception 'بيانات الدخول غير صحيحة';
   end if;
@@ -571,7 +587,7 @@ begin
     where id = v_pending.client_id;
   end if;
 
-  delete from pending_accounts where username = p_username;
+  delete from pending_accounts where username = v_pending.username;
 end;
 $$;
 
