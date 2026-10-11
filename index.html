@@ -1629,12 +1629,18 @@ async function doLogin() {
   if (!u || !p) { alert('يرجى إدخال اسم المستخدم والرمز السري'); return; }
   loginBusy(true);
   try {
-    const { data: claim, error: claimErr } = await sb.rpc('claim_account', { p_username: u, p_password: p });
-    if (claimErr) throw new Error('بيانات الدخول غير صحيحة');
+    const { data: claim, error: claimErr } = await sb.rpc('claim_account', { p_identifier: u, p_password: p });
+    if (claimErr) {
+      // يُفرَّق بين تعذّر الوصول للخادم وبين خطأ في البيانات، وإلّا ظهر للمستخدم
+      // أن رمزه خاطئ بينما المشكلة في الاتصال أو في توقّف قاعدة البيانات
+      if (isConnectionError(claimErr)) throw new Error(CONNECTION_MSG);
+      throw new Error('بيانات الدخول غير صحيحة');
+    }
     const info = Array.isArray(claim) ? claim[0] : claim;
     if (!info) throw new Error('بيانات الدخول غير صحيحة');
 
-    const email = info.synthetic_email;
+    const email = info.auth_email;
+    if (!email) throw new Error('تعذّر تحديد بريد الحساب — راجع إعداد قاعدة البيانات');
     if (info.already_registered) {
       const { error } = await sb.auth.signInWithPassword({ email, password: p });
       if (error) throw new Error('بيانات الدخول غير صحيحة');
@@ -1652,10 +1658,19 @@ async function doLogin() {
     await afterAuth();
   } catch (e) {
     await sb.auth.signOut().catch(()=>{});
-    alert(e.message || 'تعذّر تسجيل الدخول');
+    alert(isConnectionError(e) ? CONNECTION_MSG : (e.message || 'تعذّر تسجيل الدخول'));
   } finally {
     loginBusy(false);
   }
+}
+const CONNECTION_MSG = 'تعذّر الوصول إلى قاعدة البيانات.\n'
+  + 'تحقق من اتصالك بالإنترنت. فإن كان الاتصال سليماً فقد تكون قاعدة البيانات متوقفة — راجع مزوّد الخدمة.';
+// أخطاء الشبكة لا تحمل رمزاً من الخادم، بخلاف أخطاء البيانات التي يردّها
+function isConnectionError(err) {
+  if (!err) return false;
+  if (err.code && !['', 'PGRST301'].includes(err.code)) return false;
+  const m = (err.message || '') + ' ' + (err.details || '');
+  return /failed to fetch|networkerror|load failed|fetch failed|connection|ENOTFOUND|ERR_NAME/i.test(m);
 }
 // يُبنى المستخدم الحالي من قاعدة البيانات، ثم تُحمَّل بياناته المصرَّح له بها
 async function afterAuth() {
