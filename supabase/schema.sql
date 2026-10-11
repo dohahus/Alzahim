@@ -108,6 +108,15 @@ create table if not exists tasks (
   created_at   timestamptz not null default now()
 );
 
+-- مهمة واحدة قد تُوكَّل لأكثر من محامٍ
+create table if not exists task_assignees (
+  task_id  uuid not null references tasks(id) on delete cascade,
+  staff_id uuid not null references staff(id) on delete cascade,
+  primary key (task_id, staff_id)
+);
+-- فترة عمل المهمة تُحدَّد يدوياً بدل أن تبدأ من لحظة الإنشاء
+alter table tasks add column if not exists start_date date;
+
 create table if not exists task_comments (
   id              uuid primary key default gen_random_uuid(),
   task_id         uuid not null references tasks(id) on delete cascade,
@@ -240,6 +249,23 @@ create or replace function can_see_case(c_id uuid) returns boolean
   );
 $$;
 
+-- من يرى المهمة: صاحب المكتب، أو منشئها، أو أحد المُوكَّلين بها
+create or replace function can_see_task(t_id uuid) returns boolean
+  language sql stable security definer set search_path = public, extensions as $$
+  select exists (
+    select 1 from tasks t
+    where t.id = t_id
+      and (
+        is_owner()
+        or (is_staff() and (
+             t.assignee_id = auth.uid() or t.creator_id = auth.uid()
+             or exists (select 1 from task_assignees ta
+                         where ta.task_id = t.id and ta.staff_id = auth.uid())
+           ))
+      )
+  );
+$$;
+
 -- ════════════════════════════════════════════════════════════════════
 --  تشغيل الحماية على كل الجداول
 --  القاعدة: لا يُقرأ أي سطر إلا بسياسة صريحة تسمح به
@@ -252,6 +278,7 @@ alter table case_updates     enable row level security;
 alter table case_documents   enable row level security;
 alter table hearings         enable row level security;
 alter table tasks            enable row level security;
+alter table task_assignees   enable row level security;
 alter table task_comments    enable row level security;
 alter table invoices         enable row level security;
 alter table invoice_cases    enable row level security;
@@ -333,24 +360,34 @@ create policy hearings_delete on hearings for delete using (is_staff() and can_s
 -- ───────── المهام: للمكتب فقط، والمحامي يرى ما وُكِّل به ─────────
 drop policy if exists tasks_read on tasks;
 create policy tasks_read on tasks for select using (
-  is_owner() or (is_staff() and (assignee_id = auth.uid() or creator_id = auth.uid()))
+  is_owner() or (is_staff() and (
+    assignee_id = auth.uid() or creator_id = auth.uid()
+    or exists (select 1 from task_assignees ta where ta.task_id = tasks.id and ta.staff_id = auth.uid())
+  ))
 );
 drop policy if exists tasks_write on tasks;
 create policy tasks_write on tasks for insert with check (is_staff());
 drop policy if exists tasks_update on tasks;
 create policy tasks_update on tasks for update using (
-  is_owner() or (is_staff() and (assignee_id = auth.uid() or creator_id = auth.uid()))
+  is_owner() or (is_staff() and (
+    assignee_id = auth.uid() or creator_id = auth.uid()
+    or exists (select 1 from task_assignees ta where ta.task_id = tasks.id and ta.staff_id = auth.uid())
+  ))
 );
 drop policy if exists tasks_delete on tasks;
 create policy tasks_delete on tasks for delete using (
   is_owner() or (is_staff() and creator_id = auth.uid())
 );
 
+drop policy if exists task_assignees_read on task_assignees;
+create policy task_assignees_read on task_assignees for select using (can_see_task(task_id));
+drop policy if exists task_assignees_write on task_assignees;
+create policy task_assignees_write on task_assignees for insert with check (is_staff() and can_see_task(task_id));
+drop policy if exists task_assignees_delete on task_assignees;
+create policy task_assignees_delete on task_assignees for delete using (is_staff() and can_see_task(task_id));
+
 drop policy if exists task_comments_read on task_comments;
-create policy task_comments_read on task_comments for select using (
-  exists (select 1 from tasks t where t.id = task_id
-    and (is_owner() or (is_staff() and (t.assignee_id = auth.uid() or t.creator_id = auth.uid()))))
-);
+create policy task_comments_read on task_comments for select using (can_see_task(task_id));
 drop policy if exists task_comments_write on task_comments;
 create policy task_comments_write on task_comments for insert with check (
   is_staff() and exists (select 1 from tasks t where t.id = task_id

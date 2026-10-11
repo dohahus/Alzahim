@@ -135,6 +135,15 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 }
 .btn-login:hover { background:var(--olive-hover); }
 .btn-login:disabled { opacity:.6; cursor:default; }
+.pass-wrap { position:relative; }
+.pass-wrap input { padding-left:42px; }
+.pass-eye {
+  position:absolute; left:6px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; padding:7px; border-radius:6px;
+  color:var(--gray-light); display:flex; align-items:center; justify-content:center;
+}
+.pass-eye:hover { color:var(--gold-deep); background:var(--olive-pale); }
+.pass-eye svg { width:17px; height:17px; }
 .login-link {
   width:100%; margin-top:12px; background:none; border:none; color:var(--gold-deep);
   font-family:inherit; font-size:12.5px; cursor:pointer; text-decoration:underline; padding:4px;
@@ -540,6 +549,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 .mention-item:hover, .mention-item.sel { background:var(--olive-pale); }
 .mention-item .m-avatar { width:24px; height:24px; border-radius:50%; background:var(--gold); color:#FFFDF6; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .mention-hint { font-size:11px; color:var(--gray); margin-top:6px; }
+.assignee-chips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; }
 .assignee-chip {
   display:inline-flex; align-items:center; gap:7px; background:var(--olive-pale); color:var(--gold-deep);
   border:1px solid rgba(163,136,80,.3); padding:6px 10px 6px 6px; border-radius:20px; font-size:12.5px; font-weight:600; margin-top:8px;
@@ -688,7 +698,11 @@ tbody td { padding:13px 16px; font-size:13px; }
     </div>
     <div class="form-group">
       <label>كلمة المرور</label>
-      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
+      <div class="pass-wrap">
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
+        <button type="button" class="pass-eye" onclick="togglePass('login-pass', this)"
+          aria-label="إظهار كلمة المرور" title="إظهار كلمة المرور">👁</button>
+      </div>
     </div>
     <button class="btn-login" onclick="doLogin()">دخول</button>
     <button class="login-link" onclick="openResetRequest()">نسيت كلمة المرور؟</button>
@@ -718,11 +732,19 @@ tbody td { padding:13px 16px; font-size:13px; }
     <div class="login-rule"></div>
     <div class="form-group">
       <label>كلمة المرور الجديدة</label>
-      <input type="password" id="reset-pass1" placeholder="٦ أحرف على الأقل" autocomplete="new-password" />
+      <div class="pass-wrap">
+        <input type="password" id="reset-pass1" placeholder="٦ أحرف على الأقل" autocomplete="new-password" />
+        <button type="button" class="pass-eye" onclick="togglePass('reset-pass1', this)"
+          aria-label="إظهار كلمة المرور" title="إظهار كلمة المرور">👁</button>
+      </div>
     </div>
     <div class="form-group">
       <label>تأكيد كلمة المرور</label>
-      <input type="password" id="reset-pass2" placeholder="أعد كتابتها" autocomplete="new-password" />
+      <div class="pass-wrap">
+        <input type="password" id="reset-pass2" placeholder="أعد كتابتها" autocomplete="new-password" />
+        <button type="button" class="pass-eye" onclick="togglePass('reset-pass2', this)"
+          aria-label="إظهار كلمة المرور" title="إظهار كلمة المرور">👁</button>
+      </div>
     </div>
     <button class="btn-login" onclick="applyNewPassword()">حفظ كلمة المرور</button>
   </div>
@@ -865,7 +887,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 <div class="modal-overlay" id="add-client-modal" style="display:none" onclick="closeModal('add-client-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <span class="modal-title">👤 إضافة موكل جديد</span>
+      <span class="modal-title" id="client-modal-title">👤 إضافة موكل جديد</span>
       <button class="modal-close" onclick="closeModal('add-client-modal',event)">×</button>
     </div>
     <div class="modal-body">
@@ -877,16 +899,12 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div class="form-group-v"><label>رقم الجوال</label><input type="text" id="nc-phone" placeholder="+966XXXXXXXXX" /></div>
         <div class="form-group-v"><label>البريد الإلكتروني</label><input type="email" id="nc-email" placeholder="example@email.com" /></div>
       </div>
-      <div class="form-row">
-        <div class="form-group-v"><label>اسم المستخدم (للبوابة)</label><input type="text" id="nc-user" placeholder="username" /></div>
-        <div class="form-group-v"><label>كلمة المرور الأولية</label><input type="text" id="nc-pass" placeholder="كلمة سر مؤقتة" /></div>
-      </div>
       <div class="form-group-v"><label>الجنسية</label><input type="text" id="nc-nationality" placeholder="سعودي / مقيم..." /></div>
       <div class="form-group-v"><label>ملاحظات</label><textarea id="nc-notes" placeholder="أي ملاحظات..."></textarea></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('add-client-modal',event)">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveNewClient()">💾 حفظ الموكل</button>
+      <button class="btn btn-primary" id="client-modal-save-btn" onclick="saveNewClient()">💾 حفظ الموكل</button>
     </div>
   </div>
 </div>
@@ -944,6 +962,7 @@ tbody td { padding:13px 16px; font-size:13px; }
         <div id="task-assignee-chip"></div>
       </div>
       <div class="form-row">
+        <div class="form-group-v"><label>تاريخ البدء <span class="color-gray text-sm">(اختياري)</span></label><input type="date" id="task-start" /></div>
         <div class="form-group-v"><label>تاريخ الاستحقاق <span class="color-gray text-sm">(اختياري)</span></label><input type="date" id="task-due" /></div>
         <div class="form-group-v"><label>القضية المرتبطة (اختياري)</label>
           <select id="task-case"><option value="">بدون قضية محددة</option></select>
@@ -1103,10 +1122,8 @@ tbody td { padding:13px 16px; font-size:13px; }
       <div class="form-row">
         <div class="form-group-v"><label>الاسم الكامل</label><input type="text" id="um-name" placeholder="الاسم الثلاثي" /></div>
         <div class="form-group-v"><label>الدور الوظيفي</label>
-          <select id="um-role" onchange="applyRolePreset()">
-            <option>مدير المكتب</option><option>محامي</option><option>مستشار قانوني</option>
-            <option>محاسب</option><option>سكرتير</option><option>مخصص</option>
-          </select>
+          <select id="um-role" onchange="applyRolePreset()"></select>
+          <input type="text" id="um-role-new" placeholder="اسم الدور الجديد" style="display:none;margin-top:8px" />
         </div>
       </div>
       <div class="form-row">
@@ -1219,6 +1236,7 @@ const SVG_ICONS = {
   at: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
   'message-circle': '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  'eye-off': '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>',
   paperclip: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
 };
 function ic(name, sz) {
@@ -1370,6 +1388,7 @@ const ROLE_PRESETS = {
   'مدير المكتب': { cases:true, hearings:true, tasks:true, clients:true, invoices:true, reports:true, settings:true, users:true },
   'محامي':       { cases:true, hearings:true, tasks:true, clients:true, invoices:false, reports:false, settings:false, users:false },
   'مستشار قانوني': { cases:true, hearings:true, tasks:true, clients:false, invoices:false, reports:false, settings:false, users:false },
+  'محامي متدرب': { cases:true, hearings:true, tasks:true, clients:false, invoices:false, reports:false, settings:false, users:false },
   'محاسب':       { cases:false, hearings:false, tasks:true, clients:false, invoices:true, reports:true, settings:false, users:false },
   'سكرتير':      { cases:false, hearings:true, tasks:true, clients:true, invoices:false, reports:false, settings:false, users:false },
 };
@@ -1421,7 +1440,7 @@ function dbError(where, error) {
   return true;
 }
 async function loadFromDatabase() {
-  const [staff, clients, cases, updates, docs, hearings, tasks, comments,
+  const [staff, clients, cases, updates, docs, hearings, tasks, comments, assignees,
          invoices, invCases, insts, tickets, tmsgs, notifs] = await Promise.all([
     sb.from('staff').select('*'),
     sb.from('clients').select('*'),
@@ -1431,6 +1450,7 @@ async function loadFromDatabase() {
     sb.from('hearings').select('*').order('date'),
     sb.from('tasks').select('*').order('created_at'),
     sb.from('task_comments').select('*').order('created_at'),
+    sb.from('task_assignees').select('*'),
     sb.from('invoices').select('*').order('date'),
     sb.from('invoice_cases').select('*'),
     sb.from('installments').select('*').order('sort'),
@@ -1440,7 +1460,7 @@ async function loadFromDatabase() {
   ]);
   const anyErr = [['staff',staff],['clients',clients],['cases',cases],['case_updates',updates],
     ['case_documents',docs],['hearings',hearings],['tasks',tasks],['task_comments',comments],
-    ['invoices',invoices],['invoice_cases',invCases],['installments',insts],
+    ['task_assignees',assignees],['invoices',invoices],['invoice_cases',invCases],['installments',insts],
     ['tickets',tickets],['ticket_messages',tmsgs],['notifications',notifs]
   ].map(([n,r]) => dbError(n, r.error)).some(Boolean);
 
@@ -1478,17 +1498,23 @@ async function loadFromDatabase() {
     court: h.court || '', purpose: h.purpose || '', notes: h.notes || '',
   }));
 
-  const commentsByTask = groupBy(comments.data || [], c => c.task_id);
-  DB.tasks = (tasks.data || []).map(t => ({
+  const commentsByTask  = groupBy(comments.data || [], c => c.task_id);
+  const assigneesByTask = groupBy(assignees.data || [], a => a.task_id);
+  DB.tasks = (tasks.data || []).map(t => {
+    // assignee_id عمود قديم من زمن المُوكَّل الواحد — يُدمج مع الجدول الجديد
+    const ids = (assigneesByTask[t.id] || []).map(a => a.staff_id);
+    if (t.assignee_id && !ids.includes(t.assignee_id)) ids.unshift(t.assignee_id);
+    return {
     id: t.id, title: t.title, desc: t.description || '', done: t.done, due: t.due || '',
-    caseId: t.case_id, assigneeId: t.assignee_id, creatorId: t.creator_id,
+    caseId: t.case_id, assigneeIds: ids, creatorId: t.creator_id,
+    startDate: t.start_date || null,
     createdAt: t.created_at ? t.created_at.split('T')[0] : null, completedAt: t.completed_at,
     comments: (commentsByTask[t.id] || []).map(c => ({
       id: c.id, authorId: c.author_id, authorName: c.author_name, text: c.text || '',
       time: fmtStamp(c.created_at),
       attachment: c.attachment_path ? { name: c.attachment_name, size: c.attachment_size, path: c.attachment_path } : null,
     })),
-  }));
+  }; });
 
   const instByInv  = groupBy(insts.data || [], i => i.invoice_id);
   const casesByInv = groupBy(invCases.data || [], r => r.invoice_id);
@@ -1593,6 +1619,18 @@ function setLoginType(t) {
   DB.loginType = t;
   document.querySelectorAll('.login-tab').forEach((el,i) => el.classList.toggle('active', (t==='admin'&&i===0)||(t==='client'&&i===1)));
   document.getElementById('login-label-id').textContent = t === 'admin' ? 'رقم المستخدم / البريد الإلكتروني' : 'رقم الهوية / اسم المستخدم';
+}
+// إظهار كلمة المرور عند الحاجة — يقلّل أخطاء الإدخال خصوصاً على الجوال
+function togglePass(inputId, btn) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  const show = el.type === 'password';
+  el.type = show ? 'text' : 'password';
+  btn.innerHTML = ic(show ? 'eye-off' : 'eye', 17);
+  const label = show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور';
+  btn.setAttribute('aria-label', label);
+  btn.setAttribute('title', label);
+  el.focus();
 }
 function loginBusy(on, msg) {
   const btn = document.querySelector('.btn-login');
@@ -1880,7 +1918,7 @@ function myScopedHearings() {
 }
 function myScopedTasks() {
   if (isOfficeOwner()) return DB.tasks;
-  return DB.tasks.filter(t => t.assigneeId === DB.currentUser.userId);
+  return DB.tasks.filter(t => (t.assigneeIds || []).includes(DB.currentUser.userId));
 }
 function myScopedTickets() {
   if (isOfficeOwner()) return DB.clientMessages;
@@ -2491,16 +2529,19 @@ function renderTasks() {
   if (owner) {
     if (taskFilterMode === 'mine') {
       const me = DB.currentUser.userId;
-      pending = pending.filter(t=>t.assigneeId===me); done = done.filter(t=>t.assigneeId===me);
+      pending = pending.filter(t=>(t.assigneeIds||[]).includes(me)); done = done.filter(t=>(t.assigneeIds||[]).includes(me));
     } else if (taskFilterMode !== 'all') {
       const uid = taskFilterMode;
-      pending = pending.filter(t=>t.assigneeId===uid); done = done.filter(t=>t.assigneeId===uid);
+      pending = pending.filter(t=>(t.assigneeIds||[]).includes(uid)); done = done.filter(t=>(t.assigneeIds||[]).includes(uid));
     }
   }
   const assigneeChip = t => {
-    if (!t.assigneeId) return '';
-    const u = DB.users.find(x=>x.id===t.assigneeId);
-    return `<span class="task-assignee">👤 ${u?u.name:'—'}</span>`;
+    const ids = t.assigneeIds || [];
+    if (!ids.length) return '';
+    return ids.map(id => {
+      const u = DB.users.find(x=>x.id===id);
+      return `<span class="task-assignee">👤 ${u?u.name:'—'}</span>`;
+    }).join('');
   };
   const discussBtn = t => `<button class="task-open-btn" onclick="openTaskDetail('${t.id}')">💬 نقاش${(t.comments||[]).length ? ' ('+t.comments.length+')' : ''}</button>`;
   const rowActions = t => `
@@ -2562,7 +2603,8 @@ function renderTasks() {
 function taskTimelineHTML(t) {
   const dayMs = 86400000;
   const today = new Date(new Date().toDateString());
-  const start = t.createdAt ? new Date(t.createdAt) : null;
+  const startStr = t.startDate || t.createdAt;
+  const start = startStr ? new Date(startStr) : null;
   const plural = (n, one) => n === 1 ? one : (one === 'يوم' ? 'يوماً' : one);
   if (t.done) {
     if (!start) return '';
@@ -2606,14 +2648,14 @@ function refreshTaskDetailIfOpen() {
 function renderTaskDetail() {
   const t = DB.tasks.find(x=>x.id===taskDetailState.taskId); if (!t) return;
   const c = t.caseId ? DB.cases.find(x=>x.id===t.caseId) : null;
-  const assignee = t.assigneeId ? DB.users.find(u=>u.id===t.assigneeId) : null;
+  const assignees = (t.assigneeIds || []).map(id => DB.users.find(u=>u.id===id)).filter(Boolean);
   document.getElementById('td-title').textContent = t.title;
   document.getElementById('td-body').innerHTML = iconify(`
     ${t.desc ? `<p style="color:var(--gray-light);font-size:13.5px;margin-bottom:14px;line-height:1.7">${t.desc}</p>` : ''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;align-items:center;justify-content:space-between">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${c ? `<span class="badge badge-new">📋 ${c.num || 'بدون رقم'} — ${c.title}</span>` : ''}
-        ${assignee ? `<span class="badge badge-new">👤 ${assignee.name}</span>` : ''}
+        ${assignees.map(a => `<span class="badge badge-new">👤 ${a.name}</span>`).join('')}
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
         <button class="btn btn-secondary btn-sm" onclick="closeModal('task-detail-modal',{});openTaskModal('${t.id}')">✏️ تعديل</button>
@@ -2653,7 +2695,8 @@ async function sendTaskComment() {
   const text = ta.value.trim();
   const att = taskDetailState.pendingAttachment;
   if (!text && !att) return;
-  const otherPartyId = DB.currentUser.userId === t.assigneeId ? t.creatorId : t.assigneeId;
+  const notifyIds = [...new Set([...(t.assigneeIds || []), t.creatorId])]
+    .filter(id => id && id !== DB.currentUser.userId);
 
   const ok = await dbWrite('التعليق', async () => {
     let path = null;
@@ -2671,12 +2714,13 @@ async function sendTaskComment() {
       attachment_path: path,
     });
     if (ins.error) return ins;
-    if (otherPartyId && otherPartyId !== DB.currentUser.userId) {
-      return sb.from('notifications').insert({
+    // يصل الإشعار لكل المعنيين بالمهمة عدا كاتب التعليق
+    if (notifyIds.length) {
+      return sb.from('notifications').insert(notifyIds.map(id => ({
         title: 'تعليق جديد على مهمة',
         description: `${DB.currentUser.name} علّق على مهمة: ${t.title}`,
-        for_staff_id: otherPartyId,
-      });
+        for_staff_id: id,
+      })));
     }
     return ins;
   });
@@ -2713,15 +2757,16 @@ async function toggleTask(id) {
 // ═══════════════════════════════════
 //  TASK MODAL + @MENTION ASSIGNMENT
 // ═══════════════════════════════════
-let taskModalState = { assigneeId: null, editId: null };
+let taskModalState = { assigneeIds: [], editId: null };
 function openTaskModal(id) {
   const t = id ? DB.tasks.find(x=>x.id===id) : null;
-  taskModalState = { assigneeId: t ? t.assigneeId : null, editId: t ? t.id : null };
+  taskModalState = { assigneeIds: t ? [...(t.assigneeIds || [])] : [], editId: t ? t.id : null };
   document.getElementById('task-modal-title').textContent = t ? '✏️ تعديل المهمة' : '➕ مهمة جديدة';
   document.getElementById('task-modal-save-btn').textContent = t ? '💾 حفظ التعديلات' : '💾 حفظ المهمة';
   document.getElementById('task-title').value = t ? t.title : '';
   document.getElementById('task-desc').value = t ? (t.desc||'') : '';
   document.getElementById('task-due').value = t ? (t.due||'') : '';
+  document.getElementById('task-start').value = t ? (t.startDate||'') : '';
   document.getElementById('task-case').innerHTML = '<option value="">بدون قضية محددة</option>' + myScopedCases().map(c=>`<option value="${c.id}">${c.num || 'بدون رقم'} — ${c.title}</option>`).join('');
   if (t && t.caseId) document.getElementById('task-case').value = t.caseId;
   renderTaskAssigneeChip();
@@ -2759,44 +2804,70 @@ function selectMention(userId) {
   const before = el.value.slice(0, pos).replace(/@([؀-ۿ\s]{0,20})$/, '@' + u.name + ' ');
   el.value = before + el.value.slice(pos);
   const dd = document.getElementById('task-mention-dropdown'); dd.classList.remove('open'); dd.innerHTML='';
-  taskModalState.assigneeId = u.id;
+  // يمكن توكيل أكثر من محامٍ بالمهمة الواحدة
+  if (!taskModalState.assigneeIds.includes(u.id)) taskModalState.assigneeIds.push(u.id);
   renderTaskAssigneeChip();
   el.focus();
 }
 function renderTaskAssigneeChip() {
   const box = document.getElementById('task-assignee-chip');
-  if (!taskModalState.assigneeId) { box.innerHTML = ''; return; }
-  const u = DB.users.find(x=>x.id===taskModalState.assigneeId);
-  box.innerHTML = `<span class="assignee-chip">مُوكَّلة إلى: ${u?u.name:'—'} <button onclick="clearTaskAssignee()">×</button></span>`;
+  const ids = taskModalState.assigneeIds || [];
+  if (!ids.length) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="assignee-chips"><span class="color-gray text-sm">مُوكَّلة إلى:</span>'
+    + ids.map(id => {
+        const u = DB.users.find(x=>x.id===id);
+        return `<span class="assignee-chip">${u?u.name:'—'} <button onclick="clearTaskAssignee('${id}')">×</button></span>`;
+      }).join('')
+    + '</div>';
 }
-function clearTaskAssignee() { taskModalState.assigneeId = null; renderTaskAssigneeChip(); }
+function clearTaskAssignee(id) {
+  taskModalState.assigneeIds = (taskModalState.assigneeIds || []).filter(x => x !== id);
+  renderTaskAssigneeChip();
+}
 async function saveTask() {
   const title = document.getElementById('task-title').value.trim();
   if (!title) { alert('يرجى إدخال عنوان المهمة'); return; }
   const desc = document.getElementById('task-desc').value.trim();
   const due = document.getElementById('task-due').value;
   const caseId = document.getElementById('task-case').value || null;
-  const assigneeId = taskModalState.assigneeId;
+  const start = document.getElementById('task-start').value;
+  if (start && due && start > due) { alert('تاريخ البدء بعد تاريخ الاستحقاق — راجع التواريخ'); return; }
+  const assigneeIds = [...new Set(taskModalState.assigneeIds || [])];
   const editing = taskModalState.editId ? DB.tasks.find(x=>x.id===taskModalState.editId) : null;
-  const prevAssignee = editing ? editing.assigneeId : null;
+  const prevAssignees = editing ? (editing.assigneeIds || []) : [];
   const row = {
     title, description: nullIfBlank(desc), due: nullIfBlank(due),
-    case_id: caseId || null, assignee_id: assigneeId || null,
+    start_date: nullIfBlank(start), case_id: caseId || null,
   };
   const ok = await dbWrite('المهمة', async () => {
-    const res = editing
-      ? await sb.from('tasks').update(row).eq('id', editing.id)
-      : await sb.from('tasks').insert({ ...row, creator_id: DB.currentUser.userId });
-    if (res.error) return res;
-    // يُرسَل الإشعار عند التوكيل الجديد فقط، لا عند كل تعديل على مهمة موكَّلة مسبقاً
-    if (assigneeId && assigneeId !== DB.currentUser.userId && assigneeId !== prevAssignee) {
-      return sb.from('notifications').insert({
+    let taskId = editing ? editing.id : null;
+    if (editing) {
+      const up = await sb.from('tasks').update(row).eq('id', taskId);
+      if (up.error) return up;
+    } else {
+      const ins = await sb.from('tasks')
+        .insert({ ...row, creator_id: DB.currentUser.userId }).select('id').single();
+      if (ins.error) return ins;
+      taskId = ins.data.id;
+    }
+    // تُستبدل قائمة المُوكَّلين بالكامل لتطابق ما في النموذج
+    const del = await sb.from('task_assignees').delete().eq('task_id', taskId);
+    if (del.error) return del;
+    if (assigneeIds.length) {
+      const link = await sb.from('task_assignees')
+        .insert(assigneeIds.map(id => ({ task_id: taskId, staff_id: id })));
+      if (link.error) return link;
+    }
+    // الإشعار لمن أُضيف حديثاً فقط، لا لكل تعديل على مهمة موكَّلة مسبقاً
+    const added = assigneeIds.filter(id => id !== DB.currentUser.userId && !prevAssignees.includes(id));
+    if (added.length) {
+      return sb.from('notifications').insert(added.map(id => ({
         title: editing ? 'مهمة مُوكَّلة إليك' : 'مهمة جديدة مُوكَّلة إليك',
         description: `${DB.currentUser.name} وكّلك بمهمة: ${title}`,
-        for_staff_id: assigneeId,
-      });
+        for_staff_id: id,
+      })));
     }
-    return res;
+    return { error: null };
   });
   if (!ok) return;
   taskModalState.editId = null;
@@ -2813,7 +2884,7 @@ function renderClients() {
   return `
   <div class="section-header">
     <div class="section-title">👥 ${owner ? 'الموكلون' : 'موكلوني'} <span>(${clientsList.length})</span></div>
-    <button class="btn btn-primary" onclick="openModal('add-client-modal')">➕ موكل جديد</button>
+    <button class="btn btn-primary" onclick="openClientModal()">➕ موكل جديد</button>
   </div>
   <div class="table-wrap">
     <table>
@@ -2831,6 +2902,7 @@ function renderClients() {
             <td style="color:var(--gold)">${cl.user}</td>
             <td>
               <button class="btn btn-secondary btn-sm" onclick="viewClientCases('${cl.id}')">قضاياه</button>
+              <button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="openClientModal('${cl.id}')">✏️ تعديل</button>
               <button class="btn btn-danger btn-sm" style="margin-right:6px" onclick="deleteClient('${cl.id}')">حذف</button>
             </td>
           </tr>`;
@@ -3160,9 +3232,36 @@ function renderPermChecks(perms) {
   document.getElementById('um-perms').innerHTML = PERM_DEFS.map(([k,l]) => `
     <label class="perm-item"><input type="checkbox" class="um-perm" value="${k}" ${perms && perms[k] ? 'checked' : ''} /> ${l}</label>`).join('');
 }
+const ROLE_NEW = '➕ دور جديد…';
+// تُبنى القائمة من الأدوار الجاهزة ومن أي دور أُنشئ سابقاً لمستخدم قائم
+function populateRoleSelect(selected) {
+  const custom = DB.users.map(u => u.role).filter(r => r && !ROLE_PRESETS[r]);
+  const roles = [...new Set([...Object.keys(ROLE_PRESETS), ...custom])];
+  if (selected && !roles.includes(selected)) roles.push(selected);
+  document.getElementById('um-role').innerHTML =
+    roles.map(r => `<option${r === selected ? ' selected' : ''}>${r}</option>`).join('')
+    + `<option>مخصص</option><option>${ROLE_NEW}</option>`;
+  document.getElementById('um-role-new').style.display = 'none';
+}
 function applyRolePreset() {
-  const role = document.getElementById('um-role').value;
-  if (ROLE_PRESETS[role]) renderPermChecks(ROLE_PRESETS[role]);
+  const sel = document.getElementById('um-role');
+  const box = document.getElementById('um-role-new');
+  if (sel.value === ROLE_NEW) {
+    // الدور الجديد يبدأ بلا صلاحيات، تُحدَّد بالمربعات أدناه
+    box.style.display = 'block';
+    box.value = '';
+    box.focus();
+    renderPermChecks({});
+    return;
+  }
+  box.style.display = 'none';
+  if (ROLE_PRESETS[sel.value]) renderPermChecks(ROLE_PRESETS[sel.value]);
+}
+// الدور المحفوظ: اسم الدور الجديد إن اختير، وإلا المحدَّد من القائمة
+function selectedRole() {
+  const sel = document.getElementById('um-role').value;
+  if (sel !== ROLE_NEW) return sel;
+  return document.getElementById('um-role-new').value.trim();
 }
 function openUserModal(id) {
   const u = id ? DB.users.find(x=>x.id===id) : null;
@@ -3171,7 +3270,7 @@ function openUserModal(id) {
   document.getElementById('um-name').value = u ? u.name : '';
   document.getElementById('um-user').value = u ? u.user : '';
   document.getElementById('um-email').value = u ? (u.email || '') : '';
-  document.getElementById('um-role').value = u ? u.role : 'محامي';
+  populateRoleSelect(u ? u.role : 'محامي');
   // كلمة المرور مُعمّاة في نظام الحسابات ولا يمكن عرضها ولا تعديلها من هنا
   const pass = document.getElementById('um-pass');
   pass.value = '';
@@ -3193,7 +3292,8 @@ async function saveUser() {
   if (DB.users.some(x => x.user === user && x.id !== id)) { alert('اسم الدخول مستخدم مسبقاً — اختر اسماً آخر'); return; }
   const perms = {};
   document.querySelectorAll('.um-perm').forEach(c => { perms[c.value] = c.checked; });
-  const role = document.getElementById('um-role').value;
+  const role = selectedRole();
+  if (!role) { alert('يرجى كتابة اسم الدور الجديد'); return; }
   const email = nullIfBlank((document.getElementById('um-email') || {}).value);
   let ok;
   if (id) {
@@ -3621,20 +3721,39 @@ async function saveCaseModal() {
   buildSidebar();
 }
 
+let clientModalEditId = null;
+function openClientModal(id) {
+  clientModalEditId = id || null;
+  const cl = id ? DB.clients.find(c => c.id === id) : null;
+  document.getElementById('client-modal-title').textContent = cl ? '✏️ تعديل بيانات الموكل' : '👤 إضافة موكل جديد';
+  document.getElementById('client-modal-save-btn').textContent = cl ? '💾 حفظ التعديلات' : '💾 حفظ الموكل';
+  document.getElementById('nc-name').value = cl ? cl.name : '';
+  document.getElementById('nc-id').value = cl ? (cl.idNum || '') : '';
+  document.getElementById('nc-phone').value = cl ? (cl.phone || '') : '';
+  document.getElementById('nc-email').value = cl ? (cl.email || '') : '';
+  document.getElementById('nc-nationality').value = cl ? (cl.nationality || '') : '';
+  document.getElementById('nc-notes').value = cl ? (cl.notes || '') : '';
+  openModal('add-client-modal');
+}
 async function saveNewClient() {
   const name = document.getElementById('nc-name').value.trim();
   if (!name) { alert('يرجى إدخال اسم الموكل'); return; }
-  // حساب بوابة العميل يُنشأ من صفحة الإعدادات، لا من هنا — كلمة المرور
-  // لا تُحفَظ في جدول الموكلين إطلاقاً بل تُعمَّى في نظام الحسابات
-  const ok = await dbWrite('الموكل', () => sb.from('clients').insert({
+  // حساب بوابة العميل يُدار من صفحة الإعدادات — كلمة المرور لا تُحفَظ في
+  // جدول الموكلين إطلاقاً بل تُعمَّى في نظام الحسابات
+  const row = {
     name,
     id_num: nullIfBlank(document.getElementById('nc-id').value),
     phone: nullIfBlank(document.getElementById('nc-phone').value),
     email: nullIfBlank(document.getElementById('nc-email').value),
     nationality: nullIfBlank(document.getElementById('nc-nationality').value),
     notes: nullIfBlank(document.getElementById('nc-notes').value),
-  }));
+  };
+  const editId = clientModalEditId;
+  const ok = await dbWrite('الموكل', () => editId
+    ? sb.from('clients').update(row).eq('id', editId)
+    : sb.from('clients').insert(row));
   if (!ok) return;
+  clientModalEditId = null;
   closeModal('add-client-modal', {});
   navTo('clients');
 }
