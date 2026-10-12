@@ -171,6 +171,11 @@ create table if not exists installments (
   paid       boolean not null default false,
   sort       int not null default 0
 );
+-- إيصال السداد ملف في مساحة receipts، والعمود يحفظ مساره واسمه الأصلي
+alter table installments add column if not exists receipt_path text;
+alter table installments add column if not exists receipt_name text;
+alter table installments add column if not exists receipt_size bigint;
+alter table installments add column if not exists paid_at date;
 
 -- تذاكر التواصل بين الموكل والمكتب
 create table if not exists tickets (
@@ -679,7 +684,8 @@ revoke all on table pending_accounts from public, anon, authenticated;
 -- ════════════════════════════════════════════════════════════════════
 
 insert into storage.buckets (id, name, public)
-values ('case-docs','case-docs',false), ('task-files','task-files',false), ('avatars','avatars',true)
+values ('case-docs','case-docs',false), ('task-files','task-files',false),
+       ('avatars','avatars',true), ('receipts','receipts',false)
 on conflict (id) do nothing;
 
 -- مستندات القضايا: يُقرأ الملف بحسب صلاحية القضية المذكورة في أول مقطع من المسار
@@ -703,6 +709,21 @@ create policy task_files_read on storage.objects for select using (
 drop policy if exists task_files_write on storage.objects;
 create policy task_files_write on storage.objects for insert with check (
   bucket_id = 'task-files' and is_staff()
+);
+
+-- إيصالات الدفعات بيانات مالية: لا يراها إلا من يملك صلاحية الفواتير.
+-- الموكل لا يصل إليها ولو عرف المسار، لأن السياسة تُطبَّق على الملف نفسه
+drop policy if exists receipts_read on storage.objects;
+create policy receipts_read on storage.objects for select using (
+  bucket_id = 'receipts' and has_perm('invoices')
+);
+drop policy if exists receipts_write on storage.objects;
+create policy receipts_write on storage.objects for insert with check (
+  bucket_id = 'receipts' and has_perm('invoices')
+);
+drop policy if exists receipts_delete on storage.objects;
+create policy receipts_delete on storage.objects for delete using (
+  bucket_id = 'receipts' and has_perm('invoices')
 );
 
 drop policy if exists avatars_read on storage.objects;

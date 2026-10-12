@@ -55,7 +55,7 @@
 html, body { max-width:100vw; overflow-x:hidden; }
 /* متصفحات الجوال تكبّر الخطوط تلقائياً داخل الكتل العريضة فتظهر الصفحة مكبّرة — يُلغى هنا */
 html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-body { font-family: var(--font-ui); background:var(--dark); color:var(--white); font-size:14px; }
+body { font-family: var(--font-ui); background:var(--dark); color:var(--white); font-size:16.1px; }
 ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--dark-2); } ::-webkit-scrollbar-thumb { background:var(--dark-4); border-radius:3px; }
 
 /* ═══════════ SIGNATURE: النقطة الماسية — مستلة من نقطة الحرف في الشعار ═══════════ */
@@ -78,21 +78,21 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 
 /* ═══════════ INVOICE / USERS ═══════════ */
 .inv-cases-box { background:var(--dark-3); border:1px solid var(--border); border-radius:8px; padding:8px 12px; max-height:150px; overflow-y:auto; }
-.inv-case-item { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:13px; border-bottom:1px solid var(--border); cursor:pointer; }
+.inv-case-item { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:14.9px; border-bottom:1px solid var(--border); cursor:pointer; }
 .inv-case-item:last-child { border-bottom:none; }
 .inv-case-item input { accent-color:var(--gold); width:16px; height:16px; flex-shrink:0; }
 .inst-row { display:grid; grid-template-columns:1fr 1fr 34px; gap:8px; margin-bottom:8px; align-items:center; }
 .inst-label-auto {
   padding:10px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:7px;
-  color:var(--gold-deep); font-size:13px; font-weight:600;
+  color:var(--gold-deep); font-size:14.9px; font-weight:600;
 }
-.inst-del { background:none; border:1px solid var(--border); color:var(--red); border-radius:6px; cursor:pointer; height:34px; font-size:14px; }
+.inst-del { background:none; border:1px solid var(--border); color:var(--red); border-radius:6px; cursor:pointer; height:34px; font-size:16.1px; }
 .inst-del:hover { border-color:var(--red); }
 .perms-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; background:var(--dark-3); border:1px solid var(--border); border-radius:8px; padding:14px; }
-.perm-item { display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; }
+.perm-item { display:flex; align-items:center; gap:8px; font-size:14.9px; cursor:pointer; }
 .perm-item input { accent-color:var(--gold); width:16px; height:16px; }
 .badge-partial { background:rgba(211,84,0,0.14); color:#B35B00; }
-.perm-chip { display:inline-block; background:var(--dark-3); border:1px solid var(--border); color:var(--gray-light); font-size:10.5px; padding:2px 8px; border-radius:10px; margin:1px; }
+.perm-chip { display:inline-block; background:var(--dark-3); border:1px solid var(--border); color:var(--gray-light); font-size:12.1px; padding:2px 8px; border-radius:10px; margin:1px; }
 
 /* ═══════════ LOGIN ═══════════ */
 #login-screen {
@@ -114,26 +114,26 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   content:''; position:absolute; inset:10px; border:1px solid var(--olive-pale); pointer-events:none;
 }
 .login-logo img { width:220px; max-width:100%; margin-bottom:18px; }
-.login-office { font-family:'Alharf', var(--font-ui); font-size:19px; color:var(--gold-deep); font-weight:700; margin-bottom:10px; line-height:1.5; }
+.login-office { font-family:'Alharf', var(--font-ui); font-size:21.8px; color:var(--gold-deep); font-weight:700; margin-bottom:10px; line-height:1.5; }
 .login-rule { width:40px; height:3px; background:var(--gold); margin:0 auto 14px; transform:skewX(-15deg); }
-.login-sub { color:var(--gray-light); font-size:12.5px; margin-bottom:34px; letter-spacing:.3px; }
+.login-sub { color:var(--gray-light); font-size:14.4px; margin-bottom:34px; letter-spacing:.3px; }
 .login-tabs { display:flex; background:var(--dark-3); border-radius:8px; padding:4px; margin-bottom:28px; }
 .login-tab {
   flex:1; padding:10px; border:none; background:transparent; color:var(--gray-light);
-  border-radius:6px; cursor:pointer; font-size:13px; font-family:inherit; font-weight:600; transition:.2s;
+  border-radius:6px; cursor:pointer; font-size:14.9px; font-family:inherit; font-weight:600; transition:.2s;
 }
 .login-tab.active { background:var(--white); color:#FFFDF6; font-weight:700; }
 .form-group { margin-bottom:16px; text-align:right; }
-.form-group label { display:block; color:var(--gray-light); font-size:12px; margin-bottom:6px; font-weight:500; }
+.form-group label { display:block; color:var(--gray-light); font-size:13.8px; margin-bottom:6px; font-weight:500; }
 .form-group input {
   width:100%; padding:11px 14px; background:var(--dark-3); border:1px solid var(--border);
-  border-radius:7px; color:var(--white); font-size:14px; font-family:inherit;
+  border-radius:7px; color:var(--white); font-size:16.1px; font-family:inherit;
   transition:.2s; outline:none;
 }
 .form-group input:focus { border-color:var(--gold); background:var(--dark-2); }
 .btn-login {
   width:100%; padding:13px; background:var(--white); border:none; border-radius:7px;
-  color:#FFFDF6; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;
+  color:#FFFDF6; font-size:17.2px; font-weight:700; cursor:pointer; font-family:inherit;
   transition:.2s; margin-top:8px; letter-spacing:.2px;
 }
 .btn-login:hover { background:var(--olive-hover); }
@@ -155,19 +155,33 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 }
 .acct-toggle { display:flex; align-items:flex-start; gap:10px; cursor:pointer; }
 .acct-toggle input { width:17px; height:17px; margin-top:2px; flex-shrink:0; accent-color:var(--gold); }
-.acct-toggle > span { display:flex; flex-direction:column; gap:2px; font-size:13px; }
+.acct-toggle > span { display:flex; flex-direction:column; gap:2px; font-size:14.9px; }
 #nc-account-fields { margin-top:12px; }
+/* ═══════════ استعراض الملفات ═══════════ */
+.fp-frame { width:100%; height:min(72vh,760px); border:none; display:block; background:var(--dark-3); }
+.fp-img-wrap { max-height:min(72vh,760px); overflow:auto; background:var(--dark-3); text-align:center; }
+.fp-img-wrap img { max-width:100%; display:block; margin:0 auto; }
+.fp-note { padding:36px 24px; text-align:center; color:var(--gray-light); font-size:14.9px; line-height:2; }
+.fp-note b { color:var(--white); }
+.fp-loading { padding:48px; text-align:center; color:var(--gray-light); font-size:14.9px; }
+.doc-row .doc-open { flex:1; min-width:0; cursor:pointer; }
+.doc-row .doc-open:hover .doc-name { color:var(--gold-deep); text-decoration:underline; }
+.receipt-link {
+  background:none; border:none; padding:0; cursor:pointer; font-family:inherit;
+  font-size:13.8px; color:var(--gold-deep); text-decoration:underline; max-width:150px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block; vertical-align:middle;
+}
 .invite-text {
   width:100%; min-height:260px; padding:14px; background:var(--dark-2);
   border:1px solid var(--gold); border-radius:10px; color:var(--white);
-  font-family:inherit; font-size:13px; line-height:2; outline:none; resize:vertical;
+  font-family:inherit; font-size:14.9px; line-height:2; outline:none; resize:vertical;
 }
 .login-link {
   width:100%; margin-top:12px; background:none; border:none; color:var(--gold-deep);
-  font-family:inherit; font-size:12.5px; cursor:pointer; text-decoration:underline; padding:4px;
+  font-family:inherit; font-size:14.4px; cursor:pointer; text-decoration:underline; padding:4px;
 }
 .login-link:hover { color:var(--gold); }
-.login-note { margin-top:14px; font-size:11.5px; color:var(--gray); line-height:1.7; }
+.login-note { margin-top:14px; font-size:13.2px; color:var(--gray); line-height:1.7; }
 .btn-login:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
   outline:2px solid var(--gold-deep); outline-offset:2px;
 }
@@ -195,7 +209,7 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .sidebar-logo::after {
   content:''; display:block; width:34px; height:2px; background:var(--gold); margin:14px auto 0; opacity:.6;
 }
-.sidebar-logo-sub { color:var(--gray); font-size:10.5px; margin-top:10px; letter-spacing:.4px; }
+.sidebar-logo-sub { color:var(--gray); font-size:12.1px; margin-top:10px; }
 .sidebar-user {
   padding:16px 20px; border-bottom:1px solid var(--border);
   display:flex; align-items:center; gap:10px;
@@ -203,7 +217,7 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .user-avatar {
   width:38px; height:38px; border-radius:50%; background:var(--gold);
   display:flex; align-items:center; justify-content:center;
-  color:#FFFDF6; font-size:15px; font-weight:700; flex-shrink:0;
+  color:#FFFDF6; font-size:17.2px; font-weight:700; flex-shrink:0;
   font-family:'Alharf', var(--font-ui);
   background-size:cover; background-position:center; overflow:hidden; position:relative;
 }
@@ -213,15 +227,15 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .avatar-edit-row { display:flex; align-items:center; gap:14px; }
 .avatar-preview {
   width:72px; height:72px; border-radius:50%; background:var(--gold); flex-shrink:0;
-  display:flex; align-items:center; justify-content:center; color:#FFFDF6; font-size:26px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; color:#FFFDF6; font-size:29.9px; font-weight:700;
   font-family:'Alharf', var(--font-ui); background-size:cover; background-position:center;
 }
 .avatar-preview.has-photo { color:transparent; }
 .user-info { flex:1; min-width:0; }
-.user-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.user-role { font-size:11px; color:var(--gold-deep); font-weight:500; }
+.user-name { font-size:14.9px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-role { font-size:12.6px; color:var(--gold-deep); font-weight:500; }
 .sidebar-nav { flex:1; overflow-y:auto; padding:14px 0; }
-.nav-section { display:flex; align-items:center; gap:7px; padding:16px 20px 7px; font-size:10.5px; color:var(--gray); letter-spacing:.5px; font-weight:600; }
+.nav-section { display:flex; align-items:center; gap:7px; padding:16px 20px 7px; font-size:12.1px; color:var(--gray); font-weight:700; }
 .nav-section::before { width:5px; height:5px; opacity:.7; }
 .nav-section:first-child { padding-top:2px; }
 .nav-item {
@@ -231,9 +245,9 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .nav-item:hover { background:var(--dark-3); color:var(--white); }
 .nav-item.active { background:var(--olive-pale); color:var(--gold-deep); border-right-color:var(--gold); font-weight:600; }
 .nav-item .nav-icon { width:20px; flex-shrink:0; }
-.nav-item .nav-label { font-size:13px; }
+.nav-item .nav-label { font-size:14.9px; }
 .nav-item .nav-badge {
-  margin-right:auto; background:var(--red); color:#fff; font-size:10px;
+  margin-right:auto; background:var(--red); color:#fff; font-size:11.5px;
   padding:2px 7px; border-radius:10px; font-weight:700;
 }
 .sidebar-footer {
@@ -242,7 +256,7 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .btn-logout {
   width:100%; padding:10px; background:transparent; border:1px solid var(--border);
   border-radius:7px; color:var(--gray-light); cursor:pointer; font-family:inherit;
-  font-size:13px; transition:.2s; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:500;
+  font-size:14.9px; transition:.2s; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:500;
 }
 .btn-logout:hover { border-color:var(--red); color:var(--red); background:rgba(168,65,47,.05); }
 
@@ -260,12 +274,12 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   padding-right:calc(32px + env(safe-area-inset-right, 0px));
 }
 .verse-text {
-  font-family:'Amiri', 'Noto Naskh Arabic', serif; font-size:23px; font-weight:700; line-height:1.9;
+  font-family:'Amiri', 'Noto Naskh Arabic', serif; font-size:26.4px; font-weight:700; line-height:1.9;
   color:var(--gold-light); position:relative; display:inline-block;
   animation:verse-reveal 1.8s cubic-bezier(.22,1,.36,1) both;
 }
 .verse-ref {
-  font-family:var(--font-ui); font-size:11px; color:var(--gold); margin-top:6px;
+  font-family:var(--font-ui); font-size:12.6px; color:var(--gold); margin-top:6px;
   letter-spacing:.4px; position:relative; opacity:0;
   animation:verse-ref-fade .7s ease-out .95s both;
 }
@@ -283,14 +297,14 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   padding:0 28px; height:60px; display:flex; align-items:center; gap:16px;
   position:sticky; top:0; z-index:50;
 }
-.topbar-title { font-family:'Alharf', var(--font-ui); font-size:18px; font-weight:700; flex:1; color:var(--gold-deep); }
+.topbar-title { font-family:'Alharf', var(--font-ui); font-size:20.7px; font-weight:700; flex:1; color:var(--gold-deep); }
 .topbar-search {
   display:flex; align-items:center; gap:8px; background:var(--dark-3);
   border:1px solid var(--border); border-radius:8px; padding:7px 12px; width:240px;
 }
 .topbar-search input {
   background:transparent; border:none; outline:none; color:var(--white);
-  font-family:inherit; font-size:13px; width:100%;
+  font-family:inherit; font-size:14.9px; width:100%;
 }
 .topbar-search input::placeholder { color:var(--gray); }
 .topbar-search { position:relative; }
@@ -305,16 +319,16 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
   cursor:pointer; transition:.12s;
 }
 .sr-item:hover, .sr-item.sel { background:var(--olive-pale); }
-.sr-icon { flex-shrink:0; font-size:14px; }
+.sr-icon { flex-shrink:0; font-size:16.1px; }
 .sr-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
-.sr-main b { font-size:13px; font-weight:600; color:var(--white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.sr-sub { font-size:11px; color:var(--gray-light); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sr-main b { font-size:14.9px; font-weight:600; color:var(--white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sr-sub { font-size:12.6px; color:var(--gray-light); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .sr-sub .date-greg { color:var(--gray); }
 .sr-type {
-  flex-shrink:0; font-size:10px; color:var(--gold-deep); background:var(--olive-pale);
+  flex-shrink:0; font-size:11.5px; color:var(--gold-deep); background:var(--olive-pale);
   border:1px solid var(--border); border-radius:20px; padding:2px 8px;
 }
-.sr-empty { padding:14px 12px; font-size:12.5px; color:var(--gray-light); text-align:center; }
+.sr-empty { padding:14px 12px; font-size:14.4px; color:var(--gray-light); text-align:center; }
 .topbar-actions { display:flex; align-items:center; gap:10px; }
 .btn-icon {
   width:38px; height:38px; border-radius:8px; border:1px solid var(--border);
@@ -347,19 +361,19 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .stat-card.red::before { background:var(--red); }
 .stat-card.green::before { background:var(--green); }
 .stat-card.blue::before { background:var(--blue); }
-.stat-value { font-family:var(--font-mono); font-variant-numeric:tabular-nums; font-size:30px; font-weight:600; color:var(--white); margin-bottom:4px; }
-.stat-label { color:var(--gray-light); font-size:12.5px; }
-.stat-change { color:var(--green); font-size:11px; margin-top:5px; font-weight:500; }
+.stat-value { font-family:var(--font-mono); font-variant-numeric:tabular-nums; font-size:34.5px; font-weight:600; color:var(--white); margin-bottom:4px; }
+.stat-label { color:var(--gray-light); font-size:14.4px; }
+.stat-change { color:var(--green); font-size:12.6px; margin-top:5px; font-weight:500; }
 
 /* ═══════════ SECTIONS ═══════════ */
 .section-header {
   display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;
 }
-.section-title { font-size:17px; font-weight:700; }
-.section-title span { color:var(--gold-deep); font-weight:500; font-size:14px; }
+.section-title { font-size:19.5px; font-weight:700; }
+.section-title span { color:var(--gold-deep); font-weight:500; font-size:16.1px; }
 .btn {
   padding:9px 18px; border-radius:7px; border:none; cursor:pointer;
-  font-family:inherit; font-size:13px; font-weight:600; transition:.15s;
+  font-family:inherit; font-size:14.9px; font-weight:600; transition:.15s;
   display:inline-flex; align-items:center; gap:7px;
 }
 .btn-primary { background:var(--white); color:#FFFDF6; }
@@ -367,22 +381,22 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .btn-secondary { background:var(--dark-2); color:var(--white); border:1px solid var(--border); }
 .btn-secondary:hover { border-color:var(--gold); color:var(--gold-deep); }
 .btn-danger { background:var(--red); color:#fff; }
-.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-sm { padding:6px 12px; font-size:13.8px; }
 
 /* ═══════════ TABLE ═══════════ */
 .table-wrap { background:var(--dark-2); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:var(--shadow-card); }
 table { width:100%; border-collapse:collapse; }
 thead th {
   background:var(--dark-3); padding:12px 16px; text-align:right;
-  font-size:11.5px; color:var(--gray-light); font-weight:600; letter-spacing:.3px;
+  font-size:13.2px; color:var(--gray-light); font-weight:600; letter-spacing:.3px;
   border-bottom:1px solid var(--border);
 }
 tbody tr { border-top:1px solid var(--border); transition:.15s; }
 tbody tr:hover { background:var(--olive-pale); }
-tbody td { padding:13px 16px; font-size:13px; }
+tbody td { padding:13px 16px; font-size:14.9px; }
 .badge {
   display:inline-flex; align-items:center; padding:4px 11px; border-radius:20px;
-  font-size:11px; font-weight:700; border:1px solid transparent;
+  font-size:12.6px; font-weight:700; border:1px solid transparent;
 }
 .badge-active { background:rgba(63,107,63,.1); color:#3F6B3F; border-color:rgba(63,107,63,.25); }
 .badge-pending { background:rgba(169,96,30,.1); color:#A9601E; border-color:rgba(169,96,30,.25); }
@@ -405,7 +419,7 @@ tbody td { padding:13px 16px; font-size:13px; }
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border);
 }
-.card-title { font-size:14px; font-weight:700; }
+.card-title { font-size:16.1px; font-weight:700; }
 
 /* ═══════════ TIMELINE ═══════════ */
 .timeline { list-style:none; position:relative; padding-right:20px; }
@@ -418,8 +432,8 @@ tbody td { padding:13px 16px; font-size:13px; }
   background:var(--gold); border:2px solid var(--dark-2); transform:rotate(45deg);
   box-shadow:0 0 0 1px var(--border);
 }
-.timeline-date { color:var(--gray); font-size:11px; margin-bottom:4px; font-family:var(--font-mono); }
-.timeline-text { font-size:13px; line-height:1.6; }
+.timeline-date { color:var(--gray); font-size:12.6px; margin-bottom:4px; font-family:var(--font-mono); }
+.timeline-text { font-size:14.9px; line-height:1.6; }
 
 /* ═══════════ HEARING LIST ═══════════ */
 .hearing-item {
@@ -432,16 +446,16 @@ tbody td { padding:13px 16px; font-size:13px; }
   width:48px; height:48px; background:var(--olive-pale); border-radius:8px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;
 }
-.hearing-day { font-size:18px; font-weight:700; color:var(--gold-deep); line-height:1; font-family:var(--font-mono); }
-.hearing-mon { font-size:10px; color:var(--gray-light); margin-top:2px; }
+.hearing-day { font-size:20.7px; font-weight:700; color:var(--gold-deep); line-height:1; font-family:var(--font-mono); }
+.hearing-mon { font-size:11.5px; color:var(--gray-light); margin-top:2px; }
 .hearing-info { flex:1; }
-.hearing-case { font-size:13px; font-weight:600; }
-.hearing-court { color:var(--gray-light); font-size:12px; margin-top:2px; }
-.hearing-time { font-size:12px; color:var(--gold-deep); font-family:var(--font-mono); font-weight:600; }
+.hearing-case { font-size:14.9px; font-weight:600; }
+.hearing-court { color:var(--gray-light); font-size:13.8px; margin-top:2px; }
+.hearing-time { font-size:13.8px; color:var(--gold-deep); font-family:var(--font-mono); font-weight:600; }
 .btn-ics {
   display:inline-flex; align-items:center; gap:5px; margin-top:6px; padding:4px 9px;
   background:var(--dark-3); border:1px solid var(--border); border-radius:6px;
-  color:var(--gray-light); font-size:11px; cursor:pointer; font-family:inherit; transition:.15s;
+  color:var(--gray-light); font-size:12.6px; cursor:pointer; font-family:inherit; transition:.15s;
 }
 .btn-ics:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
 .btn-ics svg { width:13px; height:13px; }
@@ -459,10 +473,10 @@ tbody td { padding:13px 16px; font-size:13px; }
 .task-check:hover { border-color:var(--gold); }
 .task-check.done { background:var(--gold); border-color:var(--gold); }
 .task-check.done::after { content:''; position:absolute; right:4px; top:0px; width:5px; height:9px; border:solid #FFFDF6; border-width:0 2px 2px 0; transform:rotate(35deg); }
-.task-text { flex:1; font-size:13px; }
+.task-text { flex:1; font-size:14.9px; }
 .task-text.done { text-decoration:line-through; color:var(--gray); }
-.task-due { font-size:11px; color:var(--orange); font-family:var(--font-mono); }
-.task-assignee { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; color:var(--gold-deep); background:var(--olive-pale); padding:2px 8px; border-radius:10px; margin-top:4px; font-weight:600; }
+.task-due { font-size:12.6px; color:var(--orange); font-family:var(--font-mono); }
+.task-assignee { display:inline-flex; align-items:center; gap:4px; font-size:12.1px; color:var(--gold-deep); background:var(--olive-pale); padding:2px 8px; border-radius:10px; margin-top:4px; font-weight:600; }
 
 /* ═══════════ MODAL ═══════════ */
 .modal-overlay {
@@ -479,17 +493,17 @@ tbody td { padding:13px 16px; font-size:13px; }
   display:flex; align-items:center; justify-content:space-between; position:sticky; top:0;
   background:var(--dark-2); z-index:1;
 }
-.modal-title { font-size:16px; font-weight:700; }
-.modal-close { background:none; border:none; color:var(--gray-light); font-size:22px; cursor:pointer; line-height:1; }
+.modal-title { font-size:18.4px; font-weight:700; }
+.modal-close { background:none; border:none; color:var(--gray-light); font-size:25.3px; cursor:pointer; line-height:1; }
 .modal-close:hover { color:var(--white); }
 .modal-body { padding:24px; }
 .modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
 .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .form-group-v { margin-bottom:16px; }
-.form-group-v label { display:block; color:var(--gray-light); font-size:12px; margin-bottom:6px; font-weight:500; }
+.form-group-v label { display:block; color:var(--gray-light); font-size:13.8px; margin-bottom:6px; font-weight:500; }
 .form-group-v input, .form-group-v select, .form-group-v textarea {
   width:100%; padding:10px 12px; background:var(--dark-3); border:1px solid var(--border);
-  border-radius:7px; color:var(--white); font-size:13px; font-family:inherit; outline:none;
+  border-radius:7px; color:var(--white); font-size:14.9px; font-family:inherit; outline:none;
   transition:.15s;
 }
 .form-group-v input:focus, .form-group-v select:focus, .form-group-v textarea:focus { border-color:var(--gold); background:var(--dark-2); }
@@ -499,7 +513,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 /* ═══════════ CASE FILE TABS ═══════════ */
 .cdm-tabs { display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:20px; }
 .cdm-tab {
-  padding:10px 16px; font-size:13px; font-weight:600; color:var(--gray-light); cursor:pointer;
+  padding:10px 16px; font-size:14.9px; font-weight:600; color:var(--gray-light); cursor:pointer;
   border-bottom:2px solid transparent; margin-bottom:-1px; transition:.15s; display:flex; align-items:center; gap:7px;
 }
 .cdm-tab:hover { color:var(--gold-deep); }
@@ -510,8 +524,8 @@ tbody td { padding:13px 16px; font-size:13px; }
   border:1px solid var(--border); border-radius:8px; margin-bottom:8px;
 }
 .doc-icon { width:34px; height:34px; border-radius:7px; background:var(--olive-pale); color:var(--white); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.doc-name { font-size:13px; font-weight:600; }
-.doc-meta { font-size:11px; color:var(--gray-light); margin-top:2px; }
+.doc-name { font-size:14.9px; font-weight:600; }
+.doc-meta { font-size:12.6px; color:var(--gray-light); margin-top:2px; }
 .upload-drop {
   border:1.5px dashed var(--border); border-radius:9px; padding:22px; text-align:center; cursor:pointer; transition:.15s; color:var(--gray-light);
 }
@@ -522,11 +536,11 @@ tbody td { padding:13px 16px; font-size:13px; }
   background:linear-gradient(135deg,var(--olive-pale) 0%,var(--dark-2) 100%);
   border:1px solid var(--gold); border-radius:10px; padding:24px; margin-bottom:20px; position:relative; overflow:hidden;
 }
-.case-num { font-size:12px; color:var(--gold-deep); margin-bottom:6px; font-weight:600; letter-spacing:.3px; display:flex; align-items:center; gap:8px; }
+.case-num { font-size:13.8px; color:var(--gold-deep); margin-bottom:6px; font-weight:600; letter-spacing:.3px; display:flex; align-items:center; gap:8px; }
 .ref-code { font-family:var(--font-mono); font-weight:600; letter-spacing:.5px; }
-.case-name { font-family:'Alharf', var(--font-ui); font-size:21px; font-weight:700; margin-bottom:12px; }
+.case-name { font-family:'Alharf', var(--font-ui); font-size:24.1px; font-weight:700; margin-bottom:12px; }
 .case-meta { display:flex; gap:20px; flex-wrap:wrap; }
-.case-meta-item { display:flex; align-items:center; gap:6px; color:var(--gray-light); font-size:13px; }
+.case-meta-item { display:flex; align-items:center; gap:6px; color:var(--gray-light); font-size:14.9px; }
 .progress-bar {
   background:var(--dark-3); border-radius:20px; height:6px; margin-top:16px; overflow:hidden;
 }
@@ -540,11 +554,11 @@ tbody td { padding:13px 16px; font-size:13px; }
 }
 .portal-avatar {
   width:58px; height:58px; background:var(--gold); border-radius:50%;
-  display:flex; align-items:center; justify-content:center; font-size:24px;
+  display:flex; align-items:center; justify-content:center; font-size:27.6px;
   font-weight:700; color:#FFFDF6; flex-shrink:0; font-family:'Alharf', var(--font-ui);
 }
-.portal-greeting { font-family:'Alharf', var(--font-ui); font-size:23px; font-weight:700; margin-bottom:5px; color:var(--gold-deep); }
-.portal-sub { color:var(--gray-light); font-size:13px; }
+.portal-greeting { font-family:'Alharf', var(--font-ui); font-size:26.4px; font-weight:700; margin-bottom:5px; color:var(--gold-deep); }
+.portal-sub { color:var(--gray-light); font-size:14.9px; }
 
 /* ═══════════ NOTIFICATION PANEL ═══════════ */
 .notif-panel {
@@ -559,16 +573,16 @@ tbody td { padding:13px 16px; font-size:13px; }
 }
 .notif-item:hover { background:var(--dark-3); }
 .notif-item.unread { border-right:3px solid var(--gold); }
-.notif-title { font-size:13px; font-weight:600; margin-bottom:3px; }
-.notif-desc { color:var(--gray-light); font-size:12px; }
-.notif-time { color:var(--gray); font-size:11px; margin-top:4px; }
+.notif-title { font-size:14.9px; font-weight:600; margin-bottom:3px; }
+.notif-desc { color:var(--gray-light); font-size:13.8px; }
+.notif-time { color:var(--gray); font-size:12.6px; margin-top:4px; }
 
 /* ═══════════ CALENDAR ═══════════ */
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-.cal-head { text-align:center; font-size:11px; color:var(--gray); padding:6px 0; }
+.cal-head { text-align:center; font-size:12.6px; color:var(--gray); padding:6px 0; }
 .cal-day {
   aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  border-radius:8px; cursor:pointer; font-size:13px; transition:.15s; position:relative;
+  border-radius:8px; cursor:pointer; font-size:14.9px; transition:.15s; position:relative;
 }
 .cal-day:hover { background:var(--dark-3); }
 .cal-day.today { background:rgba(163,136,80,.2); color:var(--gold); font-weight:700; }
@@ -583,8 +597,8 @@ tbody td { padding:13px 16px; font-size:13px; }
   padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:.15s;
 }
 .search-result:hover { background:var(--dark-3); }
-.search-result-type { font-size:10px; color:var(--gold-deep); margin-bottom:3px; font-weight:600; }
-.search-result-title { font-size:13px; font-weight:600; }
+.search-result-type { font-size:11.5px; color:var(--gold-deep); margin-bottom:3px; font-weight:600; }
+.search-result-title { font-size:14.9px; font-weight:600; }
 
 /* ═══════════ MENTION / ASSIGNEE ═══════════ */
 .mention-box { position:relative; }
@@ -594,23 +608,23 @@ tbody td { padding:13px 16px; font-size:13px; }
   max-height:180px; overflow-y:auto; display:none;
 }
 .mention-dropdown.open { display:block; }
-.mention-item { padding:9px 14px; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:9px; }
+.mention-item { padding:9px 14px; font-size:14.9px; cursor:pointer; display:flex; align-items:center; gap:9px; }
 .mention-item:hover, .mention-item.sel { background:var(--olive-pale); }
-.mention-item .m-avatar { width:24px; height:24px; border-radius:50%; background:var(--gold); color:#FFFDF6; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.mention-hint { font-size:11px; color:var(--gray); margin-top:6px; }
+.mention-item .m-avatar { width:24px; height:24px; border-radius:50%; background:var(--gold); color:#FFFDF6; font-size:12.6px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.mention-hint { font-size:12.6px; color:var(--gray); margin-top:6px; }
 .assignee-chips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; }
 .assignee-chip {
   display:inline-flex; align-items:center; gap:7px; background:var(--olive-pale); color:var(--gold-deep);
-  border:1px solid rgba(163,136,80,.3); padding:6px 10px 6px 6px; border-radius:20px; font-size:12.5px; font-weight:600; margin-top:8px;
+  border:1px solid rgba(163,136,80,.3); padding:6px 10px 6px 6px; border-radius:20px; font-size:14.4px; font-weight:600; margin-top:8px;
 }
-.assignee-chip button { background:var(--gold-deep); color:#FFFDF6; border:none; width:16px; height:16px; border-radius:50%; cursor:pointer; font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center; }
+.assignee-chip button { background:var(--gold-deep); color:#FFFDF6; border:none; width:16px; height:16px; border-radius:50%; cursor:pointer; font-size:12.6px; line-height:1; display:flex; align-items:center; justify-content:center; }
 .task-filter-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
 .task-filter-bar select {
   padding:8px 12px; background:var(--dark-2); border:1px solid var(--border); border-radius:8px;
-  color:var(--white); font-family:inherit; font-size:13px; outline:none;
+  color:var(--white); font-family:inherit; font-size:14.9px; outline:none;
 }
 .task-filter-bar select:focus { border-color:var(--gold); }
-.task-open-btn { background:none; border:1px solid var(--border); color:var(--gray-light); border-radius:7px; padding:5px 10px; font-size:11px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; margin-top:6px; transition:.15s; }
+.task-open-btn { background:none; border:1px solid var(--border); color:var(--gray-light); border-radius:7px; padding:5px 10px; font-size:12.6px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; margin-top:6px; transition:.15s; }
 .task-open-btn:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
 .task-open-btn svg { width:12px; height:12px; }
 
@@ -618,13 +632,13 @@ tbody td { padding:13px 16px; font-size:13px; }
 .quick-task { border-bottom:1px solid var(--border); position:relative; }
 .quick-task-trigger {
   display:flex; align-items:center; gap:9px; padding:12px 14px; cursor:text;
-  color:var(--gray-light); font-size:13px; transition:.15s; border-radius:8px;
+  color:var(--gray-light); font-size:14.9px; transition:.15s; border-radius:8px;
 }
 .quick-task-trigger:hover { background:var(--olive-pale); color:var(--gold-deep); }
 .quick-task-trigger .qt-plus {
   width:20px; height:20px; border-radius:50%; border:1.5px dashed var(--gray);
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  font-size:14px; line-height:1; color:var(--gray);
+  font-size:16.1px; line-height:1; color:var(--gray);
 }
 .quick-task-trigger:hover .qt-plus { border-color:var(--gold); color:var(--gold-deep); border-style:solid; }
 .quick-task-form { padding:12px 14px; position:relative; }
@@ -632,20 +646,20 @@ tbody td { padding:13px 16px; font-size:13px; }
 .quick-task-row input {
   flex:1; min-width:0; padding:10px 12px; background:var(--dark-2);
   border:1px solid var(--gold); border-radius:8px; color:var(--white);
-  font-family:inherit; font-size:13.5px; outline:none;
+  font-family:inherit; font-size:15.5px; outline:none;
 }
 .quick-task-row input::placeholder { color:var(--gray); }
 .quick-task-foot {
   display:flex; align-items:center; justify-content:space-between;
   gap:8px; flex-wrap:wrap; margin-top:8px;
 }
-.quick-task-foot .qt-hint { font-size:11px; color:var(--gray); }
+.quick-task-foot .qt-hint { font-size:12.6px; color:var(--gray); }
 .quick-task-foot .task-open-btn { margin-top:0; }
 .quick-task .mention-dropdown { top:auto; margin-top:0; right:14px; left:14px; }
 
 /* ═══════════ TASK TIMELINE ═══════════ */
 .task-timeline { margin-top:8px; }
-.task-timeline-label { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--gray-light); margin-bottom:4px; gap:8px; }
+.task-timeline-label { display:flex; justify-content:space-between; align-items:center; font-size:12.6px; color:var(--gray-light); margin-bottom:4px; gap:8px; }
 .task-timeline-label b { color:var(--white); font-weight:600; }
 .task-timeline-label .overdue { color:var(--red); font-weight:700; }
 .task-timeline-label .done-ok { color:var(--green); font-weight:700; }
@@ -655,17 +669,17 @@ tbody td { padding:13px 16px; font-size:13px; }
 .task-timeline-bar > div.done-ok { background:var(--green); }
 
 /* ═══════════ TASK DETAIL MODAL — النقاش والمرفقات ═══════════ */
-.td-comments-title { font-size:13px; font-weight:700; color:var(--gold-deep); margin:18px 0 10px; }
+.td-comments-title { font-size:14.9px; font-weight:700; color:var(--gold-deep); margin:18px 0 10px; }
 .td-comments { display:flex; flex-direction:column; gap:12px; max-height:280px; overflow-y:auto; padding-left:2px; }
 .td-comment { display:flex; gap:10px; align-items:flex-start; }
-.td-avatar { width:30px; height:30px; border-radius:50%; background:var(--gold); color:#FFFDF6; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.td-comment-head { display:flex; align-items:center; gap:8px; margin-bottom:3px; font-size:12.5px; }
-.td-comment-text { font-size:13px; color:var(--gray-light); line-height:1.6; background:var(--dark-3); border-radius:8px; padding:8px 12px; display:inline-block; }
-.td-attachment { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--gold-deep); background:var(--olive-pale); border:none; border-radius:7px; padding:6px 10px; margin-top:5px; text-decoration:none; font-family:inherit; cursor:pointer; }
+.td-avatar { width:30px; height:30px; border-radius:50%; background:var(--gold); color:#FFFDF6; font-size:13.8px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.td-comment-head { display:flex; align-items:center; gap:8px; margin-bottom:3px; font-size:14.4px; }
+.td-comment-text { font-size:14.9px; color:var(--gray-light); line-height:1.6; background:var(--dark-3); border-radius:8px; padding:8px 12px; display:inline-block; }
+.td-attachment { display:inline-flex; align-items:center; gap:6px; font-size:13.8px; color:var(--gold-deep); background:var(--olive-pale); border:none; border-radius:7px; padding:6px 10px; margin-top:5px; text-decoration:none; font-family:inherit; cursor:pointer; }
 .td-attachment:hover { background:var(--gold); color:#FFFDF6; }
 .td-composer { border-top:1px solid var(--border); padding:14px 24px; }
 .td-composer-row { display:flex; gap:8px; align-items:flex-end; }
-.td-composer-row textarea { flex:1; resize:none; padding:9px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:8px; color:var(--white); font-family:inherit; font-size:13px; outline:none; }
+.td-composer-row textarea { flex:1; resize:none; padding:9px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:8px; color:var(--white); font-family:inherit; font-size:14.9px; outline:none; }
 .td-composer-row textarea:focus { border-color:var(--gold); }
 
 /* ═══════════ PAGES (hidden by default) ═══════════ */
@@ -677,11 +691,11 @@ tbody td { padding:13px 16px; font-size:13px; }
 .mb-16 { margin-bottom:16px; }
 .color-gold { color:var(--gold); }
 .color-gray { color:var(--gray-light); }
-.text-sm { font-size:12px; }
+.text-sm { font-size:13.8px; }
 .date-greg { color:var(--gray-light); font-size:.9em; font-weight:400; }
 .cdm-status {
   padding:6px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:20px;
-  color:var(--white); font-family:inherit; font-size:13px; font-weight:600; outline:none; cursor:pointer;
+  color:var(--white); font-family:inherit; font-size:14.9px; font-weight:600; outline:none; cursor:pointer;
 }
 .cdm-status:focus { border-color:var(--gold); }
 .kind-picker { display:flex; gap:10px; }
@@ -689,26 +703,26 @@ tbody td { padding:13px 16px; font-size:13px; }
 .kind-opt input { position:absolute; opacity:0; pointer-events:none; }
 .kind-opt span {
   display:flex; align-items:center; justify-content:center; gap:8px; padding:12px;
-  border:1.5px solid var(--border); border-radius:9px; cursor:pointer; font-size:13.5px;
+  border:1.5px solid var(--border); border-radius:9px; cursor:pointer; font-size:15.5px;
   font-weight:600; color:var(--gray-light); transition:.15s;
 }
 .kind-opt input:checked + span { border-color:var(--gold); color:var(--white); background:var(--olive-pale); }
 .kind-opt span svg { width:17px; height:17px; }
 .update-blocked {
   background:rgba(168,65,47,.08); border:1px solid rgba(168,65,47,.3); color:var(--red);
-  border-radius:9px; padding:12px 14px; font-size:13px; line-height:1.8; margin-bottom:16px;
+  border-radius:9px; padding:12px 14px; font-size:14.9px; line-height:1.8; margin-bottom:16px;
 }
 .rp-context {
   background:var(--dark-3); border:1px solid var(--border); border-radius:9px;
-  padding:12px 14px; margin-bottom:16px; font-size:13px; line-height:1.8;
+  padding:12px 14px; margin-bottom:16px; font-size:14.9px; line-height:1.8;
 }
 .update-report {
   margin-top:8px; padding:10px 12px; background:var(--dark-3); border-right:3px solid var(--gold);
-  border-radius:0 8px 8px 0; font-size:12.5px; color:var(--gray-light); line-height:1.8;
+  border-radius:0 8px 8px 0; font-size:14.4px; color:var(--gray-light); line-height:1.8;
 }
-.update-report-head { font-size:11px; color:var(--gold-deep); font-weight:700; margin-bottom:4px; }
-.needs-report { font-size:11.5px; color:var(--red); font-weight:600; }
-.date-hijri-preview { margin-top:6px; font-size:12px; color:var(--gold-deep); font-weight:600; min-height:16px; }
+.update-report-head { font-size:12.6px; color:var(--gold-deep); font-weight:700; margin-bottom:4px; }
+.needs-report { font-size:13.2px; color:var(--red); font-weight:600; }
+.date-hijri-preview { margin-top:6px; font-size:13.8px; color:var(--gold-deep); font-weight:600; min-height:16px; }
 .font-bold { font-weight:700; }
 .flex-center { display:flex; align-items:center; gap:8px; }
 
@@ -732,7 +746,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 
   .topbar { flex-wrap:wrap; height:auto; min-height:56px; padding:10px 14px; row-gap:10px; }
   .menu-toggle { order:1; }
-  .topbar-title { order:2; font-size:15px; }
+  .topbar-title { order:2; font-size:17.2px; }
   .topbar-actions { order:3; }
   .topbar-search { order:4; flex-basis:100%; width:100%; max-width:none; }
 
@@ -742,8 +756,8 @@ tbody td { padding:13px 16px; font-size:13px; }
     padding-left:calc(18px + env(safe-area-inset-left, 0px));
     padding-right:calc(18px + env(safe-area-inset-right, 0px));
   }
-  .verse-text { font-size:15px; line-height:1.8; }
-  .verse-ref { font-size:10px; }
+  .verse-text { font-size:17.2px; line-height:1.8; }
+  .verse-ref { font-size:11.5px; }
 
   .content {
     padding:16px;
@@ -752,10 +766,10 @@ tbody td { padding:13px 16px; font-size:13px; }
     padding-right:calc(16px + env(safe-area-inset-right, 0px));
   }
   /* دون ١٦ بكسل يكبّر iOS الصفحة فور لمس الحقل ولا يرجعها — تُثبَّت هنا */
-  input, select, textarea { font-size:16px !important; }
+  input, select, textarea { font-size:18.4px !important; }
   .stats-grid { grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:18px; }
   .stat-card { padding:14px; }
-  .stat-value { font-size:24px; }
+  .stat-value { font-size:27.6px; }
   .two-col, .three-col { grid-template-columns:1fr; }
   .form-row { grid-template-columns:1fr; }
 
@@ -777,7 +791,7 @@ tbody td { padding:13px 16px; font-size:13px; }
   .cdm-tabs { overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
   .cdm-tab { white-space:nowrap; }
   .case-detail-header { padding:16px; }
-  .case-name { font-size:18px; }
+  .case-name { font-size:20.7px; }
 
   .notif-panel { width:88vw; max-width:340px; }
 
@@ -801,22 +815,22 @@ tbody td { padding:13px 16px; font-size:13px; }
   }
   .stats-grid:not([style]) .stat-icon { margin-bottom:4px; }
   .stats-grid:not([style]) .stat-icon svg { width:20px; height:20px; }
-  .stats-grid:not([style]) .stat-value { font-size:26px; margin-bottom:0; line-height:1.1; }
-  .stats-grid:not([style]) .stat-label { font-size:11px; line-height:1.35; }
-  .stats-grid:not([style]) .stat-change { font-size:10px; margin-top:3px; }
+  .stats-grid:not([style]) .stat-value { font-size:29.9px; margin-bottom:0; line-height:1.1; }
+  .stats-grid:not([style]) .stat-label { font-size:12.6px; line-height:1.35; }
+  .stats-grid:not([style]) .stat-change { font-size:11.5px; margin-top:3px; }
   .verse-banner {
     padding:9px 14px;
     padding-top:calc(9px + env(safe-area-inset-top, 0px));
     padding-left:calc(14px + env(safe-area-inset-left, 0px));
     padding-right:calc(14px + env(safe-area-inset-right, 0px));
   }
-  .verse-text { font-size:13.5px; line-height:1.7; }
+  .verse-text { font-size:15.5px; line-height:1.7; }
   /* شريط علوي أنحف ليبقى أكبر قدر من الشاشة للمحتوى */
   .topbar { padding:7px 12px; min-height:48px; row-gap:7px; }
-  .topbar-title { font-size:14px; }
+  .topbar-title { font-size:16.1px; }
   .topbar-search { padding:4px 10px; }
   .btn-icon { width:34px; height:34px; }
-  .menu-toggle { font-size:18px; }
+  .menu-toggle { font-size:20.7px; }
   .login-box { padding:28px 18px; }
 }
 </style>
@@ -952,7 +966,7 @@ tbody td { padding:13px 16px; font-size:13px; }
 <div class="notif-panel" id="notif-panel">
   <div class="notif-panel-header">
     <strong>الإشعارات</strong>
-    <button onclick="toggleNotif()" style="background:none;border:none;color:var(--gray-light);font-size:20px;cursor:pointer">×</button>
+    <button onclick="toggleNotif()" style="background:none;border:none;color:var(--gray-light);font-size:23px;cursor:pointer">×</button>
   </div>
   <div id="notif-list"></div>
 </div>
@@ -1071,6 +1085,21 @@ tbody td { padding:13px 16px; font-size:13px; }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('add-client-modal',event)">إلغاء</button>
       <button class="btn btn-primary" id="client-modal-save-btn" onclick="saveNewClient()">💾 حفظ الموكل</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="file-preview-modal" style="display:none" onclick="closeFilePreview(event)">
+  <div class="modal" style="width:900px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="fp-title">📄 استعراض</span>
+      <button class="modal-close" onclick="closeFilePreview()">×</button>
+    </div>
+    <div class="modal-body" id="fp-body" style="padding:0"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFilePreview()">إغلاق</button>
+      <button class="btn btn-secondary" id="fp-newtab">↗ فتح في تبويب</button>
+      <button class="btn btn-primary" id="fp-download">⬇ تنزيل</button>
     </div>
   </div>
 </div>
@@ -1211,6 +1240,7 @@ tbody td { padding:13px 16px; font-size:13px; }
   </div>
 </div>
 <input type="file" id="doc-upload-input" style="display:none" onchange="handleDocUpload(event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+<input type="file" id="receipt-upload-input" style="display:none" onchange="handleReceiptUpload(event)" accept=".pdf,.jpg,.jpeg,.png,.webp" />
 
 <!-- ═══════════════ MODAL: ADD UPDATE ═══════════════ -->
 <div class="modal-overlay" id="add-update-modal" style="display:none" onclick="closeModal('add-update-modal',event)">
@@ -1757,7 +1787,11 @@ async function loadFromDatabase() {
       id: inv.id, ref: inv.ref, clientId: inv.client_id, date: inv.date,
       city: inv.city, notes: inv.notes || '',
       caseIds: (casesByInv[inv.id] || []).map(r => r.case_id),
-      installments: (instByInv[inv.id] || []).map(s => ({ id: s.id, label: s.label, amount: s.amount, paid: s.paid })),
+      installments: (instByInv[inv.id] || []).map(s => ({
+        id: s.id, label: s.label, amount: s.amount, paid: s.paid,
+        receiptPath: s.receipt_path || '', receiptName: s.receipt_name || '',
+        receiptSize: s.receipt_size || 0, paidAt: s.paid_at || '',
+      })),
     };
     syncInvoiceDerived(o);
     return o;
@@ -2319,10 +2353,10 @@ function renderDashboard() {
         return `
         <div onclick="openCaseDetail('${c.id}')" style="padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <span style="font-weight:600;font-size:13px">${c.title}</span>
+            <span style="font-weight:600;font-size:14.9px">${c.title}</span>
             <span class="badge badge-${c.status}">${statusLabel(c.status)}</span>
           </div>
-          <div style="display:flex;gap:12px;font-size:12px;color:var(--gray-light)">
+          <div style="display:flex;gap:12px;font-size:13.8px;color:var(--gray-light)">
             <span>📋 ${c.num||'بدون رقم'}</span><span>👤 ${cl?cl.name:'—'}</span><span>🏛️ ${c.court.replace('المحكمة','').trim()}</span>
           </div>
           <div class="progress-bar" style="margin-top:8px">
@@ -2380,8 +2414,8 @@ function renderDashboard() {
          ['pending','معلقة',cases.filter(c=>c.status==='pending').length,'#A9601E'],
          ['closed','مغلقة',cases.filter(c=>c.status==='closed').length,'#8A7F63']].map(([k,l,n,col]) => `
         <div style="text-align:center;padding:12px 20px;background:var(--dark-3);border-radius:10px">
-          <div style="font-size:26px;font-weight:700;color:${col};font-family:var(--font-mono)">${n}</div>
-          <div style="font-size:12px;color:var(--gray-light)">${l}</div>
+          <div style="font-size:29.9px;font-weight:700;color:${col};font-family:var(--font-mono)">${n}</div>
+          <div style="font-size:13.8px;color:var(--gray-light)">${l}</div>
         </div>`).join('')}
     </div>
   </div>`;
@@ -2404,9 +2438,9 @@ function renderCases(filter='') {
     <div class="section-title">⚖️ ${isOfficeOwner() ? 'القضايا' : 'قضاياي'} <span>(${scoped.length})</span></div>
     <div style="display:flex;gap:10px">
       <input type="text" placeholder="بحث في القضايا..." oninput="document.getElementById('content').innerHTML=renderCases(this.value)"
-        style="padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:200px" />
+        style="padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:14.9px;outline:none;width:200px" />
       <select onchange="filterCasesByStatus(this.value)"
-        style="padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:13px;outline:none">
+        style="padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:14.9px;outline:none">
         <option value="">كل الحالات</option>
         <option value="active">جارية</option><option value="pending">معلقة</option>
         <option value="closed">مغلقة</option>
@@ -2520,7 +2554,7 @@ function renderCdmBody() {
         <div class="case-meta-item">🆚 ${c.opponent}</div>
         ${c.nextHearing ? `<div class="case-meta-item">📅 الجلسة القادمة: <strong style="color:var(--gold-deep)">${formatDate(c.nextHearing)}</strong></div>` : ''}
       </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--gray-light)">تقدم القضية: ${c.progress}%</div>
+      <div style="margin-top:10px;font-size:13.8px;color:var(--gray-light)">تقدم القضية: ${c.progress}%</div>
       <div class="progress-bar"><div class="progress-fill" style="width:${c.progress}%"></div></div>
     </div>
     <div style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -2529,8 +2563,8 @@ function renderCdmBody() {
         ${['active','pending','closed'].map(st =>
           `<option value="${st}"${c.status===st?' selected':''}>${statusLabel(st)}</option>`).join('')}
       </select>
-      <span class="badge badge-new" style="font-size:13px;padding:6px 14px">${c.type}</span>
-      <span style="font-size:13px;padding:6px 14px;background:var(--dark-3);border-radius:20px;color:var(--gray-light)">الدائرة: ${c.dept || 'غير محددة'}</span>
+      <span class="badge badge-new" style="font-size:14.9px;padding:6px 14px">${c.type}</span>
+      <span style="font-size:14.9px;padding:6px 14px;background:var(--dark-3);border-radius:20px;color:var(--gray-light)">الدائرة: ${c.dept || 'غير محددة'}</span>
     </div>
     <div class="cdm-tabs">
       ${tabs.map(([key,label,icon]) => `<div class="cdm-tab ${cdmState.tab===key?'active':''}" onclick="switchCdmTab('${key}')">${ic(icon,15)}<span>${label}</span></div>`).join('')}
@@ -2580,7 +2614,7 @@ function renderCdmUpdates(c) {
             </div>`}
         </li>`).join('')}
     </ul>`}
-    ${c.notes ? `<div class="card" style="margin-top:16px"><div class="card-title" style="margin-bottom:8px">ملاحظات</div><p style="color:var(--gray-light);font-size:13px">${c.notes}</p></div>` : ''}
+    ${c.notes ? `<div class="card" style="margin-top:16px"><div class="card-title" style="margin-bottom:8px">ملاحظات</div><p style="color:var(--gray-light);font-size:14.9px">${c.notes}</p></div>` : ''}
   `;
 }
 function renderCdmContract(c, cl) {
@@ -2588,7 +2622,7 @@ function renderCdmContract(c, cl) {
   const addBtn = hasPerm('invoices') ? `<button class="btn btn-secondary" onclick="closeModal('case-detail-modal',{});openInvoiceModalForCase('${c.id}')">➕ عقد أتعاب لهذه القضية</button>` : '';
   if (!invs.length) {
     return `<div class="card" style="text-align:center;padding:36px 20px">
-      <div style="color:var(--gray-light);font-size:13px;margin-bottom:16px">لا يوجد عقد أتعاب مرتبط بهذه القضية بعد</div>
+      <div style="color:var(--gray-light);font-size:14.9px;margin-bottom:16px">لا يوجد عقد أتعاب مرتبط بهذه القضية بعد</div>
       ${addBtn}
     </div>`;
   }
@@ -2599,11 +2633,11 @@ function renderCdmContract(c, cl) {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px">
         <div>
           <div class="case-num" style="margin-bottom:4px">عقد أتعاب — <span class="ref-code">${inv.ref}</span></div>
-          <div style="font-size:12.5px;color:var(--gray-light)">بتاريخ ${formatDate(inv.date)} — ${cl?cl.name:''}</div>
+          <div style="font-size:14.4px;color:var(--gray-light)">بتاريخ ${formatDate(inv.date)} — ${cl?cl.name:''}</div>
         </div>
         <span class="badge ${stBadge[st]}">${stLabel[st]}</span>
       </div>
-      <div class="tabular-num" style="font-size:21px;font-weight:600;color:var(--gold-deep);margin-bottom:14px">${invTotal(inv).toLocaleString()} ر.س</div>
+      <div class="tabular-num" style="font-size:24.1px;font-weight:600;color:var(--gold-deep);margin-bottom:14px">${invTotal(inv).toLocaleString()} ر.س</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openInvoiceDetail('${inv.id}')">تفاصيل الدفعات</button>
         <button class="btn btn-primary btn-sm" onclick="openContractPDF('${inv.id}')">🖨️ عرض العقد PDF</button>
@@ -2623,13 +2657,14 @@ function renderCdmPayments(c) {
       <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value">${paid.toLocaleString()}</div><div class="stat-label">المُحصَّل (ر.س)</div></div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>بند الدفعة</th><th>العقد</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead>
+      <thead><tr><th>بند الدفعة</th><th>العقد</th><th>المبلغ</th><th>الحالة</th><th>الإيصال</th><th></th></tr></thead>
       <tbody>
         ${rows.map(r=>`<tr>
           <td>${r.s.label}</td>
           <td class="color-gray ref-code">${r.inv.ref}</td>
           <td class="tabular-num" style="font-weight:700;color:var(--gold-deep)">${instAmountDisplay(r.s.amount)}</td>
           <td><span class="badge ${r.s.paid?'badge-active':'badge-urgent'}">${r.s.paid?'مسدَّدة':'مستحقة'}</span></td>
+          <td>${receiptCell(r.inv.id, r.i)}</td>
           <td>${!r.s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment('${r.inv.id}',${r.i})">✓ تسديد</button>`:''}</td>
         </tr>`).join('')}
       </tbody>
@@ -2648,10 +2683,11 @@ function renderCdmDocs(c, key, label, hint) {
       </div>` : docs.map(d => `
       <div class="doc-row">
         <div class="doc-icon">📄</div>
-        <div style="flex:1;min-width:0">
+        <div class="doc-open" title="اضغط للاستعراض" onclick="previewStoredFile('case-docs','${d.path}','${escHtml(d.name)}')">
           <div class="doc-name">${d.name}</div>
           <div class="doc-meta">${formatBytes(d.size)} — رُفع بتاريخ ${formatDate(d.uploadedAt)}${d.uploadedBy ? ' بواسطة '+d.uploadedBy : ''}</div>
         </div>
+        <button class="btn btn-secondary btn-sm" onclick="previewStoredFile('case-docs','${d.path}','${escHtml(d.name)}')">👁️ استعراض</button>
         <button class="btn btn-secondary btn-sm" onclick="openStoredFile('case-docs','${d.path}','${d.name}')">تنزيل</button>
         <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteCaseDoc('${c.id}','${key}','${d.id}')">🗑️</button>
       </div>`).join('')}
@@ -2737,7 +2773,7 @@ function renderHearings() {
           </div>
           <div>
             <div class="hearing-time">${h.time}</div>
-            ${isPast ? '<div style="font-size:11px;color:var(--gray);margin-top:4px">منتهية</div>' : '<div style="font-size:11px;color:var(--green);margin-top:4px">قادمة</div>'}
+            ${isPast ? '<div style="font-size:12.6px;color:var(--gray);margin-top:4px">منتهية</div>' : '<div style="font-size:12.6px;color:var(--green);margin-top:4px">قادمة</div>'}
             ${!isPast ? `<button class="btn-ics" onclick="addHearingToCalendar('${h.id}')">📅 أضف للتقويم</button>` : ''}
           </div>
         </div>`;
@@ -2934,7 +2970,7 @@ function renderTaskDetail() {
   const assignees = (t.assigneeIds || []).map(id => DB.users.find(u=>u.id===id)).filter(Boolean);
   document.getElementById('td-title').textContent = t.title;
   document.getElementById('td-body').innerHTML = iconify(`
-    ${t.desc ? `<p style="color:var(--gray-light);font-size:13.5px;margin-bottom:14px;line-height:1.7">${t.desc}</p>` : ''}
+    ${t.desc ? `<p style="color:var(--gray-light);font-size:15.5px;margin-bottom:14px;line-height:1.7">${t.desc}</p>` : ''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;align-items:center;justify-content:space-between">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${c ? `<span class="badge badge-new">📋 ${c.num || 'بدون رقم'} — ${c.title}</span>` : ''}
@@ -3018,6 +3054,47 @@ function safeFileName(name) {
   const ext = dot > -1 ? name.slice(dot).replace(/[^.\w]/g, '') : '';
   return Math.random().toString(36).slice(2, 10) + ext;
 }
+// ── استعراض الملفات داخل الموقع بلا تنزيل ──
+const PREVIEW_IMG = ['jpg','jpeg','png','gif','webp','bmp','svg','avif'];
+function fileExt(name) {
+  const m = String(name || '').toLowerCase().match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : '';
+}
+function closeFilePreview(ev) {
+  if (ev && ev.target !== ev.currentTarget) return;
+  // يُفرَّغ المحتوى حتى لا يبقى الرابط المؤقَّت في الصفحة بعد الإغلاق
+  document.getElementById('fp-body').innerHTML = '';
+  document.getElementById('file-preview-modal').style.display = 'none';
+}
+async function previewStoredFile(bucket, path, name) {
+  if (!path) return;
+  const body = document.getElementById('fp-body');
+  document.getElementById('fp-title').textContent = name || 'استعراض';
+  body.innerHTML = '<div class="fp-loading">جارٍ فتح الملف…</div>';
+  document.getElementById('file-preview-modal').style.display = 'flex';
+  // رابط بلا download ليُعرض في الصفحة بدل أن يُحمَّل، ومدته أطول لأن العرض يستمر
+  const { data, error } = await sb.storage.from(bucket).createSignedUrl(path, 600);
+  if (error) {
+    body.innerHTML = `<div class="fp-note">تعذّر فتح الملف:<br><b>${escHtml(error.message)}</b></div>`;
+    return;
+  }
+  const url = data.signedUrl;
+  const ext = fileExt(name) || fileExt(path);
+  if (ext === 'pdf') {
+    body.innerHTML = `<iframe class="fp-frame" src="${url}#view=FitH"></iframe>`;
+  } else if (PREVIEW_IMG.includes(ext)) {
+    body.innerHTML = `<div class="fp-img-wrap"><img src="${url}" alt="${escHtml(name||'')}" /></div>`;
+  } else if (ext === 'heic' || ext === 'heif') {
+    body.innerHTML = `<div class="fp-note">صور <b>HEIC</b> من الآيفون لا تعرضها المتصفحات.<br>
+      نزّل الملف لفتحه، أو أعد رفعه بصيغة JPG.</div>`;
+  } else {
+    body.innerHTML = `<div class="fp-note">لا يمكن استعراض ملفات <b>${escHtml(ext || 'بلا امتداد')}</b> داخل المتصفح.<br>
+      نزّله لفتحه بالبرنامج المناسب.</div>`;
+  }
+  document.getElementById('fp-newtab').onclick = () => window.open(url, '_blank');
+  document.getElementById('fp-download').onclick = () => openStoredFile(bucket, path, name);
+}
+
 // روابط التخزين خاصة: تُطلَب بصلاحية المستخدم وتنتهي بعد مدة قصيرة
 async function openStoredFile(bucket, path, downloadName) {
   if (!path) return;
@@ -3332,7 +3409,7 @@ function viewClientCases(clientId) {
           <span style="font-weight:700">${c.title}</span>
           <span class="badge badge-${c.status}">${statusLabel(c.status)}</span>
         </div>
-        <div style="color:var(--gray-light);font-size:12px">📋 ${c.num||'بدون رقم'} &nbsp;|&nbsp; 🏛️ ${c.court}</div>
+        <div style="color:var(--gray-light);font-size:13.8px">📋 ${c.num||'بدون رقم'} &nbsp;|&nbsp; 🏛️ ${c.court}</div>
       </div>`).join(''));
   openModal('case-detail-modal');
 }
@@ -3399,18 +3476,19 @@ function openInvoiceDetail(id) {
   const cl = DB.clients.find(c=>c.id===inv.clientId);
   document.getElementById('ivd-title').textContent = `عقد ${inv.ref} — ${cl?cl.name:''}`;
   document.getElementById('ivd-body').innerHTML = iconify(`
-    <div style="margin-bottom:14px;font-size:13px;color:var(--gray-light)">
+    <div style="margin-bottom:14px;font-size:14.9px;color:var(--gray-light)">
       تاريخ العقد: ${formatDate(inv.date)} — الإجمالي: <b style="color:var(--gold)">${invTotal(inv).toLocaleString()} ر.س</b>
       — المُحصَّل: <b style="color:#1E7E34">${invPaidAmount(inv).toLocaleString()} ر.س</b>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>#</th><th>بند الدفعة</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>بند الدفعة</th><th>المبلغ</th><th>الحالة</th><th>الإيصال</th><th></th></tr></thead>
       <tbody>
         ${inv.installments.map((s,i)=>`<tr>
           <td style="color:var(--gray)">${i+1}</td>
           <td>${s.label}</td>
           <td style="font-weight:700;color:var(--gold)">${instAmountDisplay(s.amount)}</td>
-          <td><span class="badge ${s.paid?'badge-active':'badge-urgent'}">${s.paid?'مسدَّدة':'مستحقة'}</span></td>
+          <td><span class="badge ${s.paid?'badge-active':'badge-urgent'}">${s.paid?'مسدَّدة':'مستحقة'}</span>${s.paidAt?`<div class="color-gray" style="font-size:12.6px">${formatDateShort(s.paidAt)}</div>`:''}</td>
+          <td>${receiptCell(inv.id, i)}</td>
           <td>${!s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment('${inv.id}',${i})">✓ تسديد</button>`:''}</td>
         </tr>`).join('')}
       </tbody>
@@ -3420,15 +3498,74 @@ function openInvoiceDetail(id) {
     </div>`);
   openModal('invoice-detail-modal');
 }
-async function payInstallment(invId, idx) {
-  const inv = DB.invoices.find(i=>i.id===invId); if(!inv) return;
-  const inst = inv.installments[idx]; if (!inst) return;
-  const ok = await dbWrite('تسديد الدفعة',
-    () => sb.from('installments').update({ paid: true }).eq('id', inst.id));
+// ── إيصال سداد الدفعة ──
+function receiptCell(invId, idx) {
+  const inv = DB.invoices.find(i => i.id === invId);
+  const s = inv && inv.installments[idx];
+  if (!s) return '';
+  if (s.receiptPath) return `
+    <button class="receipt-link" title="${escHtml(s.receiptName)} — اضغط للاستعراض"
+      onclick="previewStoredFile('receipts','${s.receiptPath}','${escHtml(s.receiptName)}')">📎 ${escHtml(s.receiptName)}</button>
+    <button class="btn btn-secondary btn-sm" style="color:var(--red);padding:3px 7px"
+      title="حذف الإيصال" onclick="deleteReceipt('${invId}',${idx})">🗑️</button>`;
+  return `<button class="btn btn-secondary btn-sm" onclick="triggerReceiptUpload('${invId}',${idx})">📎 إرفاق</button>`;
+}
+let receiptTarget = null;
+function triggerReceiptUpload(invId, idx) {
+  receiptTarget = { invId, idx };
+  document.getElementById('receipt-upload-input').click();
+}
+async function handleReceiptUpload(ev) {
+  const file = ev.target.files[0]; ev.target.value = '';
+  if (!file || !receiptTarget) return;
+  if (file.size > 8*1024*1024) { alert('حجم الإيصال كبير جداً — الحد الأقصى 8 ميغابايت'); return; }
+  const { invId, idx } = receiptTarget;
+  const inv = DB.invoices.find(i => i.id === invId);
+  const inst = inv && inv.installments[idx];
+  if (!inst) return;
+  const old = inst.receiptPath;
+  const path = `${invId}/${inst.id}-${Date.now()}-${safeFileName(file.name)}`;
+  const ok = await dbWrite('إرفاق الإيصال', async () => {
+    const up = await sb.storage.from('receipts').upload(path, file);
+    if (up.error) return up;
+    const upd = await sb.from('installments').update({
+      receipt_path: path, receipt_name: file.name, receipt_size: file.size,
+    }).eq('id', inst.id);
+    // لا يُترك الملف يتيماً في التخزين إن فشل تسجيله
+    if (upd.error) await sb.storage.from('receipts').remove([path]).catch(()=>{});
+    return upd;
+  });
   if (!ok) return;
+  if (old) await sb.storage.from('receipts').remove([old]).catch(()=>{});
+  refreshPaymentViews(invId);
+}
+async function deleteReceipt(invId, idx) {
+  const inv = DB.invoices.find(i => i.id === invId);
+  const inst = inv && inv.installments[idx]; if (!inst || !inst.receiptPath) return;
+  if (!confirm(`حذف إيصال «${inst.label}»؟\nالدفعة تبقى مسجَّلة كما هي.`)) return;
+  const path = inst.receiptPath;
+  const ok = await dbWrite('حذف الإيصال', () => sb.from('installments')
+    .update({ receipt_path: null, receipt_name: null, receipt_size: null }).eq('id', inst.id));
+  if (!ok) return;
+  await sb.storage.from('receipts').remove([path]).catch(()=>{});
+  refreshPaymentViews(invId);
+}
+function refreshPaymentViews(invId) {
   if (document.getElementById('invoice-detail-modal').style.display === 'flex') openInvoiceDetail(invId);
   refreshCdmIfOpen();
   if (currentPage === 'invoices') renderPage('invoices');
+}
+async function payInstallment(invId, idx) {
+  const inv = DB.invoices.find(i=>i.id===invId); if(!inv) return;
+  const inst = inv.installments[idx]; if (!inst) return;
+  const ok = await dbWrite('تسديد الدفعة', () => sb.from('installments')
+    .update({ paid: true, paid_at: new Date().toISOString().split('T')[0] }).eq('id', inst.id));
+  if (!ok) return;
+  refreshPaymentViews(invId);
+  // لحظة التسديد هي أنسب وقت لإرفاق الإيصال
+  if (!inst.receiptPath && confirm('سُجِّلت الدفعة.\nهل تريد إرفاق إيصال السداد الآن؟')) {
+    triggerReceiptUpload(invId, idx);
+  }
 }
 
 // ═══════════════════════════════════
@@ -3446,7 +3583,7 @@ function renderReports() {
       <div class="card-title" style="margin-bottom:14px">📂 القضايا حسب النوع</div>
       ${Object.entries(byType).map(([t,n]) => `
         <div style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <div style="display:flex;justify-content:space-between;font-size:14.9px;margin-bottom:4px">
             <span>${t}</span><span style="color:var(--gold)">${n}</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" style="width:${(n/DB.cases.length)*100}%"></div></div>
@@ -3456,7 +3593,7 @@ function renderReports() {
       <div class="card-title" style="margin-bottom:14px">👨‍💼 القضايا حسب المحامي</div>
       ${Object.entries(byLawyer).map(([l,n]) => `
         <div style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <div style="display:flex;justify-content:space-between;font-size:14.9px;margin-bottom:4px">
             <span>${l}</span><span style="color:var(--gold)">${n}</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" style="width:${(n/DB.cases.length)*100}%"></div></div>
@@ -3475,7 +3612,7 @@ function renderReports() {
         ['الفواتير المستحقة', DB.invoices.filter(i=>!i.paid).length, '💰'],
       ].map(([l,v,i]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-          <span style="font-size:13px">${i} ${l}</span>
+          <span style="font-size:14.9px">${i} ${l}</span>
           <span style="font-weight:700;color:var(--gold)">${v}</span>
         </div>`).join('')}
     </div>
@@ -3484,16 +3621,16 @@ function renderReports() {
     <div class="card-title" style="margin-bottom:16px">💰 التقرير المالي</div>
     <div style="display:flex;gap:20px;flex-wrap:wrap">
       <div style="flex:1;min-width:200px">
-        <div style="font-size:13px;color:var(--gray-light);margin-bottom:4px">إجمالي الفواتير</div>
-        <div style="font-size:28px;font-weight:800;color:var(--gold)">${DB.invoices.reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
+        <div style="font-size:14.9px;color:var(--gray-light);margin-bottom:4px">إجمالي الفواتير</div>
+        <div style="font-size:32.2px;font-weight:800;color:var(--gold)">${DB.invoices.reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
       </div>
       <div style="flex:1;min-width:200px">
-        <div style="font-size:13px;color:var(--gray-light);margin-bottom:4px">المُحصَّل</div>
-        <div style="font-size:28px;font-weight:800;color:#1E7E34">${DB.invoices.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
+        <div style="font-size:14.9px;color:var(--gray-light);margin-bottom:4px">المُحصَّل</div>
+        <div style="font-size:32.2px;font-weight:800;color:#1E7E34">${DB.invoices.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
       </div>
       <div style="flex:1;min-width:200px">
-        <div style="font-size:13px;color:var(--gray-light);margin-bottom:4px">المستحق</div>
-        <div style="font-size:28px;font-weight:800;color:#C0392B">${DB.invoices.filter(i=>!i.paid).reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
+        <div style="font-size:14.9px;color:var(--gray-light);margin-bottom:4px">المستحق</div>
+        <div style="font-size:32.2px;font-weight:800;color:#C0392B">${DB.invoices.filter(i=>!i.paid).reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
       </div>
     </div>
   </div>`;
@@ -3512,7 +3649,7 @@ function renderSettings() {
       <div class="avatar-preview ${currentAvatar()?'has-photo':''}" id="avatar-preview"
         style="${currentAvatar()?`background-image:url('${currentAvatar()}')`:''}">${(me.name||'').charAt(0)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:14px;margin-bottom:2px">${me.name}</div>
+        <div style="font-weight:700;font-size:16.1px;margin-bottom:2px">${me.name}</div>
         <div class="color-gray text-sm" style="margin-bottom:10px">${me.role}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="triggerAvatarUpload()">📤 ${currentAvatar()?'تغيير الصورة':'رفع صورة'}</button>
@@ -3550,8 +3687,8 @@ function renderSettings() {
           ${DB.users.map(u => `<tr>
             <td>
               <div style="display:flex;align-items:center;gap:10px">
-                <div class="user-avatar ${u.avatar?'has-photo':''}" style="width:32px;height:32px;font-size:13px${u.avatar?`;background-image:url('${u.avatar}');color:transparent`:''}">${u.name.charAt(0)}</div>
-                <span>${u.name}${me.userId===u.id?' <span style="color:var(--gold);font-size:11px">(أنت)</span>':''}</span>
+                <div class="user-avatar ${u.avatar?'has-photo':''}" style="width:32px;height:32px;font-size:14.9px${u.avatar?`;background-image:url('${u.avatar}');color:transparent`:''}">${u.name.charAt(0)}</div>
+                <span>${u.name}${me.userId===u.id?' <span style="color:var(--gold);font-size:12.6px">(أنت)</span>':''}</span>
               </div>
             </td>
             <td class="color-gray">${u.user}</td>
@@ -3761,52 +3898,52 @@ function renderClientPortal() {
       <div class="card" style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
           <div>
-            <div style="font-size:12px;color:var(--gold);margin-bottom:4px">📋 ${c.num}</div>
-            <div style="font-size:18px;font-weight:800">${c.title}</div>
-            <div style="color:var(--gray-light);font-size:13px;margin-top:4px">🏛️ ${c.court} — ${c.dept}</div>
+            <div style="font-size:13.8px;color:var(--gold);margin-bottom:4px">📋 ${c.num}</div>
+            <div style="font-size:20.7px;font-weight:800">${c.title}</div>
+            <div style="color:var(--gray-light);font-size:14.9px;margin-top:4px">🏛️ ${c.court} — ${c.dept}</div>
           </div>
-          <span class="badge badge-${c.status}" style="font-size:13px;padding:6px 14px">${statusLabel(c.status)}</span>
+          <span class="badge badge-${c.status}" style="font-size:14.9px;padding:6px 14px">${statusLabel(c.status)}</span>
         </div>
         <div style="margin-bottom:12px">
-          <div style="font-size:12px;color:var(--gray-light);margin-bottom:6px">تقدم القضية</div>
+          <div style="font-size:13.8px;color:var(--gray-light);margin-bottom:6px">تقدم القضية</div>
           <div class="progress-bar"><div class="progress-fill" style="width:${c.progress}%"></div></div>
-          <div style="text-align:left;font-size:11px;color:var(--gold);margin-top:4px">${c.progress}%</div>
+          <div style="text-align:left;font-size:12.6px;color:var(--gold);margin-top:4px">${c.progress}%</div>
         </div>
         <div class="two-col" style="gap:16px">
           <div>
-            <div style="font-size:12px;color:var(--gray-light);margin-bottom:8px;font-weight:600">📜 المستجدات</div>
+            <div style="font-size:13.8px;color:var(--gray-light);margin-bottom:8px;font-weight:600">📜 المستجدات</div>
             ${c.updates.length === 0 ? '<p class="text-sm color-gray">لا توجد مستجدات</p>' :
               c.updates.slice().reverse().slice(0,3).map(u => `
               <div style="padding:10px;background:var(--dark-3);border-radius:8px;margin-bottom:8px;border-right:3px solid var(--gold)">
-                <div style="font-size:11px;color:var(--gray);margin-bottom:3px">${formatDate(u.date)}</div>
-                <div style="font-size:13px">${u.text}</div>
+                <div style="font-size:12.6px;color:var(--gray);margin-bottom:3px">${formatDate(u.date)}</div>
+                <div style="font-size:14.9px">${u.text}</div>
               </div>`).join('')}
           </div>
           <div>
-            <div style="font-size:12px;color:var(--gray-light);margin-bottom:8px;font-weight:600">📅 الجلسات</div>
+            <div style="font-size:13.8px;color:var(--gray-light);margin-bottom:8px;font-weight:600">📅 الجلسات</div>
             ${myHearings.length === 0 ? '<p class="text-sm color-gray">لا توجد جلسات</p>' :
               myHearings.slice(0,3).map(h => {
                 const d = new Date(h.date); const isPast = d < new Date();
                 return `
                 <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--dark-3);border-radius:8px;margin-bottom:8px">
                   <div style="width:38px;height:38px;background:${isPast?'rgba(107,107,107,.2)':'rgba(163,136,80,.15)'};border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                    <span style="font-size:14px;font-weight:800;color:${isPast?'var(--gray)':'var(--gold)'}">${d.getDate()}</span>
-                    <span style="font-size:9px;color:var(--gray-light)">${d.toLocaleDateString('ar-SA',{month:'short'})}</span>
+                    <span style="font-size:16.1px;font-weight:800;color:${isPast?'var(--gray)':'var(--gold)'}">${d.getDate()}</span>
+                    <span style="font-size:10.3px;color:var(--gray-light)">${d.toLocaleDateString('ar-SA',{month:'short'})}</span>
                   </div>
                   <div>
-                    <div style="font-size:12px;font-weight:600">${h.purpose} — ${h.time}</div>
-                    <div style="font-size:11px;color:var(--gray-light)">${h.court}</div>
+                    <div style="font-size:13.8px;font-weight:600">${h.purpose} — ${h.time}</div>
+                    <div style="font-size:12.6px;color:var(--gray-light)">${h.court}</div>
                   </div>
-                  ${!isPast ? '<span style="margin-right:auto;font-size:10px;color:var(--green)">● قادمة</span>' : ''}
+                  ${!isPast ? '<span style="margin-right:auto;font-size:11.5px;color:var(--green)">● قادمة</span>' : ''}
                 </div>`; }).join('')}
           </div>
         </div>
         ${c.nextHearing ? `
         <div style="margin-top:12px;padding:12px 16px;background:rgba(163,136,80,.1);border:1px solid rgba(163,136,80,.3);border-radius:10px;display:flex;align-items:center;gap:10px">
-          <span style="font-size:20px">📅</span>
+          <span style="font-size:23px">📅</span>
           <div>
-            <div style="font-size:12px;color:var(--gold);font-weight:600">الجلسة القادمة</div>
-            <div style="font-size:14px;font-weight:700">${formatDate(c.nextHearing)}</div>
+            <div style="font-size:13.8px;color:var(--gold);font-weight:600">الجلسة القادمة</div>
+            <div style="font-size:16.1px;font-weight:700">${formatDate(c.nextHearing)}</div>
           </div>
         </div>` : ''}
       </div>`;
@@ -3835,7 +3972,7 @@ function renderClientHearings() {
         </div>
         <div>
           <div class="hearing-time">${h.time}</div>
-          <div style="font-size:11px;color:${isPast?'var(--gray)':'var(--green)'};margin-top:4px">${isPast?'منتهية':'قادمة'}</div>
+          <div style="font-size:12.6px;color:${isPast?'var(--gray)':'var(--green)'};margin-top:4px">${isPast?'منتهية':'قادمة'}</div>
           ${!isPast ? `<button class="btn-ics" onclick="addHearingToCalendar('${h.id}')">📅 أضف للتقويم</button>` : ''}
         </div>
       </div>`;
@@ -3847,7 +3984,7 @@ function renderClientDocs() {
   const myCases = DB.cases.filter(c=>c.clientId===u.clientId);
   return `
   <div class="section-title" style="margin-bottom:20px">📁 مستنداتي</div>
-  <p style="color:var(--gray-light);font-size:13px;margin-bottom:18px">مستندات الوكالة وأوراق القضية التي أودعها المكتب لقضاياك. لإيداع مستند جديد، تواصل مع المكتب.</p>
+  <p style="color:var(--gray-light);font-size:14.9px;margin-bottom:18px">مستندات الوكالة وأوراق القضية التي أودعها المكتب لقضاياك. لإيداع مستند جديد، تواصل مع المكتب.</p>
   ${myCases.length === 0 ? '<div class="card"><p class="color-gray text-sm">لا توجد قضايا مسجلة بعد</p></div>' :
     myCases.map(c => {
       const docs = c.documents || { agency: [], papers: [] };
@@ -3858,10 +3995,11 @@ function renderClientDocs() {
         ${all.length === 0 ? '<p class="color-gray text-sm">لا توجد مستندات مودَعة بعد لهذه القضية</p>' : all.map(d => `
           <div class="doc-row">
             <div class="doc-icon">📄</div>
-            <div style="flex:1;min-width:0">
+            <div class="doc-open" title="اضغط للاستعراض" onclick="previewStoredFile('case-docs','${d.path}','${escHtml(d.name)}')">
               <div class="doc-name">${d.name}</div>
               <div class="doc-meta">${d.kind} — ${formatBytes(d.size)} — بتاريخ ${formatDate(d.uploadedAt)}</div>
             </div>
+            <button class="btn btn-secondary btn-sm" onclick="previewStoredFile('case-docs','${d.path}','${escHtml(d.name)}')">👁️ استعراض</button>
             <button class="btn btn-secondary btn-sm" onclick="openStoredFile('case-docs','${d.path}','${d.name}')">تنزيل</button>
           </div>`).join('')}
       </div>`;
@@ -3877,14 +4015,14 @@ function renderClientContact() {
       <div class="card-title" style="margin-bottom:16px">📋 معلومات الاتصال</div>
       ${[['📞 هاتف','0148482131'],['📱 جوال','+966537475000'],['📧 بريد','Abdullah@alzahimlaw.com'],['📍 الموقع','طريق الملك عبدالله | الدائري الثاني']].map(([l,v]) => `
         <div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
-          <span style="font-size:13px;flex:1">${l}</span>
-          <span style="color:var(--gold);font-size:13px">${v}</span>
+          <span style="font-size:14.9px;flex:1">${l}</span>
+          <span style="color:var(--gold);font-size:14.9px">${v}</span>
         </div>`).join('')}
-      <div style="margin-top:16px;padding:14px;background:rgba(163,136,80,.08);border-radius:10px;font-size:13px;color:var(--gray-light)">
+      <div style="margin-top:16px;padding:14px;background:rgba(163,136,80,.08);border-radius:10px;font-size:14.9px;color:var(--gray-light)">
         ساعات العمل: الأحد – الخميس، 8 صباحاً – 5 مساءً
       </div>
       <a href="https://wa.me/966537475000" target="_blank" rel="noopener"
-        style="margin-top:14px;width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">
+        style="margin-top:14px;width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14.9px">
         💬 تواصل عبر واتساب
       </a>
     </div>
@@ -3899,7 +4037,7 @@ function renderClientContact() {
         ${my.map(t => `
           <div onclick="openTicket('${t.id}')" style="cursor:pointer;padding:12px 14px;background:var(--dark-3);border-radius:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px">
             <div style="min-width:0">
-              <div style="font-weight:600;font-size:13px">${t.subject||'بدون عنوان'}</div>
+              <div style="font-weight:600;font-size:14.9px">${t.subject||'بدون عنوان'}</div>
               <div class="text-sm color-gray">${t.messages.length} رسالة — آخر رد: ${t.messages[t.messages.length-1].time}</div>
             </div>
             <span class="badge ${t.status==='open'?'badge-active':'badge-closed'}" style="flex-shrink:0">${t.status==='open'?'مفتوحة':'مغلقة'}</span>
@@ -3944,7 +4082,7 @@ function renderTicketsAdmin() {
     <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTicket('${t.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div style="min-width:0">
-          <div style="font-weight:700;font-size:14px">${t.subject || 'بدون عنوان'}</div>
+          <div style="font-weight:700;font-size:16.1px">${t.subject || 'بدون عنوان'}</div>
           <div class="text-sm color-gray" style="margin-top:3px">👤 ${cl?cl.name:'—'} — ${t.messages.length} رسالة</div>
           <div class="text-sm color-gray" style="margin-top:3px">آخر رسالة (${last.from==='client'?'من الموكل':'من المكتب'}): ${last.text.slice(0,80)}${last.text.length>80?'…':''}</div>
         </div>
