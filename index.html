@@ -88,6 +88,29 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 }
 .inst-del { background:none; border:1px solid var(--border); color:var(--red); border-radius:6px; cursor:pointer; height:34px; font-size:16.1px; }
 .inst-del:hover { border-color:var(--red); }
+
+/* ═══════════ اختيار نوع المستند ═══════════ */
+.doc-kind-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:20px; }
+.doc-kind {
+  display:flex; flex-direction:column; align-items:flex-start; gap:3px; text-align:right;
+  padding:13px 14px; background:var(--dark-3); border:1.5px solid var(--border);
+  border-radius:10px; cursor:pointer; font-family:inherit; color:var(--gray-light);
+  transition:.15s; position:relative;
+}
+.doc-kind:hover { border-color:var(--gold); background:var(--olive-pale); }
+.doc-kind b { font-size:14.4px; color:var(--white); font-weight:700; }
+.doc-kind span:last-child { font-size:12.1px; line-height:1.5; }
+.doc-kind .dk-icon { font-size:19.5px; margin-bottom:2px; }
+.doc-kind .dk-icon svg { width:20px; height:20px; }
+.doc-kind.sel { border-color:var(--gold); background:var(--olive-pale); box-shadow:inset 0 0 0 1px var(--gold); }
+.doc-kind.sel b, .doc-kind.sel .dk-icon { color:var(--gold-deep); }
+.inst-row.desc { grid-template-columns:1.7fr 1fr 34px; }
+.inst-row .inst-desc {
+  padding:8px 11px; background:var(--dark-2); border:1px solid var(--border);
+  border-radius:7px; color:var(--white); font-family:inherit; font-size:14.9px; outline:none;
+}
+.inst-row .inst-desc:focus { border-color:var(--gold); }
+@media (max-width: 560px) { .doc-kind-grid { grid-template-columns:1fr; } }
 .perms-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; background:var(--dark-3); border:1px solid var(--border); border-radius:8px; padding:14px; }
 .perm-item { display:flex; align-items:center; gap:8px; font-size:14.9px; cursor:pointer; }
 .perm-item input { accent-color:var(--gold); width:16px; height:16px; }
@@ -1298,40 +1321,92 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 <div class="modal-overlay" id="add-invoice-modal" style="display:none" onclick="closeModal('add-invoice-modal',event)">
   <div class="modal" style="width:700px" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <span class="modal-title">🧾 فاتورة جديدة — عقد أتعاب محاماة</span>
+      <span class="modal-title" id="inv-modal-title">🧾 مستند جديد</span>
       <button class="modal-close" onclick="closeModal('add-invoice-modal',event)">×</button>
     </div>
     <div class="modal-body">
+      <div class="doc-kind-grid" id="inv-kind-grid">
+        <button type="button" class="doc-kind" data-kind="fee" onclick="setInvKind('fee')">
+          <span class="dk-icon">⚖️</span><b>عقد أتعاب محاماة</b>
+          <span>ترافع ومدافعة في قضية — بدفعات</span>
+        </button>
+        <button type="button" class="doc-kind" data-kind="consulting" onclick="setInvKind('consulting')">
+          <span class="dk-icon">📋</span><b>عقد استشارات سنوي</b>
+          <span>اشتراك سنوي متجدد — بلا ترافع</span>
+        </button>
+        <button type="button" class="doc-kind" data-kind="quote" onclick="setInvKind('quote')">
+          <span class="dk-icon">📊</span><b>عرض سعر</b>
+          <span>صفحة واحدة — بنود وأسعار وسريان</span>
+        </button>
+        <button type="button" class="doc-kind" data-kind="invoice" onclick="setInvKind('invoice')">
+          <span class="dk-icon">🧾</span><b>فاتورة</b>
+          <span>صفحة واحدة — بنود واستحقاق</span>
+        </button>
+      </div>
+
       <div class="form-row">
-        <div class="form-group-v"><label>الموكل (الطرف الثاني)</label>
+        <div class="form-group-v"><label id="inv-client-label">الموكل (الطرف الثاني)</label>
           <select id="inv-client" onchange="invClientChanged()"><option value="">اختر الموكل</option></select>
         </div>
-        <div class="form-group-v"><label>تاريخ تحرير العقد</label>
+        <div class="form-group-v"><label id="inv-date-label">تاريخ التحرير</label>
           <input type="date" id="inv-date" onchange="updateInvDatePreview()" oninput="updateInvDatePreview()" />
           <div id="inv-date-hijri" class="date-hijri-preview"></div>
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group-v"><label>مدينة إبرام العقد</label><input type="text" id="inv-city" value="المدينة المنورة" /></div>
-        <div class="form-group-v"><label>رقم العقد (يُولَّد تلقائياً إن تُرك فارغاً)</label><input type="text" id="inv-ref" placeholder="مثال: 2026-005" /></div>
+        <div class="form-group-v" data-for="fee consulting"><label>مدينة الإبرام</label><input type="text" id="inv-city" value="المدينة المنورة" /></div>
+        <div class="form-group-v"><label id="inv-ref-label">الرقم (يُولَّد تلقائياً إن تُرك فارغاً)</label><input type="text" id="inv-ref" placeholder="مثال: 2026-005" /></div>
       </div>
-      <div class="form-group-v"><label>القضايا المتمثلة (موضوع العقد)</label>
+
+      <div class="form-group-v" data-for="consulting quote invoice">
+        <label id="inv-subject-label">الموضوع</label>
+        <input type="text" id="inv-subject" placeholder="مثال: الاستشارات القانونية وصياغة ومراجعة العقود" />
+      </div>
+
+      <div class="form-group-v" data-for="fee consulting invoice">
+        <label id="inv-cases-label">القضايا المرتبطة</label>
         <div id="inv-cases-box" class="inv-cases-box"><span class="color-gray text-sm">اختر الموكل أولاً لعرض قضاياه</span></div>
       </div>
-      <div class="form-group-v"><label>الأتعاب — جدول الدفعات</label>
+
+      <div class="form-group-v">
+        <label id="inv-items-label">جدول الدفعات</label>
         <div id="inv-installments"></div>
         <div style="margin-top:4px">
-          <button class="btn btn-secondary btn-sm" onclick="addInstRow()">➕ إضافة دفعة</button>
+          <button class="btn btn-secondary btn-sm" onclick="addInstRow()" id="inv-add-row-btn">➕ إضافة دفعة</button>
+          <span class="color-gray text-sm" id="inv-total-preview" style="margin-right:10px"></span>
         </div>
       </div>
-      <div class="form-group-v"><label>شروط أو ملاحظات إضافية (تُدرج في العقد — اختياري)</label>
+
+      <div class="form-row" data-for="quote invoice">
+        <div class="form-group-v" data-for="quote"><label>مدة سريان العرض (بالأيام)</label>
+          <input type="number" id="inv-valid" value="30" min="1" /></div>
+        <div class="form-group-v" data-for="invoice"><label>تاريخ الاستحقاق</label>
+          <input type="date" id="inv-due" /></div>
+        <div class="form-group-v">
+          <label>ضريبة القيمة المضافة</label>
+          <select id="inv-vat" onchange="invVatChanged();updateInvTotalPreview()">
+            <option value="0">بدون ضريبة</option>
+            <option value="15">١٥٪ — فاتورة ضريبية</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group-v" data-for="quote invoice" id="inv-vatnum-wrap" style="display:none">
+        <label>الرقم الضريبي للمكتب</label>
+        <input type="text" id="inv-vatnum" placeholder="١٥ رقماً — يلزم نظاماً لتسمية المستند «فاتورة ضريبية»" />
+      </div>
+      <div class="form-group-v" data-for="quote invoice">
+        <label>بيانات السداد / التحويل (اختياري — تظهر أسفل المستند)</label>
+        <textarea id="inv-bank" placeholder="اسم المستفيد — اسم البنك — الآيبان SA.........."></textarea>
+      </div>
+
+      <div class="form-group-v"><label id="inv-notes-label">شروط أو ملاحظات إضافية (اختياري)</label>
         <textarea id="inv-notes" placeholder="أي شروط خاصة إضافية..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('add-invoice-modal',event)">إلغاء</button>
       <button class="btn btn-secondary" onclick="saveInvoiceContract(false)">💾 حفظ فقط</button>
-      <button class="btn btn-primary" onclick="saveInvoiceContract(true)">🖨️ حفظ وإصدار PDF</button>
+      <button class="btn btn-primary" onclick="saveInvoiceContract(true)" id="inv-save-print-btn">🖨️ حفظ وإصدار PDF</button>
     </div>
   </div>
 </div>
@@ -1787,6 +1862,10 @@ async function loadFromDatabase() {
     const o = {
       id: inv.id, ref: inv.ref, clientId: inv.client_id, date: inv.date,
       city: inv.city, notes: inv.notes || '',
+      kind: inv.kind || 'fee', subject: inv.subject || '',
+      vatRate: +(inv.vat_rate || 0), vatNumber: inv.vat_number || '',
+      validDays: inv.valid_days || null, dueDate: inv.due_date || '',
+      bankInfo: inv.bank_info || '',
       caseIds: (casesByInv[inv.id] || []).map(r => r.case_id),
       installments: (instByInv[inv.id] || []).map(s => ({
         id: s.id, label: s.label, amount: s.amount, paid: s.paid,
@@ -2641,7 +2720,7 @@ function renderCdmContract(c, cl) {
       <div class="tabular-num" style="font-size:24.1px;font-weight:600;color:var(--gold-deep);margin-bottom:14px">${invTotal(inv).toLocaleString()} ر.س</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="closeModal('case-detail-modal',{});openInvoiceDetail('${inv.id}')">تفاصيل الدفعات</button>
-        <button class="btn btn-primary btn-sm" onclick="openContractPDF('${inv.id}')">🖨️ عرض العقد PDF</button>
+        <button class="btn btn-primary btn-sm" onclick="openDocPDF('${inv.id}')">🖨️ عرض ${docKindLabel(inv.kind)} PDF</button>
       </div>
     </div>`; }).join('') + `<div style="text-align:center">${addBtn}</div>`;
 }
@@ -3441,19 +3520,20 @@ function renderInvoices() {
   </div>
   <div class="section-header">
     <div class="section-title">💰 الفواتير وعقود الأتعاب</div>
-    <button class="btn btn-primary" onclick="openModal('add-invoice-modal');populateInvoiceModal()">➕ فاتورة جديدة</button>
+    <button class="btn btn-primary" onclick="openModal('add-invoice-modal');populateInvoiceModal()">➕ مستند جديد</button>
   </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>رقم العقد</th><th>القضايا</th><th>الموكل</th><th>الإجمالي (ر.س)</th><th>المُحصَّل</th><th>الدفعات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+      <thead><tr><th>النوع</th><th>الرقم</th><th>القضايا</th><th>العميل</th><th>الإجمالي (ر.س)</th><th>المُحصَّل</th><th>الدفعات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
       <tbody>
-        ${DB.invoices.length === 0 ? '<tr><td colspan="8" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد فواتير أو عقود أتعاب بعد — اضغط «فاتورة جديدة» لإصدار أول عقد</td></tr>' : ''}
+        ${DB.invoices.length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد مستندات بعد — اضغط «مستند جديد» لإصدار عقد أو عرض سعر أو فاتورة</td></tr>' : ''}
         ${DB.invoices.map(inv => {
           const cl = DB.clients.find(x=>x.id===inv.clientId);
           const nums = (inv.caseIds||[]).map(id=>{const c=DB.cases.find(x=>x.id===id);return c?c.num:'';}).filter(Boolean).join('، ') || '—';
           const st = invStatus(inv);
           const paidCnt = inv.installments.filter(i=>i.paid).length;
           return `<tr>
+            <td><span class="badge badge-partial" style="white-space:nowrap">${DOC_KIND_BADGE[inv.kind||'fee']}</span></td>
             <td style="color:var(--gold);font-weight:700">${inv.ref}</td>
             <td>${nums}</td>
             <td>${cl?cl.name:'—'}</td>
@@ -3463,7 +3543,7 @@ function renderInvoices() {
             <td><span class="badge ${stBadge[st]}">${stLabel[st]}</span></td>
             <td style="white-space:nowrap">
               <button class="btn btn-secondary btn-sm" onclick="openInvoiceDetail('${inv.id}')">📄 الدفعات</button>
-              <button class="btn btn-primary btn-sm" onclick="openContractPDF('${inv.id}')">🖨️ العقد PDF</button>
+              <button class="btn btn-primary btn-sm" onclick="openDocPDF('${inv.id}')">🖨️ ${docKindLabel(inv.kind)} PDF</button>
               <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteInvoice('${inv.id}')">🗑️ حذف</button>
             </td>
           </tr>`;
@@ -3496,7 +3576,7 @@ function openInvoiceDetail(id) {
     </table></div>
     <div style="display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap">
       <button class="btn btn-secondary" style="color:var(--red)" onclick="deleteInvoice('${inv.id}')">🗑️ حذف العقد</button>
-      <button class="btn btn-primary" onclick="openContractPDF('${inv.id}')">🖨️ عرض / طباعة عقد الأتعاب PDF</button>
+      <button class="btn btn-primary" onclick="openDocPDF('${inv.id}')">🖨️ عرض / طباعة PDF</button>
     </div>`);
   openModal('invoice-detail-modal');
 }
@@ -4201,16 +4281,113 @@ function populateHearingModal() {
   const sel = document.getElementById('nh-case');
   sel.innerHTML = '<option value="">اختر القضية</option>' + myScopedCases().map(c=>`<option value="${c.id}">${c.num || 'بدون رقم'} — ${c.title}</option>`).join('');
 }
-function populateInvoiceModal() {
+// ── أنواع المستندات المالية ──
+// كل نوع يغيّر مسمّيات الحقول وما يظهر منها وشكل جدول البنود
+const DOC_KINDS = {
+  fee: {
+    title: '⚖️ عقد أتعاب محاماة', client: 'الموكل (الطرف الثاني)', date: 'تاريخ تحرير العقد',
+    ref: 'رقم العقد (يُولَّد تلقائياً إن تُرك فارغاً)', items: 'الأتعاب — جدول الدفعات',
+    addRow: '➕ إضافة دفعة', cases: 'القضايا المتمثلة (موضوع العقد)', casesRequired: true,
+    notes: 'شروط أو ملاحظات إضافية (تُدرج في العقد — اختياري)', desc: false, print: '🖨️ حفظ وإصدار العقد',
+  },
+  consulting: {
+    title: '📋 عقد استشارات قانونية سنوي', client: 'العميل (الطرف الثاني)', date: 'تاريخ بدء العقد',
+    ref: 'رقم العقد (يُولَّد تلقائياً إن تُرك فارغاً)', items: 'الأتعاب السنوية — جدول الدفعات',
+    addRow: '➕ إضافة دفعة', cases: 'قضايا مرتبطة (اختياري)', casesRequired: false,
+    subject: 'نطاق الخدمات (يظهر في البند الثاني)',
+    subjectPh: 'مثال: الاستشارات الشرعية والنظامية، وصياغة ومراجعة العقود، والرد على الاستفسارات',
+    notes: 'شروط أو ملاحظات إضافية (تُدرج في العقد — اختياري)', desc: false, print: '🖨️ حفظ وإصدار العقد',
+  },
+  quote: {
+    title: '📊 عرض سعر', client: 'العميل (الموجَّه إليه العرض)', date: 'تاريخ العرض',
+    ref: 'رقم العرض (يُولَّد تلقائياً إن تُرك فارغاً)', items: 'بنود العرض',
+    addRow: '➕ إضافة بند', cases: '', casesRequired: false,
+    subject: 'موضوع العرض', subjectPh: 'مثال: تأسيس شركة ذات مسؤولية محدودة وإنهاء إجراءاتها',
+    notes: 'شروط إضافية تُضاف لشروط العرض (اختياري)', desc: true, print: '🖨️ حفظ وإصدار العرض',
+  },
+  invoice: {
+    title: '🧾 فاتورة', client: 'العميل (المفوتَر عليه)', date: 'تاريخ إصدار الفاتورة',
+    ref: 'رقم الفاتورة (يُولَّد تلقائياً إن تُرك فارغاً)', items: 'بنود الفاتورة',
+    addRow: '➕ إضافة بند', cases: 'قضايا مرتبطة (اختياري)', casesRequired: false,
+    subject: 'وصف الخدمة', subjectPh: 'مثال: أتعاب استشارات قانونية عن شهر محرم ١٤٤٨هـ',
+    notes: 'ملاحظات تظهر أسفل الفاتورة (اختياري)', desc: true, print: '🖨️ حفظ وإصدار الفاتورة',
+  },
+};
+let invKind = 'fee';
+function setInvKind(kind) {
+  invKind = kind;
+  const k = DOC_KINDS[kind];
+  document.querySelectorAll('#inv-kind-grid .doc-kind').forEach(b =>
+    b.classList.toggle('sel', b.dataset.kind === kind));
+  document.getElementById('inv-modal-title').innerHTML = iconify(k.title);
+  document.getElementById('inv-client-label').textContent = k.client;
+  document.getElementById('inv-date-label').textContent = k.date;
+  document.getElementById('inv-ref-label').textContent = k.ref;
+  document.getElementById('inv-items-label').textContent = k.items;
+  document.getElementById('inv-add-row-btn').innerHTML = iconify(k.addRow);
+  document.getElementById('inv-notes-label').textContent = k.notes;
+  document.getElementById('inv-save-print-btn').innerHTML = iconify(k.print);
+  if (k.subject) {
+    document.getElementById('inv-subject-label').textContent = k.subject;
+    document.getElementById('inv-subject').placeholder = k.subjectPh || '';
+  }
+  if (k.cases) document.getElementById('inv-cases-label').textContent = k.cases;
+  // الحقول تُظهر وتُخفى بحسب النوع المذكور في data-for
+  document.querySelectorAll('#add-invoice-modal [data-for]').forEach(el => {
+    el.style.display = el.dataset.for.split(' ').includes(kind) ? '' : 'none';
+  });
+  invVatChanged();
+  rebuildInstRows();
+  updateInvTotalPreview();
+}
+function invVatChanged() {
+  const on = (document.getElementById('inv-vat').value || '0') !== '0';
+  const w = document.getElementById('inv-vatnum-wrap');
+  w.style.display = (on && ['quote','invoice'].includes(invKind)) ? '' : 'none';
+}
+// تبديل النوع يغيّر شكل الصفوف، فتُعاد بناؤها مع الحفاظ على ما أُدخل
+function rebuildInstRows() {
+  const box = document.getElementById('inv-installments');
+  const prev = [...box.querySelectorAll('.inst-row')].map(r => ({
+    desc: r.querySelector('.inst-desc') ? r.querySelector('.inst-desc').value : '',
+    amount: r.querySelector('.inst-amount').value,
+  }));
+  box.innerHTML = '';
+  (prev.length ? prev : [{desc:'',amount:''},{desc:'',amount:''}]).forEach(v => addInstRow(v.amount, v.desc));
+}
+function updateInvTotalPreview() {
+  const el = document.getElementById('inv-total-preview'); if (!el) return;
+  const amounts = [...document.querySelectorAll('#inv-installments .inst-amount')].map(i => i.value);
+  const sum = amounts.reduce((t,v) => t + parseInstAmount(v), 0);
+  if (!sum) { el.textContent = ''; return; }
+  const vat = ['quote','invoice'].includes(invKind) ? (+document.getElementById('inv-vat').value || 0) : 0;
+  el.textContent = vat
+    ? `المجموع ${sum.toLocaleString()} + ضريبة ${Math.round(sum*vat/100).toLocaleString()} = ${Math.round(sum*(1+vat/100)).toLocaleString()} ر.س`
+    : `الإجمالي ${sum.toLocaleString()} ر.س`;
+}
+
+function populateInvoiceModal(kind) {
   document.getElementById('inv-client').innerHTML = '<option value="">اختر الموكل</option>' + DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('inv-city').value = 'المدينة المنورة';
   document.getElementById('inv-ref').value = '';
   document.getElementById('inv-notes').value = '';
+  document.getElementById('inv-subject').value = '';
+  document.getElementById('inv-valid').value = '30';
+  document.getElementById('inv-due').value = '';
+  document.getElementById('inv-vat').value = '0';
+  document.getElementById('inv-vatnum').value = '';
+  document.getElementById('inv-bank').value = '';
   document.getElementById('inv-cases-box').innerHTML = '<span class="color-gray text-sm">اختر الموكل أولاً لعرض قضاياه</span>';
   document.getElementById('inv-installments').innerHTML = '';
-  addInstRow();
-  addInstRow();
+  addInstRow(); addInstRow();
+  // الإيموجي في الوسم الثابت لا يمر على iconify، فيُحوَّل هنا مرة واحدة
+  const grid = document.getElementById('inv-kind-grid');
+  if (!grid.dataset.iconified) {
+    grid.querySelectorAll('.dk-icon').forEach(el => { el.innerHTML = iconify(el.textContent.trim(), 20); });
+    grid.dataset.iconified = '1';
+  }
+  setInvKind(kind || 'fee');
   updateInvDatePreview();
 }
 function updateInvDatePreview() {
@@ -4233,14 +4410,19 @@ function ordinalInstLabel(n) { return 'الدفعة ' + (ORDINAL_AR[n-1] || ('ر
 function renumberInstRows() {
   document.querySelectorAll('#inv-installments .inst-label-auto').forEach((el,i) => { el.textContent = ordinalInstLabel(i+1); });
 }
-function addInstRow(amount) {
+function addInstRow(amount, desc) {
   const box = document.getElementById('inv-installments');
+  const useDesc = DOC_KINDS[invKind] && DOC_KINDS[invKind].desc;
   const row = document.createElement('div');
-  row.className = 'inst-row';
+  row.className = 'inst-row' + (useDesc ? ' desc' : '');
+  const first = useDesc
+    ? `<input type="text" class="inst-desc" placeholder="وصف البند — مثال: إعداد ومراجعة عقد التأسيس" value="${escHtml(desc||'')}" />`
+    : '<div class="inst-label-auto"></div>';
   row.innerHTML = `
-    <div class="inst-label-auto"></div>
-    <input type="text" class="inst-amount" placeholder="المبلغ — رقم أو نص حر (مثال: 10000 أو 50% من قيمة الحكم)" value="${amount||''}" />
-    <button class="inst-del" title="حذف الدفعة" onclick="this.parentElement.remove();renumberInstRows()">${ic('trash',15)}</button>`;
+    ${first}
+    <input type="text" class="inst-amount" oninput="updateInvTotalPreview()"
+      placeholder="${useDesc ? 'المبلغ بالريال' : 'المبلغ — رقم أو نص حر (مثال: 10000 أو 50% من قيمة الحكم)'}" value="${escHtml(amount||'')}" />
+    <button class="inst-del" title="حذف البند" onclick="this.parentElement.remove();renumberInstRows();updateInvTotalPreview()">${ic('trash',15)}</button>`;
   box.appendChild(row);
   renumberInstRows();
 }
@@ -4748,41 +4930,77 @@ async function saveUpdateReport() {
 }
 
 async function saveInvoiceContract(print) {
+  const k = DOC_KINDS[invKind];
   const clientId = document.getElementById('inv-client').value;
-  if (!clientId) { alert('يرجى اختيار الموكل'); return; }
+  if (!clientId) { alert('يرجى اختيار ' + (invKind === 'fee' ? 'الموكل' : 'العميل')); return; }
   const caseIds = [...document.querySelectorAll('.inv-case-chk:checked')].map(c=>c.value);
-  if (!caseIds.length) { alert('يرجى اختيار قضية واحدة على الأقل من القضايا المتمثلة'); return; }
+  if (k.casesRequired && !caseIds.length) { alert('يرجى اختيار قضية واحدة على الأقل من القضايا المتمثلة'); return; }
+  // بنود عرض السعر والفاتورة لها وصف يكتبه المستخدم، ودفعات العقود تُرقَّم تلقائياً
   const insts = [...document.querySelectorAll('#inv-installments .inst-row')]
-    .map(r => r.querySelector('.inst-amount').value.trim())
-    .filter(amount => amount !== '')
-    .map((amount,i) => ({ label: ordinalInstLabel(i+1), amount, sort: i }));
-  if (!insts.length) { alert('يرجى إدخال دفعة واحدة على الأقل'); return; }
-  // رقم العقد يتسلسل على عدد العقود القائمة إن لم يُكتب يدوياً
+    .map(r => ({
+      amount: r.querySelector('.inst-amount').value.trim(),
+      desc: r.querySelector('.inst-desc') ? r.querySelector('.inst-desc').value.trim() : '',
+    }))
+    .filter(x => x.amount !== '' || x.desc !== '')
+    .map((x,i) => ({ label: k.desc ? (x.desc || 'بند ' + (i+1)) : ordinalInstLabel(i+1), amount: x.amount, sort: i }));
+  if (!insts.length) { alert(k.desc ? 'يرجى إدخال بند واحد على الأقل' : 'يرجى إدخال دفعة واحدة على الأقل'); return; }
+  if (['quote','invoice'].includes(invKind) && !document.getElementById('inv-subject').value.trim()) {
+    alert('يرجى كتابة الموضوع'); return;
+  }
+  const vat = +(document.getElementById('inv-vat').value || 0);
+  const isDoc = ['quote','invoice'].includes(invKind);
+  // الترقيم يتسلسل داخل كل نوع على حدة حتى لا تتداخل أرقام الفواتير بأرقام العقود
+  const PREFIX = { fee:'ع', consulting:'س', quote:'ض', invoice:'ف' };
+  const sameKind = DB.invoices.filter(i => (i.kind||'fee') === invKind).length;
   const ref = document.getElementById('inv-ref').value.trim()
-    || (new Date().getFullYear() + '-' + String(DB.invoices.length + 1).padStart(3,'0'));
+    || (PREFIX[invKind] + '-' + new Date().getFullYear() + '-' + String(sameKind + 1).padStart(3,'0'));
   let newId = null;
-  const ok = await dbWrite('عقد الأتعاب', async () => {
+  const ok = await dbWrite(k.title.replace(/^\S+\s/,''), async () => {
     const ins = await sb.from('invoices').insert({
-      ref, client_id: clientId,
+      ref, client_id: clientId, kind: invKind,
       date: document.getElementById('inv-date').value || new Date().toISOString().split('T')[0],
       city: document.getElementById('inv-city').value.trim() || 'المدينة المنورة',
       notes: nullIfBlank(document.getElementById('inv-notes').value),
+      subject: nullIfBlank(document.getElementById('inv-subject').value),
+      vat_rate: isDoc ? vat : 0,
+      vat_number: isDoc && vat ? nullIfBlank(document.getElementById('inv-vatnum').value) : null,
+      valid_days: invKind === 'quote' ? (+document.getElementById('inv-valid').value || 30) : null,
+      due_date: invKind === 'invoice' ? nullIfBlank(document.getElementById('inv-due').value) : null,
+      bank_info: isDoc ? nullIfBlank(document.getElementById('inv-bank').value) : null,
     }).select('id').single();
     if (ins.error) return ins;
     newId = ins.data.id;
-    const link = await sb.from('invoice_cases').insert(caseIds.map(cid => ({ invoice_id: newId, case_id: cid })));
-    if (link.error) return link;
-    return sb.from('installments').insert(insts.map(s => ({ ...s, invoice_id: newId })));
+    if (caseIds.length) {
+      const link = await sb.from('invoice_cases').insert(caseIds.map(cid => ({ invoice_id: newId, case_id: cid })));
+      if (link.error) return link;
+    }
+    return sb.from('installments').insert(insts.map(x => ({ ...x, invoice_id: newId })));
   });
   if (!ok) return;
   closeModal('add-invoice-modal',{});
   navTo('invoices');
-  if (print && newId) openContractPDF(newId);
+  if (print && newId) openDocPDF(newId);
 }
 
 // ═══════════════════════════════════
 //  CONTRACT PDF (عقد أتعاب على الورق الرسمي)
 // ═══════════════════════════════════
+// بيانات المكتب كما في ورق المراسلة الرسمي — مرجع واحد لكل المستندات
+const OFFICE = {
+  name: 'مكتب المحامي / أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات القانونية',
+  shortName: 'مكتب الزاحم للمحاماة والاستشارات القانونية',
+  lawyer: 'أ.د عبدالله بن إبراهيم الزاحم',
+  license: '38321',
+  address: 'طريق الملك عبدالله (الدائري الثاني) مقابل سوق بن داود، المدينة المنورة',
+  pobox: 'DMPA6717',
+  phone: '+966506475000',
+  mobile: '+96659777374',
+  email: 'abdullah@alzahimlaw.com',
+  city: 'المدينة المنورة',
+};
+OFFICE.party1 = `${OFFICE.name} ترخيص رقم (${OFFICE.license})، وعنوانه ${OFFICE.address}؛ `
+  + `ص.ب: ${OFFICE.pobox}، هاتف: ${OFFICE.phone}، بريد إلكتروني: ${OFFICE.email}.`;
+
 function tafqit(n) {
   n = Math.floor(Math.abs(+n||0));
   if (n === 0) return 'صفر';
@@ -4829,7 +5047,7 @@ function buildContractHTML(inv) {
   const page1 = `
     <h1>( عقد أتعاب محاماة )</h1>
     <p>إنه في يوم ${dt.weekday} الموافق ${dt.hijri ? dt.hijri + 'هـ (' + dt.greg + 'م)' : dt.greg + 'م'} ب${inv.city} تم الاتفاق بين كل من:</p>
-    <p><b>الطرف الأول:</b> مكتب المحامي / أ.د عبدالله بن إبراهيم الزاحم، للمحاماة والاستشارات القانونية ترخيص رقم (321/38) وعنوانه المدينة المنورة ـ الدائري الثاني مقابل بن داود؛ ص.ب: المدينة المنورة 42363-2651. <span class="muted">(يشار للطرف الأول فيما بعد بـ«الطرف الأول أو المكتب»)</span></p>
+    <p><b>الطرف الأول:</b> ${OFFICE.party1} <span class="muted">(يشار للطرف الأول فيما بعد بـ«الطرف الأول أو المكتب»)</span></p>
     <p><b>الطرف الثاني:</b> السيد/ ${cl.name}${cl.nationality ? ' ' + cl.nationality + ' الجنسية' : ''} هوية رقم (${cl.idNum || '—'})، ${inv.city}، جوال (${cl.phone || '—'}). <span class="muted">(يشار للطرف الثاني فيما بعد بـ«الطرف الثاني»)</span></p>
     <h2>( تمهيد )</h2>
     <p>بما أن الطرف الأول مكتب متخصص ويعمل في المحاماة وتقديم الاستشارات القانونية والشرعية والمرافعة والمدافعة أمام الجهات القضائية بمختلف درجاتها ويضم نخبة من المحامين والمستشارين، وله من الإمكانيات والخبرات الكافية لتقديم هذه الخدمات لعملائه في كافة المجالات الشرعية والنظامية المتعلقة بمهنة المحاماة، وحيث إن الطرف الثاني يرغب بتوكيل الطرف الأول، وسيكون المعني من طرف المكتب بإدارة العلاقة مع الطرف الثاني على اتصال منتظم به حسب مقتضيات العمل، وسيتولى مسؤولية إدارة الفريق المعني المتواجد في المكتب بالمدينة المنورة، وقد يضم هذا الفريق — إذا اقتضت الحاجة — أفراداً آخرين من المحامين والمستشارين القانونيين والشرعيين المتواجدين لدى المكتب.</p>
@@ -4868,14 +5086,175 @@ function buildContractHTML(inv) {
   // تُقسَّم الكتل تلقائياً على عدد الصفحات اللازم عند الطباعة (حتى لا يُقتطع بند التوقيع)
   return page1 + page2;
 }
-function openContractPDF(id) {
+// ── حساب الإجماليات لعرض السعر والفاتورة ──
+function docTotals(inv) {
+  const items = (inv.installments || []);
+  const net = items.reduce((t, x) => t + parseInstAmount(x.amount), 0);
+  const rate = +(inv.vatRate || 0);
+  const vat = Math.round(net * rate) / 100;
+  return { items, net, rate, vat, gross: net + vat };
+}
+function itemsTableHTML(inv) {
+  const t = docTotals(inv);
+  const rows = t.items.map((x, i) => `<tr>
+      <td class="c">${i+1}</td>
+      <td>${escHtml(x.label || '—')}</td>
+      <td class="n">${isPureInstAmount(x.amount) ? parseInstAmount(x.amount).toLocaleString('ar-SA') : escHtml(x.amount || '')}</td>
+    </tr>`).join('');
+  const totals = `
+    <tr class="sum"><td colspan="2">المجموع قبل الضريبة</td><td class="n">${t.net.toLocaleString('ar-SA')}</td></tr>
+    ${t.rate ? `<tr class="sum"><td colspan="2">ضريبة القيمة المضافة (${t.rate}%)</td><td class="n">${t.vat.toLocaleString('ar-SA')}</td></tr>` : ''}
+    <tr class="grand"><td colspan="2">الإجمالي المستحق</td><td class="n">${t.gross.toLocaleString('ar-SA')}</td></tr>`;
+  return `<table class="items">
+    <thead><tr><th class="c" style="width:34px">#</th><th>البيان</th><th class="n" style="width:120px">المبلغ (ر.س)</th></tr></thead>
+    <tbody>${rows}${totals}</tbody></table>
+    <p class="tafqit">الإجمالي كتابةً: ${tafqit(Math.round(t.gross))} ريال سعودي لا غير.</p>`;
+}
+function isPureInstAmount(v) {
+  return typeof isPureNumericAmount === 'function' ? isPureNumericAmount(v) : /^[\d.,\s]+$/.test(String(v||''));
+}
+function clientLine(cl) {
+  return [cl.name, cl.idNum ? 'هوية رقم (' + cl.idNum + ')' : '', cl.phone ? 'جوال ' + cl.phone : '', cl.email || '']
+    .filter(Boolean).join('، ');
+}
+
+// ── عرض سعر — صفحة واحدة ──
+function buildQuoteHTML(inv) {
+  const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
+  const dt = contractDates(inv.date);
+  const days = +(inv.validDays || 30);
+  const until = new Date(inv.date + 'T12:00:00'); until.setDate(until.getDate() + days);
+  const t = docTotals(inv);
+  return `
+    <h1>( عرض سعر )</h1>
+    <table class="meta">
+      <tr><td><b>رقم العرض:</b> ${escHtml(inv.ref)}</td>
+          <td><b>التاريخ:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
+          <td><b>صالح حتى:</b> ${formatDateText(until.toISOString().split('T')[0])}</td></tr>
+    </table>
+    <p><b>السادة / ${escHtml(cl.name)}</b> &nbsp; المحترمين</p>
+    <p>السلام عليكم ورحمة الله وبركاته، وبعد:</p>
+    <p>يسر ${OFFICE.shortName} أن يقدّم لكم عرض السعر التالي بخصوص: <b>${escHtml(inv.subject || 'الخدمات القانونية المطلوبة')}</b>.</p>
+    ${itemsTableHTML(inv)}
+    <h3>شروط العرض</h3>
+    <ol>
+      <li>الأسعار أعلاه بالريال السعودي، و${t.rate ? 'شاملة ضريبة القيمة المضافة كما هو مبيّن' : 'غير شاملة ضريبة القيمة المضافة إن استُحقّت نظاماً'}.</li>
+      <li>هذا العرض ساري لمدة ${days} يوماً من تاريخه، وبعد انقضائها يخضع للمراجعة.</li>
+      <li>لا تشمل الأسعار الرسوم الحكومية والقضائية، ولا أتعاب الخبراء والمحاسبين والمترجمين والتصديقات، ويتحملها الطرف الثاني.</li>
+      <li>يبدأ العمل بعد قبول العرض خطياً وسداد الدفعة الأولى المتفق عليها.</li>
+      <li>لا يشمل هذا العرض الترافع أمام الجهات القضائية ولا إجراءات التنفيذ ولا التحكيم، ما لم يُنص عليه صراحةً ضمن بنوده.</li>
+      <li>هذا العرض لا يُعدّ عقداً ملزماً ما لم يُوقَّع من الطرفين أو يصدر قبول خطي به.</li>
+      ${inv.notes ? `<li>${escHtml(inv.notes)}</li>` : ''}
+    </ol>
+    ${inv.bankInfo ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(inv.bankInfo).replace(/\n/g,'<br>')}</p>` : ''}
+    <p class="center">وتفضلوا بقبول فائق الاحترام والتقدير</p>
+    <div class="sig-row">
+      <div class="sig"><div class="sig-title">قبول العميل</div><div>${escHtml(cl.name)}</div><div class="sig-line">التوقيع: ..................... التاريخ: ...........</div></div>
+      <div class="sig"><div class="sig-title">عن المكتب</div><div>${OFFICE.lawyer}</div><div class="sig-line">التوقيع: .....................</div></div>
+    </div>`;
+}
+
+// ── فاتورة — صفحة واحدة ──
+function buildInvoiceHTML(inv) {
+  const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
+  const dt = contractDates(inv.date);
+  const t = docTotals(inv);
+  const taxable = t.rate > 0 && (inv.vatNumber || '').trim();
+  const cases = (inv.caseIds||[]).map(id=>DB.cases.find(c=>c.id===id)).filter(Boolean);
+  return `
+    <h1>( ${taxable ? 'فاتورة ضريبية' : 'فاتورة'} )</h1>
+    <table class="meta">
+      <tr><td><b>رقم الفاتورة:</b> ${escHtml(inv.ref)}</td>
+          <td><b>تاريخ الإصدار:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
+          <td><b>تاريخ الاستحقاق:</b> ${inv.dueDate ? formatDateText(inv.dueDate) : 'عند الاستلام'}</td></tr>
+    </table>
+    <table class="parties">
+      <tr>
+        <td><b>المُصدِر</b><br>${OFFICE.name}<br>ترخيص رقم (${OFFICE.license})<br>${OFFICE.address}<br>${OFFICE.phone} — ${OFFICE.email}${taxable ? '<br><b>الرقم الضريبي:</b> ' + escHtml(inv.vatNumber) : ''}</td>
+        <td><b>المفوتَر عليه</b><br>${escHtml(clientLine(cl)).replace(/، /g,'<br>')}</td>
+      </tr>
+    </table>
+    ${inv.subject ? `<p><b>وصف الخدمة:</b> ${escHtml(inv.subject)}</p>` : ''}
+    ${cases.length ? `<p><b>بخصوص:</b> ${cases.map(c=>(c.num?'قضية رقم ('+c.num+') — ':'')+escHtml(c.title)).join('، ')}</p>` : ''}
+    ${itemsTableHTML(inv)}
+    ${inv.bankInfo ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(inv.bankInfo).replace(/\n/g,'<br>')}</p>` : ''}
+    ${inv.notes ? `<h3>ملاحظات</h3><p>${escHtml(inv.notes)}</p>` : ''}
+    ${!taxable && t.rate > 0 ? `<p class="muted">* لم يُدرج الرقم الضريبي، فلا تُعدّ هذه فاتورة ضريبية نظاماً.</p>` : ''}
+    <p class="center">شكراً لثقتكم بنا</p>
+    <div class="sig-row">
+      <div class="sig"><div class="sig-title">عن المكتب</div><div>${OFFICE.lawyer}</div><div class="sig-line">التوقيع والختم: .....................</div></div>
+    </div>`;
+}
+
+// ── عقد استشارات قانونية سنوي ──
+function buildConsultingHTML(inv) {
+  const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
+  const dt = contractDates(inv.date);
+  const total = invTotal(inv);
+  const end = new Date(inv.date + 'T12:00:00'); end.setFullYear(end.getFullYear() + 1); end.setDate(end.getDate() - 1);
+  const instsList = inv.installments.map(s => {
+    const amt = isPureInstAmount(s.amount)
+      ? `مبلغ (${parseInstAmount(s.amount).toLocaleString('ar-SA')} ريال) ${tafqit(parseInstAmount(s.amount))} ريال`
+      : (String(s.amount||'').trim() || 'مبلغ يُحدَّد لاحقاً');
+    return `<li>${amt} — ${escHtml(s.label)}.</li>`;
+  }).join('');
+  return `
+    <h1>( عقد استشارات قانونية سنوي )</h1>
+    <p>إنه في يوم ${dt.weekday} الموافق ${dt.hijri ? dt.hijri + 'هـ (' + dt.greg + 'م)' : dt.greg + 'م'} ب${inv.city} تم الاتفاق بين كل من:</p>
+    <p><b>الطرف الأول:</b> ${OFFICE.party1} <span class="muted">(يشار للطرف الأول فيما بعد بـ«الطرف الأول أو المكتب»)</span></p>
+    <p><b>الطرف الثاني:</b> ${escHtml(clientLine(cl))}، ${inv.city}. <span class="muted">(يشار للطرف الثاني فيما بعد بـ«الطرف الثاني»)</span></p>
+    <h2>( تمهيد )</h2>
+    <p>بما أن الطرف الأول مكتب متخصص في المحاماة وتقديم الاستشارات الشرعية والنظامية، ويضم نخبة من المحامين والمستشارين، وله من الإمكانيات والخبرات ما يؤهله لتقديم هذه الخدمات؛ وحيث إن الطرف الثاني يرغب في الاستعانة بالطرف الأول مستشاراً قانونياً له على مدار السنة وفق اشتراك سنوي؛ فقد اتفق الطرفان بعد أن أقرّا بأهليتهما النظامية والشرعية للتعاقد والتصرف على ما يلي:</p>
+    <h3>البند الأول</h3>
+    <p>التمهيد أعلاه جزء لا يتجزأ من هذا العقد ومكمل له ومتمم إياه.</p>
+    <h3>البند الثاني / نطاق الخدمات</h3>
+    <p>يقدّم الطرف الأول للطرف الثاني الخدمات التالية: ${escHtml(inv.subject || 'الاستشارات الشرعية والنظامية الشفهية والكتابية، ومراجعة وصياغة العقود والاتفاقيات والخطابات، والرد على الاستفسارات القانونية، وإبداء الرأي فيما يُحال إليه من موضوعات')}.</p>
+    <h3>البند الثالث / مدة العقد</h3>
+    <p>مدة هذا العقد سنة واحدة تبدأ من تاريخ ${dt.greg}م وتنتهي في ${formatDateText(end.toISOString().split('T')[0])}، وتتجدد تلقائياً لمدة مماثلة ما لم يُخطر أحد الطرفين الآخر كتابةً برغبته في عدم التجديد قبل ثلاثين يوماً من تاريخ انتهائها.</p>
+    <h3>البند الرابع / الأتعاب</h3>
+    <p>أتعاب الطرف الأول عن مدة هذا العقد مبلغ إجمالي قدره (${total.toLocaleString('ar-SA')} ريال) ${tafqit(total)} ريال، تُدفع على النحو التالي:</p>
+    <ol>${instsList}</ol>
+    <p>تُستحق الأتعاب كاملة عن مدة العقد، ولا تُرد كلياً أو جزئياً في حال رغبة الطرف الثاني في إنهاء العقد قبل مدته.</p>
+    <h3>البند الخامس / ما لا يشمله العقد</h3>
+    <p>لا تشمل هذه الأتعاب الترافع والمدافعة أمام الجهات القضائية بمختلف درجاتها، ولا إجراءات التنفيذ، ولا التحكيم، ولا الدعاوى المقامة من الطرف الثاني أو ضده؛ ويُتفق على أتعابها بعقد مستقل. كما لا تشمل الرسوم الحكومية والقضائية وأتعاب الخبراء والمحاسبين والمترجمين والتصديقات، ويتحملها الطرف الثاني.</p>
+    <h3>البند السادس / السرية</h3>
+    <p>يلتزم الطرف الأول بالمحافظة على سرية كل ما يطّلع عليه من معلومات ووثائق تخص الطرف الثاني، وعدم إفشائها أو استخدامها لغير أغراض هذا العقد، ويستمر هذا الالتزام بعد انتهاء العقد.</p>
+    <h3>البند السابع / التزامات الطرف الثاني</h3>
+    <p>1- يلتزم الطرف الثاني بتزويد الطرف الأول بكافة المعلومات والمستندات اللازمة لإبداء الرأي، ويقر بصحتها؛ وإذا تبيّن خلاف ذلك أو أخفى بعضها فلا يتحمل الطرف الأول نتيجة الرأي المبني عليها.</p>
+    <p>2- يلتزم الطرف الثاني بسداد الأتعاب في مواعيدها المتفق عليها، وللطرف الأول إيقاف تقديم الخدمة عند التأخر في السداد دون إخلال بحقه في كامل الأتعاب.</p>
+    <h3>البند الثامن / الشروط العامة</h3>
+    <p>1- جميع الإخطارات التي تُرسل بالبريد المسجل أو بالبريد الإلكتروني الموضح لطرفي هذا العقد تعتبر صحيحة ومنتجة لآثارها.</p>
+    <p>2- في حال حصول خلاف حول بنود هذا العقد أو تفسيره فإن الجهات القضائية في ${OFFICE.city} هي المخولة بالنظر في ذلك.</p>
+    <p>3- نُظم هذا العقد من نسختين بيد كل طرف نسخة ووقع عليه بالتاريخ المذكور أعلاه.</p>
+    ${inv.notes ? `<h3>شروط خاصة</h3><p>${escHtml(inv.notes)}</p>` : ''}
+    <p class="center">وصلى الله على نبينا محمد وعلى آله وصحبه أجمعين</p>
+    <div class="sig-row">
+      <div class="sig"><div class="sig-title">الطرف الثاني</div><div>${escHtml(cl.name)}</div><div class="sig-line">التوقيع: ..............................</div></div>
+      <div class="sig"><div class="sig-title">الطرف الأول</div><div>${OFFICE.lawyer}</div><div class="sig-line">التوقيع: ..............................</div></div>
+    </div>`;
+}
+
+// كل الأنواع تُطبع على ورق المكتب نفسه وبنفس آلية تقسيم الصفحات
+const DOC_PRINT = {
+  fee:        { build: inv => buildContractHTML(inv),   title: 'عقد أتعاب محاماة', ref: 'عقد أتعاب رقم' },
+  consulting: { build: inv => buildConsultingHTML(inv), title: 'عقد استشارات قانونية سنوي', ref: 'عقد استشارات رقم' },
+  quote:      { build: inv => buildQuoteHTML(inv),      title: 'عرض سعر', ref: 'عرض سعر رقم', compact: true },
+  invoice:    { build: inv => buildInvoiceHTML(inv),    title: 'فاتورة', ref: 'فاتورة رقم', compact: true },
+};
+function openDocPDF(id) {
+  const inv = DB.invoices.find(i => i.id === id); if (!inv) return;
+  openContractPDF(id, DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee);
+}
+
+function openContractPDF(id, spec) {
   const inv = DB.invoices.find(i=>i.id===id); if (!inv) return;
-  const contractBody = buildContractHTML(inv);
+  spec = spec || DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee;
+  const contractBody = spec.build(inv);
   const bg = location.href.replace(/[^/]*$/, '') + 'assets/letterhead.png';
   const w = window.open('', '_blank');
   if (!w) { alert('يرجى السماح بالنوافذ المنبثقة في المتصفح لإصدار ملف الـ PDF'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
-  <title>عقد أتعاب محاماة — ${inv.ref}</title>
+  <title>${spec.title} — ${inv.ref}</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
@@ -4897,6 +5276,37 @@ function openContractPDF(id) {
     .sig { text-align:center; flex:1; }
     .sig-title { font-weight:700; color:#7C5F16; margin-bottom:6px; }
     .sig-line { margin-top:14px; color:#444; }
+    table.meta { width:100%; border-collapse:collapse; margin:10px 0 12px; font-size:12px; }
+    table.meta td { border:1px solid #D8CDB0; padding:5px 8px; background:#FBF9F3; }
+    table.parties { width:100%; border-collapse:collapse; margin-bottom:10px; font-size:11.8px; }
+    table.parties td { border:1px solid #D8CDB0; padding:7px 9px; vertical-align:top; width:50%; line-height:1.7; }
+    table.parties b { color:#7C5F16; }
+    table.items { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.2px; }
+    table.items th { background:#7C5F16; color:#FFFDF6; padding:6px 8px; font-weight:700; border:1px solid #7C5F16; }
+    table.items td { border:1px solid #D8CDB0; padding:6px 8px; }
+    table.items .c { text-align:center; }
+    table.items .n { text-align:left; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    table.items tr.sum td { background:#FBF9F3; font-weight:600; }
+    table.items tr.grand td { background:#F2EBD9; font-weight:800; color:#7C5F16; font-size:13px; }
+    .tafqit { font-size:11.8px; color:#44423A; margin-bottom:8px; }
+    .bank { background:#FBF9F3; border:1px solid #D8CDB0; border-radius:4px; padding:7px 9px; font-size:11.8px; }
+    /* عرض السعر والفاتورة صفحة واحدة، فتُضغط مسافاتهما دون المساس بالعقود */
+    body.compact .pagecontent { line-height:1.55; }
+    body.compact h1 { margin-bottom:7px; }
+    body.compact h3 { margin:6px 0 2px; }
+    body.compact p { margin-bottom:2px; }
+    body.compact table.meta { margin:7px 0 8px; }
+    body.compact table.meta td { padding:4px 7px; }
+    body.compact table.parties td { padding:5px 7px; line-height:1.5; }
+    body.compact table.items { margin:7px 0 4px; }
+    body.compact table.items th, body.compact table.items td { padding:4px 7px; }
+    body.compact .tafqit { margin-bottom:5px; }
+    body.compact .bank { padding:5px 8px; }
+    body.compact .center { margin-top:8px; }
+    body.compact .sig-row { margin-top:12px; }
+    body.compact .sig-line { margin-top:10px; }
+    body.compact ol { margin-bottom:3px; }
+    body.compact li { margin-bottom:1px; }
     .ref-line { position:absolute; bottom:30mm; right:20mm; left:20mm; text-align:center; font-size:10.5px; color:#8C8C8C; font-family:'IBM Plex Mono', monospace; }
     .toolbar { position:fixed; top:12px; left:12px; z-index:50; }
     .toolbar button { padding:11px 22px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; background:#A3801C; color:#FFFDF6; box-shadow:0 2px 10px rgba(0,0,0,.4); }
@@ -4907,14 +5317,14 @@ function openContractPDF(id) {
       .toolbar { display:none; }
     }
     #flow { position:absolute; visibility:hidden; pointer-events:none; }
-  </style></head><body>
+  </style></head><body class="${spec.compact ? 'compact' : ''}">
   <div class="toolbar"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>
   <div id="pages"></div>
   <div id="flow" class="pagecontent" style="position:absolute;top:0;right:0;left:auto;bottom:auto;width:170mm">${contractBody}</div>
   <scr` + `ipt>
   (function(){
     var BG = ${JSON.stringify(bg)};
-    var REF = ${JSON.stringify(inv.ref)};
+    var REF = ${JSON.stringify(spec.ref + ': ' + inv.ref)};
     function paginate() {
       var flow = document.getElementById('flow');
       var pagesWrap = document.getElementById('pages');
@@ -4941,7 +5351,7 @@ function openContractPDF(id) {
       for (var i = 0; i < pages.length; i++) {
         var f = document.createElement('div');
         f.className = 'ref-line';
-        f.textContent = 'عقد أتعاب رقم: ' + REF + '  —  صفحة ' + (i+1) + ' من ' + pages.length;
+        f.textContent = REF + '  —  صفحة ' + (i+1) + ' من ' + pages.length;
         pages[i].appendChild(f);
       }
     }
@@ -4998,7 +5408,7 @@ function renderClientInvoices() {
           </tbody>
         </table></div>
         <div style="display:flex;justify-content:flex-end;margin-top:14px">
-          <button class="btn btn-primary" onclick="openContractPDF('${inv.id}')">📄 عرض / تحميل عقد الأتعاب PDF</button>
+          <button class="btn btn-primary" onclick="openDocPDF('${inv.id}')">📄 عرض / تحميل ${docKindLabel(inv.kind)} PDF</button>
         </div>
       </div>`;
     }).join('')}`;
@@ -5191,6 +5601,10 @@ function arCount(n, one, two, few, singular) {
   if (n <= 10) return n + ' ' + few;
   return n + ' ' + (singular || one);
 }
+const DOC_KIND_LABEL = { fee:'عقد الأتعاب', consulting:'عقد الاستشارات', quote:'عرض السعر', invoice:'الفاتورة' };
+const DOC_KIND_BADGE = { fee:'عقد أتعاب', consulting:'استشارات سنوي', quote:'عرض سعر', invoice:'فاتورة' };
+function docKindLabel(k) { return DOC_KIND_LABEL[k || 'fee'] || DOC_KIND_LABEL.fee; }
+
 function statusLabel(s) {
   return {active:'جارية',pending:'معلقة',closed:'مغلقة',won:'مكسوبة',lost:'مخسورة',new:'جديدة'}[s]||s;
 }

@@ -157,6 +157,18 @@ create table if not exists invoices (
   created_at timestamptz not null default now()
 );
 
+-- نوع المستند وحقوله الإضافية (عرض سعر / فاتورة / عقد استشارات)
+alter table invoices add column if not exists kind text not null default 'fee';
+alter table invoices drop constraint if exists invoices_kind_chk;
+alter table invoices add constraint invoices_kind_chk
+  check (kind in ('fee','consulting','quote','invoice'));
+alter table invoices add column if not exists subject text;
+alter table invoices add column if not exists vat_rate numeric not null default 0;
+alter table invoices add column if not exists vat_number text;
+alter table invoices add column if not exists valid_days int;
+alter table invoices add column if not exists due_date date;
+alter table invoices add column if not exists bank_info text;
+
 create table if not exists invoice_cases (
   invoice_id uuid not null references invoices(id) on delete cascade,
   case_id    uuid not null references cases(id) on delete cascade,
@@ -176,6 +188,7 @@ alter table installments add column if not exists receipt_path text;
 alter table installments add column if not exists receipt_name text;
 alter table installments add column if not exists receipt_size bigint;
 alter table installments add column if not exists paid_at date;
+alter table installments add column if not exists qty numeric;
 
 -- تذاكر التواصل بين الموكل والمكتب
 create table if not exists tickets (
