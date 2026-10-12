@@ -6016,8 +6016,13 @@ function buildContractHTML(inv) {
     ${inv.notes ? `<h3>شروط خاصة</h3><p>${inv.notes}</p>` : ''}
     <p class="center">وصلى الله على نبينا محمد وعلى آله وصحبه أجمعين</p>
     <div class="sig-row">
-      <div class="sig"><div class="sig-title">الطرف الثاني</div><div>${cl.name}</div><div class="sig-line">التوقيع: ..............................</div></div>
-      <div class="sig"><div class="sig-title">الطرف الأول</div><div>مكتب المحامي/ أ.د. عبدالله الزاحم</div><div class="sig-line">التوقيع: ..............................</div></div>
+      <div class="sig"><div class="sig-title">الطرف الأول</div><div>${OFFICE.lawyer}</div>
+        <div class="sig-mark">
+          <img class="sig-img" src="${portalBaseUrl()}assets/signature.png?v=${ASSET_V}" alt="التوقيع">
+          <img class="sig-stamp" src="${portalBaseUrl()}assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب">
+        </div>
+      </div>
+      <div class="sig"><div class="sig-title">الطرف الثاني</div><div>${escHtml(cl.name)}</div><div class="sig-line">التوقيع: ..............................</div></div>
     </div>
     `;
   // تُقسَّم الكتل تلقائياً على عدد الصفحات اللازم عند الطباعة (حتى لا يُقتطع بند التوقيع)
@@ -6217,6 +6222,11 @@ function openContractPDF(id, spec, noPrint) {
     .sig { text-align:center; flex:1; }
     .sig-title { font-weight:700; color:#7C5F16; margin-bottom:6px; }
     .sig-line { margin-top:14px; color:#444; }
+    /* توقيع المكتب وختمه متراكبان قليلاً كما يُوقَّع الورق فعلاً */
+    .sig-mark { position:relative; height:34mm; margin-top:1mm; }
+    .sig-img { position:absolute; top:0; right:9%; width:31mm; }
+    .sig-stamp { position:absolute; top:10mm; left:9%; width:27mm;
+      transform:rotate(-7deg); mix-blend-mode:multiply; opacity:.92; }
     table.meta { width:100%; border-collapse:collapse; margin:10px 0 12px; font-size:12px; }
     table.meta td { border:1px solid #D8CDB0; padding:5px 8px; background:#FBF9F3; }
     table.parties { width:100%; border-collapse:collapse; margin-bottom:10px; font-size:11.8px; }
