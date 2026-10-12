@@ -1848,7 +1848,11 @@ function invTotal(inv) { return (inv.installments||[]).reduce((s,i)=>s+parseInst
 function invPaidAmount(inv) { return (inv.installments||[]).filter(i=>i.paid).reduce((s,i)=>s+parseInstAmount(i.amount),0); }
 function invStatus(inv) { const t=invTotal(inv), p=invPaidAmount(inv); return t>0&&p>=t ? 'paid' : (p>0 ? 'partial' : 'unpaid'); }
 // عرض السعر ليس التزاماً مالياً ما لم يُقبل، فلا يدخل في الأرقام المالية
-function billableInvoices() { return DB.invoices.filter(i => (i.kind || 'fee') !== 'quote'); }
+// عرض السعر ليس التزاماً، وفاتورة الاستلام إقرار بدفعة محسوبة في عقدها،
+// فاحتسابها إيراداً جديداً يضاعف الرقم
+function billableInvoices() {
+  return DB.invoices.filter(i => !['quote','receipt'].includes(i.kind || 'fee'));
+}
 // المبالغ تُجمَع من الدفعات لا من حالة الفاتورة: الفاتورة المسدَّدة جزئياً
 // لها محصَّل ومستحق في آنٍ واحد
 function financeTotals(list) {
@@ -1977,6 +1981,7 @@ async function loadFromDatabase() {
       validDays: inv.valid_days || null, dueDate: inv.due_date || '',
       bankInfo: inv.bank_info || '',
       clientName: inv.client_name || '', convertedTo: inv.converted_to || null,
+      sourceInvoice: inv.source_invoice || null, sourceInst: inv.source_inst || null,
       caseIds: (casesByInv[inv.id] || []).map(r => r.case_id),
       installments: (instByInv[inv.id] || []).map(s => ({
         id: s.id, label: s.label, amount: s.amount, paid: s.paid,
@@ -2872,7 +2877,9 @@ function renderCdmPayments(c) {
           <td class="tabular-num" style="font-weight:700;color:var(--gold-deep)">${instAmountDisplay(r.s.amount)}</td>
           <td><span class="badge ${r.s.paid?'badge-active':'badge-urgent'}">${r.s.paid?'مسدَّدة':'مستحقة'}</span></td>
           <td>${receiptCell(r.inv.id, r.i)}</td>
-          <td>${!r.s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment('${r.inv.id}',${r.i})">✓ تسديد</button>`:''}</td>
+          <td style="white-space:nowrap">${r.s.paid
+            ? `<button class="btn btn-secondary btn-sm" onclick="issueReceipt('${r.inv.id}',${r.i})">🧾 ${receiptFor(r.inv.id,r.s.id)?'عرض الفاتورة':'إصدار فاتورة'}</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="payInstallment('${r.inv.id}',${r.i})">✓ تسديد</button>`}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>`;
@@ -3762,7 +3769,9 @@ function openInvoiceDetail(id) {
           <td style="font-weight:700;color:var(--gold)">${instAmountDisplay(s.amount)}</td>
           <td><span class="badge ${s.paid?'badge-active':'badge-urgent'}">${s.paid?'مسدَّدة':'مستحقة'}</span>${s.paidAt?`<div class="color-gray" style="font-size:12.6px">${formatDateShort(s.paidAt)}</div>`:''}</td>
           <td>${receiptCell(inv.id, i)}</td>
-          <td>${!s.paid?`<button class="btn btn-primary btn-sm" onclick="payInstallment('${inv.id}',${i})">✓ تسديد</button>`:''}</td>
+          <td style="white-space:nowrap">${s.paid
+            ? `<button class="btn btn-secondary btn-sm" onclick="issueReceipt('${inv.id}',${i})">🧾 ${receiptFor(inv.id,s.id)?'عرض الفاتورة':'إصدار فاتورة'}</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="payInstallment('${inv.id}',${i})">✓ تسديد</button>`}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>
@@ -3829,6 +3838,47 @@ function refreshPaymentViews(invId) {
   refreshCdmIfOpen();
   if (currentPage === 'invoices') renderPage('invoices');
 }
+// فاتورة الاستلام: تُرسل للموكل إقراراً بقبض دفعة من عقده
+function receiptFor(invId, instId) {
+  return DB.invoices.find(i => i.kind === 'receipt' && i.sourceInst === instId);
+}
+async function issueReceipt(invId, idx) {
+  const inv = DB.invoices.find(i => i.id === invId); if (!inv) return;
+  const inst = inv.installments[idx]; if (!inst || !inst.paid) return;
+  const done = receiptFor(invId, inst.id);
+  if (done) { openDocPDF(done.id, true); return; }     // صدرت سابقاً: تُفتح كما هي
+  const who = docClient(inv);
+  const amt = parseInstAmount(inst.amount);
+  const date = inst.paidAt || todayISO();
+  if (!confirm(`إصدار فاتورة باستلام «${inst.label}» من ${docKindLabel(inv.kind)} ${inv.ref}؟\n\n`
+    + `العميل: ${who.name}\nالمبلغ: ${amt.toLocaleString()} ر.س\nتاريخ الاستلام: ${formatDateText(date)}`)) return;
+  let newId = null;
+  const ok = await dbWrite('فاتورة الاستلام', async () => {
+    const ins = await sb.from('invoices').insert({
+      ref: nextDocRef(date), kind: 'receipt',
+      client_id: inv.clientId || null, client_name: nullIfBlank(inv.clientName),
+      date, city: inv.city || OFFICE.city,
+      subject: `${inst.label} من ${docKindLabel(inv.kind)} رقم ${inv.ref}`,
+      source_invoice: invId, source_inst: inst.id,
+    }).select('id').single();
+    if (ins.error) return ins;
+    newId = ins.data.id;
+    if ((inv.caseIds || []).length) {
+      const link = await sb.from('invoice_cases')
+        .insert(inv.caseIds.map(cid => ({ invoice_id: newId, case_id: cid })));
+      if (link.error) return link;
+    }
+    // الدفعة في السند مسدَّدة أصلاً، فيظهر إجماليه محصَّلاً
+    return sb.from('installments').insert({
+      invoice_id: newId, label: inst.label, amount: inst.amount, sort: 0,
+      paid: true, paid_at: date,
+    });
+  });
+  if (!ok) return;
+  refreshPaymentViews(invId);
+  if (newId) openDocPDF(newId, true);
+}
+
 async function payInstallment(invId, idx) {
   const inv = DB.invoices.find(i=>i.id===invId); if(!inv) return;
   const inst = inv.installments[idx]; if (!inst) return;
@@ -6240,7 +6290,9 @@ function buildInvoiceHTML(inv) {
     <table class="meta">
       <tr><td><b>رقم الفاتورة:</b> <span class="docref">${escHtml(arNum(inv.ref))}</span></td>
           <td><b>تاريخ الإصدار:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
-          <td><b>تاريخ الاستحقاق:</b> ${inv.dueDate ? formatDateText(inv.dueDate) : 'عند الاستلام'}</td></tr>
+          <td>${inv.kind === 'receipt'
+            ? `<b>تاريخ الاستلام:</b> ${formatDateText(inv.date)}`
+            : `<b>تاريخ الاستحقاق:</b> ${inv.dueDate ? formatDateText(inv.dueDate) : 'عند الاستلام'}`}</td></tr>
     </table>
     <table class="parties">
       <tr>
@@ -6253,7 +6305,9 @@ function buildInvoiceHTML(inv) {
     ${inv.subject ? `<p><b>وصف الخدمة:</b> ${escHtml(inv.subject)}</p>` : ''}
     ${cases.length ? `<p><b>بخصوص:</b> ${cases.map(c=>(c.num?'قضية رقم ('+arNum(c.num)+') — ':'')+escHtml(c.title)).join('، ')}</p>` : ''}
     ${itemsTableHTML(inv)}
-    ${(() => { const bk = inv.bankInfo || OFFICE.bankInfo; return bk ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(bk).replace(/\n/g,'<br>')}</p>` : ''; })()}
+    ${(() => { if (inv.kind === 'receipt') return '';
+       const bk = inv.bankInfo || OFFICE.bankInfo;
+       return bk ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(bk).replace(/\n/g,'<br>')}</p>` : ''; })()}
     ${inv.notes ? `<h3>ملاحظات</h3><p>${escHtml(inv.notes)}</p>` : ''}
     <p class="closing">نعتز بثقتكم، ونسعد بخدمتكم</p>`;
 }
@@ -6317,6 +6371,7 @@ const DOC_PRINT = {
   consulting: { build: inv => buildConsultingHTML(inv), title: 'عقد استشارات قانونية سنوي', ref: 'عقد استشارات رقم' },
   quote:      { build: inv => buildQuoteHTML(inv),      title: 'عرض سعر', ref: 'عرض سعر رقم', compact: true },
   invoice:    { build: inv => buildInvoiceHTML(inv),    title: 'فاتورة', ref: 'فاتورة رقم', compact: true },
+  receipt:    { build: inv => buildInvoiceHTML(inv),    title: 'فاتورة', ref: 'فاتورة رقم', compact: true },
 };
 function openDocPDF(id, noPrint) {
   const inv = DB.invoices.find(i => i.id === id); if (!inv) return;
@@ -6702,8 +6757,8 @@ function arCount(n, one, two, few, singular) {
   if (n <= 10) return n + ' ' + few;
   return n + ' ' + (singular || one);
 }
-const DOC_KIND_LABEL = { fee:'عقد الأتعاب', consulting:'عقد الاستشارات', quote:'عرض السعر', invoice:'الفاتورة' };
-const DOC_KIND_BADGE = { fee:'عقد أتعاب', consulting:'استشارات سنوي', quote:'عرض سعر', invoice:'فاتورة' };
+const DOC_KIND_LABEL = { fee:'عقد الأتعاب', consulting:'عقد الاستشارات', quote:'عرض السعر', invoice:'الفاتورة', receipt:'الفاتورة' };
+const DOC_KIND_BADGE = { fee:'عقد أتعاب', consulting:'استشارات سنوي', quote:'عرض سعر', invoice:'فاتورة', receipt:'فاتورة استلام' };
 function docKindLabel(k) { return DOC_KIND_LABEL[k || 'fee'] || DOC_KIND_LABEL.fee; }
 // العميل إمّا موكل مسجَّل وإمّا اسم مكتوب في عرض السعر
 // المهام عمل داخلي للمكتب، فلا تُعرض في بوابة الموكل.

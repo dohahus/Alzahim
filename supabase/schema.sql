@@ -161,7 +161,10 @@ create table if not exists invoices (
 alter table invoices add column if not exists kind text not null default 'fee';
 alter table invoices drop constraint if exists invoices_kind_chk;
 alter table invoices add constraint invoices_kind_chk
-  check (kind in ('fee','consulting','quote','invoice'));
+  check (kind in ('fee','consulting','quote','invoice','receipt'));
+-- سند استلام الدفعة يشير إلى العقد ودفعته فلا يُحتسب إيراداً جديداً
+alter table invoices add column if not exists source_invoice uuid references invoices(id) on delete set null;
+alter table invoices add column if not exists source_inst uuid references installments(id) on delete set null;
 alter table invoices add column if not exists subject text;
 alter table invoices add column if not exists vat_rate numeric not null default 0;
 alter table invoices add column if not exists vat_number text;
