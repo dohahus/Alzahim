@@ -680,6 +680,11 @@ tbody td { padding:13px 16px; font-size:14.9px; }
   border:1px solid rgba(163,136,80,.3); padding:6px 10px 6px 6px; border-radius:20px; font-size:14.4px; font-weight:600; margin-top:8px;
 }
 .assignee-chip button { background:var(--gold-deep); color:#FFFDF6; border:none; width:16px; height:16px; border-radius:50%; cursor:pointer; font-size:12.6px; line-height:1; display:flex; align-items:center; justify-content:center; }
+/* بطاقة العاجل: إطار أحمر ووهج خافت — تُلفت النظر بلا صراخ */
+.card-urgent { border-color:rgba(192,57,43,.45); box-shadow:0 0 0 1px rgba(192,57,43,.12), 0 2px 14px rgba(192,57,43,.09); }
+.card-urgent .card-title { color:#C0392B; }
+.card-urgent .card-title::before { background:#C0392B; }
+
 .prio-count {
   display:inline-block; min-width:24px; padding:1px 8px; border-radius:20px;
   background:rgba(192,57,43,.14); color:#C0392B; font-size:12.6px; font-weight:700;
@@ -2610,7 +2615,7 @@ function renderDashboard() {
           <div class="task-item">
             <div class="task-check ${t.done?'done':''}" onclick="toggleTask('${t.id}')"></div>
             <span class="task-text ${t.done?'done':''}">${t.title}</span>
-            <span class="task-due">${t.due ? '📅 '+formatDate(t.due) : ''}</span>
+            <span class="task-due">${t.due ? '📅 '+formatDateHijri(t.due) : ''}</span>
           </div>`).join('')}
       </div>
     </div>
@@ -3132,11 +3137,11 @@ function renderTasks() {
       </div>
   </div>
   <div class="two-col">
-    <div class="card">
+    <div class="card card-urgent">
       <div class="card-header">
         <span class="card-title">🔴 هام عاجل <span class="prio-count">${urgent.length}</span></span>
       </div>
-      <div class="prio-note">يحلّ أجلها خلال أسبوع العمل الجاري — من ${formatDateShort(w.from)} إلى ${formatDateShort(w.to)}</div>
+      <div class="prio-note">يحلّ أجلها خلال أسبوع العمل الجاري — من ${formatDateShortHijri(w.from)} إلى ${formatDateShortHijri(w.to)}</div>
       ${urgent.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام عاجلة</p>' : urgent.map(t => `
         <div class="task-item ${taskUrgency(t)==='overdue'?'is-overdue':''}" id="task-${t.id}" style="flex-wrap:wrap">
           <div class="task-check" onclick="toggleTask('${t.id}')"></div>
@@ -3150,7 +3155,7 @@ function renderTasks() {
             ${taskTimelineHTML(t)}
           </div>
           <div style="text-align:left">
-            ${t.due ? `<span class="task-due">📅 ${formatDate(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
+            ${t.due ? `<button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : ''}
             ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
@@ -3173,7 +3178,7 @@ function renderTasks() {
             ${taskTimelineHTML(t)}
           </div>
           <div style="text-align:left">
-            ${t.due ? `<span class="task-due">📅 ${formatDate(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
+            ${t.due ? `<span class="task-due">📅 ${formatDateHijri(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
             ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
@@ -3190,7 +3195,7 @@ function renderTasks() {
             ${taskTimelineHTML(t)}
           </div>
           <div style="text-align:left">
-            <span class="task-due" style="color:var(--gray)">✔ ${t.due ? formatDate(t.due) : 'بدون تاريخ استحقاق'}</span><br>
+            <span class="task-due" style="color:var(--gray)">✔ ${t.due ? formatDateHijri(t.due) : 'بدون تاريخ استحقاق'}</span><br>
             ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
@@ -6814,6 +6819,22 @@ function formatDate(d) {
 // التاريخ كنص صِرف — دوال الطباعة لا تقبل وسوم HTML
 function formatDateText(d) {
   return String(formatDate(d)).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+}
+// هجري رقمي مختصر — للعناصر الضيقة
+function formatDateShortHijri(d) {
+  if (!d) return '—';
+  const date = new Date(String(d).length <= 10 ? d + 'T12:00:00' : d);
+  if (isNaN(date)) return '—';
+  return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',
+    {year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+}
+// هجري وحده — لصفحات يزدحم فيها التاريخان فيتعب العين
+function formatDateHijri(d) {
+  if (!d) return '—';
+  const date = new Date(String(d).length <= 10 ? d + 'T12:00:00' : d);
+  if (isNaN(date)) return '—';
+  return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',
+    {year:'numeric',month:'long',day:'numeric'}).format(date);
 }
 // نسخة مختصرة رقمية (لعناصر ضيقة المساحة كخلايا الجداول)
 function formatDateShort(d) {
