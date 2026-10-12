@@ -5230,6 +5230,9 @@ const OFFICE = {
   lawyer: 'أ.د عبدالله بن إبراهيم الزاحم',
   license: '38321',
   address: 'طريق الملك عبدالله (الدائري الثاني) مقابل سوق بن داود، المدينة المنورة',
+  shortAddress: 'DMPA6717',          // العنوان الوطني المختصر
+  cr: '7019939342',                  // رقم سجل المنشأة
+  uniqueNo: '3105777119',            // الرقم المميز
   pobox: 'DMPA6717',
   phone: '+966506475000',
   mobile: '+966559777374',
@@ -5242,8 +5245,9 @@ const OFFICE = {
 // بيانات السداد الافتراضية في عروض الأسعار والفواتير — تُعدَّل لكل مستند عند الحاجة
 OFFICE.bankInfo = `المستفيد: ${OFFICE.name}\n${OFFICE.bank}\n`
   + `رقم الحساب: ${OFFICE.bankAccount}\nالآيبان: ${OFFICE.iban}`;
-OFFICE.party1 = `${OFFICE.name} ترخيص رقم (${OFFICE.license})، وعنوانه ${OFFICE.address}؛ `
-  + `ص.ب: ${OFFICE.pobox}، هاتف: ${OFFICE.phone}، بريد إلكتروني: ${OFFICE.email}.`;
+OFFICE.party1 = `${OFFICE.name} ترخيص رقم (${arNum(OFFICE.license)})، سجل المنشأة (${arNum(OFFICE.cr)})، `
+  + `وعنوانه ${OFFICE.address}؛ العنوان الوطني المختصر: ${OFFICE.shortAddress}، `
+  + `هاتف: ${arNum(OFFICE.phone)}، بريد إلكتروني: ${OFFICE.email}.`;
 
 function tafqit(n) {
   n = Math.floor(Math.abs(+n||0));
@@ -5281,7 +5285,7 @@ function buildContractHTML(inv) {
   const cases = (inv.caseIds||[]).map(id=>DB.cases.find(c=>c.id===id)).filter(Boolean);
   const dt = contractDates(inv.date);
   const total = invTotal(inv);
-  const casesTxt = cases.map((c,i)=>`${i+1}- الترافع والمدافعة أمام ${c.court} في القضية${c.num ? ' رقم (' + c.num + ')' : ''} — ${c.title}`).join('؛ ');
+  const casesTxt = cases.map((c,i)=>`${arNum(i+1)}- الترافع والمدافعة أمام ${c.court} في القضية${c.num ? ' رقم (' + arNum(c.num) + ')' : ''} — ${c.title}`).join('؛ ');
   const instsList = inv.installments.map(s => {
     const amt = isPureNumericAmount(s.amount)
       ? `مبلغ (${parseInstAmount(s.amount).toLocaleString('ar-SA')} ريال) ${tafqit(parseInstAmount(s.amount))} ريال`
@@ -5340,9 +5344,9 @@ function docTotals(inv) {
 function itemsTableHTML(inv) {
   const t = docTotals(inv);
   const rows = t.items.map((x, i) => `<tr>
-      <td class="c">${i+1}</td>
+      <td class="c">${arNum(i+1)}</td>
       <td>${escHtml(x.label || '—')}</td>
-      <td class="n">${isPureInstAmount(x.amount) ? parseInstAmount(x.amount).toLocaleString('ar-SA') : escHtml(x.amount || '')}</td>
+      <td class="n">${isPureInstAmount(x.amount) ? parseInstAmount(x.amount).toLocaleString('ar-SA') : escHtml(arNum(x.amount || ''))}</td>
     </tr>`).join('');
   const totals = `
     <tr class="grand"><td colspan="2">الإجمالي المستحق</td><td class="n">${t.gross.toLocaleString('ar-SA')}</td></tr>`;
@@ -5355,7 +5359,8 @@ function isPureInstAmount(v) {
   return typeof isPureNumericAmount === 'function' ? isPureNumericAmount(v) : /^[\d.,\s]+$/.test(String(v||''));
 }
 function clientLine(cl) {
-  return [cl.name, cl.idNum ? 'هوية رقم (' + cl.idNum + ')' : '', cl.phone ? 'جوال ' + cl.phone : '', cl.email || '']
+  return [cl.name, cl.idNum ? 'هوية رقم (' + arNum(cl.idNum) + ')' : '',
+          cl.phone ? 'جوال ' + arNum(cl.phone) : '', cl.email || '']
     .filter(Boolean).join('، ');
 }
 
@@ -5368,7 +5373,7 @@ function buildQuoteHTML(inv) {
   return `
     <h1>( عرض سعر )</h1>
     <table class="meta">
-      <tr><td><b>رقم العرض:</b> <span class="docref">${escHtml(inv.ref)}</span></td>
+      <tr><td><b>رقم العرض:</b> <span class="docref">${escHtml(arNum(inv.ref))}</span></td>
           <td><b>التاريخ:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
           <td><b>صالح حتى:</b> ${formatDateText(until.toISOString().split('T')[0])}</td></tr>
     </table>
@@ -5379,7 +5384,7 @@ function buildQuoteHTML(inv) {
     <h3>شروط العرض</h3>
     <ol>
       <li>الأسعار أعلاه بالريال السعودي.</li>
-      <li>هذا العرض ساري لمدة ${days} يوماً من تاريخه، وبعد انقضائها يخضع للمراجعة.</li>
+      <li>هذا العرض ساري لمدة ${arNum(days)} يوماً من تاريخه، وبعد انقضائها يخضع للمراجعة.</li>
       <li>لا تشمل الأسعار الرسوم الحكومية والقضائية، ولا أتعاب الخبراء والمحاسبين والمترجمين والتصديقات، ويتحملها الطرف الثاني.</li>
       <li>يبدأ العمل بعد قبول العرض خطياً وسداد الدفعة الأولى المتفق عليها.</li>
       <li>لا يشمل هذا العرض الترافع أمام الجهات القضائية ولا إجراءات التنفيذ ولا التحكيم، ما لم يُنص عليه صراحةً ضمن بنوده.</li>
@@ -5387,6 +5392,7 @@ function buildQuoteHTML(inv) {
       ${inv.notes ? `<li>${escHtml(inv.notes)}</li>` : ''}
     </ol>
     ${(() => { const bk = inv.bankInfo || OFFICE.bankInfo; return bk ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(bk).replace(/\n/g,'<br>')}</p>` : ''; })()}
+    <p class="estab">العنوان الوطني المختصر: ${OFFICE.shortAddress} · سجل المنشأة: ${arNum(OFFICE.cr)} · الرقم المميز: ${arNum(OFFICE.uniqueNo)} · ترخيص رقم: ${arNum(OFFICE.license)}</p>
     <p class="center">وتفضلوا بقبول فائق الاحترام والتقدير</p>
     <div class="sig-row">
       <div class="sig"><div class="sig-title">قبول العميل</div><div>${escHtml(cl.name)}</div><div class="sig-line">التوقيع: ..................... التاريخ: ...........</div></div>
@@ -5402,18 +5408,20 @@ function buildInvoiceHTML(inv) {
   return `
     <h1>( فاتورة )</h1>
     <table class="meta">
-      <tr><td><b>رقم الفاتورة:</b> <span class="docref">${escHtml(inv.ref)}</span></td>
+      <tr><td><b>رقم الفاتورة:</b> <span class="docref">${escHtml(arNum(inv.ref))}</span></td>
           <td><b>تاريخ الإصدار:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
           <td><b>تاريخ الاستحقاق:</b> ${inv.dueDate ? formatDateText(inv.dueDate) : 'عند الاستلام'}</td></tr>
     </table>
     <table class="parties">
       <tr>
-        <td><b>المُصدِر</b><br>${OFFICE.name}<br>ترخيص رقم (${OFFICE.license})<br>${OFFICE.address}<br>${OFFICE.phone} — ${OFFICE.email}</td>
+        <td><b>المُصدِر</b><br>${OFFICE.name}<br>
+          ترخيص رقم (${arNum(OFFICE.license)}) · سجل المنشأة ${arNum(OFFICE.cr)} · الرقم المميز ${arNum(OFFICE.uniqueNo)}<br>
+          العنوان الوطني المختصر: ${OFFICE.shortAddress}<br>${arNum(OFFICE.phone)} — ${OFFICE.email}</td>
         <td><b>المفوتَر عليه</b><br>${escHtml(clientLine(cl)).replace(/، /g,'<br>')}</td>
       </tr>
     </table>
     ${inv.subject ? `<p><b>وصف الخدمة:</b> ${escHtml(inv.subject)}</p>` : ''}
-    ${cases.length ? `<p><b>بخصوص:</b> ${cases.map(c=>(c.num?'قضية رقم ('+c.num+') — ':'')+escHtml(c.title)).join('، ')}</p>` : ''}
+    ${cases.length ? `<p><b>بخصوص:</b> ${cases.map(c=>(c.num?'قضية رقم ('+arNum(c.num)+') — ':'')+escHtml(c.title)).join('، ')}</p>` : ''}
     ${itemsTableHTML(inv)}
     ${(() => { const bk = inv.bankInfo || OFFICE.bankInfo; return bk ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(bk).replace(/\n/g,'<br>')}</p>` : ''; })()}
     ${inv.notes ? `<h3>ملاحظات</h3><p>${escHtml(inv.notes)}</p>` : ''}
@@ -5497,7 +5505,8 @@ function openContractPDF(id, spec, noPrint) {
     * { margin:0; padding:0; box-sizing:border-box; }
     /* خط الهوية الرسمي — بمسار مطلق لأن نافذة الطباعة مستند مستقل */
     @font-face { font-family:'Alharf'; src:url('${base}assets/alharf-bold.ttf') format('truetype'); font-weight:bold; font-display:block; }
-    body { font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif; direction:rtl; color:#211C10; background:#555; }
+    /* Adobe Arabic إن كان مثبَّتاً على الجهاز الذي يُصدر المستند، وإلا فالبديل */
+    body { font-family:'Adobe Arabic','IBM Plex Sans Arabic','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; color:#211C10; background:#555; }
     .page { width:210mm; height:296.5mm; position:relative; background:#fff; margin:10px auto; box-shadow:0 4px 18px rgba(0,0,0,.35); overflow:hidden; }
     .pagebg { position:absolute; top:0; right:0; width:100%; height:100%; }
     .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; overflow:hidden; font-size:12.8px; line-height:1.66; }
@@ -5527,6 +5536,7 @@ function openContractPDF(id, spec, noPrint) {
     table.items .n { text-align:left; font-variant-numeric:tabular-nums; white-space:nowrap; }
     table.items tr.sum td { background:#FBF9F3; font-weight:600; }
     table.items tr.grand td { background:#F2EBD9; font-weight:800; color:#7C5F16; font-size:13px; }
+    .estab { font-size:10.8px; color:#6B6757; text-align:center; margin-top:8px; border-top:1px solid #E6DFC9; padding-top:5px; }
     .docref { unicode-bidi:isolate; direction:ltr; white-space:nowrap; font-family:'IBM Plex Mono', monospace; }
     .tafqit { font-size:11.8px; color:#44423A; margin-bottom:8px; }
     .bank { background:#FBF9F3; border:1px solid #D8CDB0; border-radius:4px; padding:7px 9px; font-size:11.8px; }
@@ -5565,7 +5575,8 @@ function openContractPDF(id, spec, noPrint) {
   <scr` + `ipt>
   (function(){
     var BG = ${JSON.stringify(bg)};
-    var REF = ${JSON.stringify(spec.ref + ': ' + inv.ref)};
+    var REF = ${JSON.stringify(spec.ref + ': ' + arNum(inv.ref))};
+    function arNumJS(v){ return String(v).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[+d]; }); }
     function paginate() {
       var flow = document.getElementById('flow');
       var pagesWrap = document.getElementById('pages');
@@ -5592,7 +5603,7 @@ function openContractPDF(id, spec, noPrint) {
       for (var i = 0; i < pages.length; i++) {
         var f = document.createElement('div');
         f.className = 'ref-line';
-        f.textContent = REF + '  —  صفحة ' + (i+1) + ' من ' + pages.length;
+        f.textContent = REF + '  —  صفحة ' + arNumJS(i+1) + ' من ' + arNumJS(pages.length);
         pages[i].appendChild(f);
       }
     }
@@ -5854,6 +5865,11 @@ function docClient(inv) {
 
 function statusLabel(s) {
   return {active:'جارية',pending:'معلقة',closed:'مغلقة',won:'مكسوبة',lost:'مخسورة',new:'جديدة'}[s]||s;
+}
+// أرقام عربية هندية (٠١٢…) لتوحيد شكل الأرقام في المستندات المطبوعة.
+// الآيبان والبريد يبقيان لاتينيَّين: الأول يُنسخ للتحويل البنكي، والثاني عنوان
+function arNum(v) {
+  return String(v == null ? '' : v).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
 }
 function escHtml(t) {
   return String(t == null ? '' : t).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
