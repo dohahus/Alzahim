@@ -4964,10 +4964,10 @@ function reportDocParts(c, u, cl) {
   const css = `
     @page { size: A4; margin: 0; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; color:#211C10; background:#555; }
+    body { font-family:'Adobe Arabic','Scheherazade New','IBM Plex Sans Arabic',serif; direction:rtl; color:#211C10; background:#555; }
     .page { width:210mm; height:296.5mm; position:relative; background:#fff; margin:10px auto; box-shadow:0 4px 18px rgba(0,0,0,.35); overflow:hidden; }
     .pagebg { position:absolute; top:0; right:0; width:100%; height:100%; }
-    .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; font-size:13px; line-height:2; }
+    .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; font-size:13px; line-height:1.85; }
     h1 { text-align:center; font-size:19px; color:#7C5F16; margin-bottom:6px; }
     .sub { text-align:center; font-size:12px; color:#777; margin-bottom:8px; }
     .casenum { text-align:center; font-size:13px; color:#44423A; margin-bottom:18px; }
@@ -4991,7 +4991,7 @@ function reportDocParts(c, u, cl) {
     <div class="pagecontent">
       <h1>تقرير ${u.kind === 'hearing' ? 'جلسة' : 'إنجاز مهمة'}</h1>
       <div class="sub">${esc(formatDateText(u.date))}</div>
-      <div class="casenum">رقم القضية: <b>${esc(c.num || 'غير مقيَّدة')}</b></div>
+      <div class="casenum">رقم القضية: <b>${esc(arNum(c.num) || 'غير مقيَّدة')}</b></div>
       <div class="meta">
         <div><b>موضوع القضية:</b> ${esc(c.title)}</div>
         <div><b>الموكل:</b> ${esc(cl ? cl.name : '—')}</div>
@@ -5011,7 +5011,7 @@ function reportDocParts(c, u, cl) {
   </div>`;
   const head = `<meta charset="utf-8"><title>تقرير — ${esc(c.title)}</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>${css}</style>`;
   return { css, body, head };
 }
@@ -5499,14 +5499,14 @@ function openContractPDF(id, spec, noPrint) {
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
   <title>${spec.title} — ${inv.ref}</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     @page { size: A4; margin: 0; }
     * { margin:0; padding:0; box-sizing:border-box; }
     /* خط الهوية الرسمي — بمسار مطلق لأن نافذة الطباعة مستند مستقل */
     @font-face { font-family:'Alharf'; src:url('${base}assets/alharf-bold.ttf') format('truetype'); font-weight:bold; font-display:block; }
     /* Adobe Arabic إن كان مثبَّتاً على الجهاز الذي يُصدر المستند، وإلا فالبديل */
-    body { font-family:'Adobe Arabic','IBM Plex Sans Arabic','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; color:#211C10; background:#555; }
+    body { font-family:'Adobe Arabic','Scheherazade New','IBM Plex Sans Arabic',serif; direction:rtl; color:#211C10; background:#555; }
     .page { width:210mm; height:296.5mm; position:relative; background:#fff; margin:10px auto; box-shadow:0 4px 18px rgba(0,0,0,.35); overflow:hidden; }
     .pagebg { position:absolute; top:0; right:0; width:100%; height:100%; }
     .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; overflow:hidden; font-size:12.8px; line-height:1.66; }
@@ -5536,13 +5536,13 @@ function openContractPDF(id, spec, noPrint) {
     table.items .n { text-align:left; font-variant-numeric:tabular-nums; white-space:nowrap; }
     table.items tr.sum td { background:#FBF9F3; font-weight:600; }
     table.items tr.grand td { background:#F2EBD9; font-weight:800; color:#7C5F16; font-size:13px; }
-    .estab { font-size:10.8px; color:#6B6757; text-align:center; margin-top:8px; border-top:1px solid #E6DFC9; padding-top:5px; }
+    .estab { font-size:10.8px; color:#6B6757; text-align:center; margin-top:6px; border-top:1px solid #E6DFC9; padding-top:4px; }
     .docref { unicode-bidi:isolate; direction:ltr; white-space:nowrap; font-family:'IBM Plex Mono', monospace; }
     .tafqit { font-size:11.8px; color:#44423A; margin-bottom:8px; }
     .bank { background:#FBF9F3; border:1px solid #D8CDB0; border-radius:4px; padding:7px 9px; font-size:11.8px; }
     /* عرض السعر والفاتورة صفحة واحدة، فتُضغط مسافاتهما دون المساس بالعقود */
     /* مستند الصفحة الواحدة يُتوسَّط رأسياً بين الترويسة والتذييل */
-    body.compact .pagecontent { line-height:1.55; display:flex; flex-direction:column; justify-content:center; }
+    body.compact .pagecontent { line-height:1.48; display:flex; flex-direction:column; justify-content:center; }
     body.compact h1 { margin-bottom:7px; }
     body.compact h3 { margin:6px 0 2px; }
     body.compact p { margin-bottom:2px; }
