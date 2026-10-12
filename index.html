@@ -4408,6 +4408,22 @@ function invClientChanged() {
     </label>`).join('')
     : '<span class="color-gray text-sm">لا توجد قضايا مسجلة لهذا الموكل — أضف القضية أولاً من صفحة القضايا</span>';
 }
+// ترميز المستندات: السنة الهجرية ثم تسلسل بلا حروف — مثل 1448-001.
+// التسلسل على كل المستندات لا على كل نوع، فلا يتكرر رقم بين فاتورة وعقد
+function hijriYear(dateStr) {
+  const d = new Date((dateStr || new Date().toISOString().split('T')[0]) + 'T12:00:00');
+  if (isNaN(d)) return '';
+  return new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { year: 'numeric' })
+    .format(d).replace(/[^\d]/g, '');
+}
+function nextDocRef(dateStr) {
+  const y = hijriYear(dateStr);
+  const used = DB.invoices
+    .map(i => String(i.ref || '').match(new RegExp('^' + y + '-(\\d+)$')))
+    .filter(Boolean).map(m => +m[1]);
+  const n = (used.length ? Math.max(...used) : 0) + 1;
+  return y + '-' + String(n).padStart(3, '0');
+}
 const ORDINAL_AR = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];
 function ordinalInstLabel(n) { return 'الدفعة ' + (ORDINAL_AR[n-1] || ('رقم ' + n)); }
 function renumberInstRows() {
@@ -5080,11 +5096,8 @@ async function saveInvoiceContract(print) {
     alert('يرجى كتابة الموضوع'); return;
   }
   const isDoc = ['quote','invoice'].includes(invKind);
-  // الترقيم يتسلسل داخل كل نوع على حدة حتى لا تتداخل أرقام الفواتير بأرقام العقود
-  const PREFIX = { fee:'ع', consulting:'س', quote:'ض', invoice:'ف' };
-  const sameKind = DB.invoices.filter(i => (i.kind||'fee') === invKind).length;
   const ref = document.getElementById('inv-ref').value.trim()
-    || (PREFIX[invKind] + '-' + new Date().getFullYear() + '-' + String(sameKind + 1).padStart(3,'0'));
+    || nextDocRef(document.getElementById('inv-date').value);
   let newId = null;
   const ok = await dbWrite(k.title.replace(/^\S+\s/,''), async () => {
     const ins = await sb.from('invoices').insert({
@@ -5267,7 +5280,7 @@ function buildQuoteHTML(inv) {
   return `
     <h1>( عرض سعر )</h1>
     <table class="meta">
-      <tr><td><b>رقم العرض:</b> ${escHtml(inv.ref)}</td>
+      <tr><td><b>رقم العرض:</b> <span class="docref">${escHtml(inv.ref)}</span></td>
           <td><b>التاريخ:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
           <td><b>صالح حتى:</b> ${formatDateText(until.toISOString().split('T')[0])}</td></tr>
     </table>
@@ -5301,7 +5314,7 @@ function buildInvoiceHTML(inv) {
   return `
     <h1>( فاتورة )</h1>
     <table class="meta">
-      <tr><td><b>رقم الفاتورة:</b> ${escHtml(inv.ref)}</td>
+      <tr><td><b>رقم الفاتورة:</b> <span class="docref">${escHtml(inv.ref)}</span></td>
           <td><b>تاريخ الإصدار:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
           <td><b>تاريخ الاستحقاق:</b> ${inv.dueDate ? formatDateText(inv.dueDate) : 'عند الاستلام'}</td></tr>
     </table>
@@ -5316,7 +5329,7 @@ function buildInvoiceHTML(inv) {
     ${itemsTableHTML(inv)}
     ${(() => { const bk = inv.bankInfo || OFFICE.bankInfo; return bk ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(bk).replace(/\n/g,'<br>')}</p>` : ''; })()}
     ${inv.notes ? `<h3>ملاحظات</h3><p>${escHtml(inv.notes)}</p>` : ''}
-    <p class="center">شكراً لثقتكم بنا</p>`;
+    <p class="closing">نعتز بثقتكم، ونسعد بخدمتكم</p>`;
 }
 
 // ── عقد استشارات قانونية سنوي ──
@@ -5383,7 +5396,8 @@ function openContractPDF(id, spec, noPrint) {
   const inv = DB.invoices.find(i=>i.id===id); if (!inv) return;
   spec = spec || DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee;
   const contractBody = spec.build(inv);
-  const bg = location.href.replace(/[^/]*$/, '') + 'assets/letterhead.png?v=' + ASSET_V;
+  const base = location.href.replace(/[^/]*$/, '');
+  const bg = base + 'assets/letterhead.png?v=' + ASSET_V;
   const w = window.open('', '_blank');
   if (!w) { alert('يرجى السماح بالنوافذ المنبثقة في المتصفح لإصدار ملف الـ PDF'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
@@ -5393,11 +5407,13 @@ function openContractPDF(id, spec, noPrint) {
   <style>
     @page { size: A4; margin: 0; }
     * { margin:0; padding:0; box-sizing:border-box; }
+    /* خط الهوية الرسمي — بمسار مطلق لأن نافذة الطباعة مستند مستقل */
+    @font-face { font-family:'Alharf'; src:url('${base}assets/alharf-bold.ttf') format('truetype'); font-weight:bold; font-display:block; }
     body { font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif; direction:rtl; color:#211C10; background:#555; }
     .page { width:210mm; height:296.5mm; position:relative; background:#fff; margin:10px auto; box-shadow:0 4px 18px rgba(0,0,0,.35); overflow:hidden; }
     .pagebg { position:absolute; top:0; right:0; width:100%; height:100%; }
     .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; overflow:hidden; font-size:12.8px; line-height:1.66; }
-    h1 { text-align:center; font-size:21px; color:#7C5F16; margin-bottom:9px; }
+    h1 { text-align:center; font-family:'Alharf','IBM Plex Sans Arabic',serif; font-weight:bold; font-size:27px; color:#7C5F16; margin-bottom:10px; }
     h2 { text-align:center; font-size:15px; margin:8px 0 3px; }
     h3 { font-size:14px; color:#7C5F16; margin:8px 0 2px; }
     p { text-align:justify; margin-bottom:3px; }
@@ -5405,6 +5421,8 @@ function openContractPDF(id, spec, noPrint) {
     li { margin-bottom:2px; text-align:justify; }
     .muted { color:#666; font-size:11.5px; }
     .center { text-align:center; margin-top:11px; font-weight:600; }
+    /* خاتمة المستند بخط الهوية الرسمي */
+    .closing { text-align:center; margin-top:16px; font-family:'Alharf','IBM Plex Sans Arabic',serif; font-weight:bold; font-size:17px; color:#7C5F16; }
     .sig-row { display:flex; justify-content:space-between; margin-top:20px; gap:40px; }
     .sig { text-align:center; flex:1; }
     .sig-title { font-weight:700; color:#7C5F16; margin-bottom:6px; }
@@ -5421,6 +5439,7 @@ function openContractPDF(id, spec, noPrint) {
     table.items .n { text-align:left; font-variant-numeric:tabular-nums; white-space:nowrap; }
     table.items tr.sum td { background:#FBF9F3; font-weight:600; }
     table.items tr.grand td { background:#F2EBD9; font-weight:800; color:#7C5F16; font-size:13px; }
+    .docref { unicode-bidi:isolate; direction:ltr; white-space:nowrap; font-family:'IBM Plex Mono', monospace; }
     .tafqit { font-size:11.8px; color:#44423A; margin-bottom:8px; }
     .bank { background:#FBF9F3; border:1px solid #D8CDB0; border-radius:4px; padding:7px 9px; font-size:11.8px; }
     /* عرض السعر والفاتورة صفحة واحدة، فتُضغط مسافاتهما دون المساس بالعقود */
