@@ -650,6 +650,8 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 .task-open-btn { background:none; border:1px solid var(--border); color:var(--gray-light); border-radius:7px; padding:5px 10px; font-size:12.6px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; margin-top:6px; transition:.15s; }
 .task-open-btn:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
 .task-open-btn svg { width:12px; height:12px; }
+.wa-btn { color:#1F7A4D; }
+.wa-btn:hover { border-color:#1F7A4D; color:#15603B; background:rgba(31,122,77,.08); }
 
 /* ═══════════ QUICK TASK COMPOSER ═══════════ */
 .quick-task { border-bottom:1px solid var(--border); position:relative; }
@@ -1758,6 +1760,17 @@ function instAmountDisplay(v) {
 function invTotal(inv) { return (inv.installments||[]).reduce((s,i)=>s+parseInstAmount(i.amount),0); }
 function invPaidAmount(inv) { return (inv.installments||[]).filter(i=>i.paid).reduce((s,i)=>s+parseInstAmount(i.amount),0); }
 function invStatus(inv) { const t=invTotal(inv), p=invPaidAmount(inv); return t>0&&p>=t ? 'paid' : (p>0 ? 'partial' : 'unpaid'); }
+// عرض السعر ليس التزاماً مالياً ما لم يُقبل، فلا يدخل في الأرقام المالية
+function billableInvoices() { return DB.invoices.filter(i => (i.kind || 'fee') !== 'quote'); }
+// المبالغ تُجمَع من الدفعات لا من حالة الفاتورة: الفاتورة المسدَّدة جزئياً
+// لها محصَّل ومستحق في آنٍ واحد
+function financeTotals(list) {
+  const invs = list || billableInvoices();
+  const total = invs.reduce((s,i) => s + invTotal(i), 0);
+  const paid  = invs.reduce((s,i) => s + invPaidAmount(i), 0);
+  return { total, paid, due: total - paid, count: invs.length,
+           openCount: invs.filter(i => invStatus(i) !== 'paid').length };
+}
 function syncInvoiceDerived(inv) { inv.amount = invTotal(inv); inv.paid = invStatus(inv)==='paid'; }
 
 // لم تعد هناك نسخة محلية من البيانات: كل قراءة وكتابة تمرّ بقاعدة البيانات،
@@ -2382,7 +2395,8 @@ function renderDashboard() {
   const active = cases.filter(c=>c.status==='active').length;
   const pending = cases.filter(c=>c.status==='pending').length;
   const upcomingHearings = hearings.filter(h => new Date(h.date) >= new Date()).length;
-  const unpaidInv = DB.invoices.filter(i=>!i.paid).reduce((s,i)=>s+i.amount,0);
+  const fin = financeTotals();
+  const unpaidInv = fin.due;
   const todayH = hearings.filter(h => h.date === new Date().toISOString().split('T')[0]);
   const pendingTasks = tasks.filter(t=>!t.done);
   const canSeeFinance = hasPerm('invoices');
@@ -2412,7 +2426,7 @@ function renderDashboard() {
       <div class="stat-icon">💰</div>
       <div class="stat-value">${unpaidInv.toLocaleString()}</div>
       <div class="stat-label">مستحقات غير مسددة (ر.س)</div>
-      <div class="stat-change">${DB.invoices.filter(i=>!i.paid).length} فاتورة</div>
+      <div class="stat-change">${arCount(fin.openCount,'فاتورة واحدة','فاتورتان','فواتير','فاتورة')} غير مكتملة السداد</div>
     </div>` : `
     <div class="stat-card red">
       <div class="stat-icon">✅</div>
@@ -2686,6 +2700,7 @@ function renderCdmUpdates(c) {
               <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
                 <button class="task-open-btn" onclick="openUpdateReport('${c.id}','${u.id}')">✏️ تعديل</button>
                 <button class="task-open-btn" onclick="printUpdateReport('${c.id}','${u.id}')">🖨️ طباعة على ورق المكتب</button>
+                <button class="task-open-btn wa-btn" onclick="shareUpdateWhatsApp('${c.id}','${u.id}')">💬 مشاركة واتساب</button>
               </div>
             </div>` : `
             <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -2698,7 +2713,7 @@ function renderCdmUpdates(c) {
   `;
 }
 function renderCdmContract(c, cl) {
-  const invs = DB.invoices.filter(inv => (inv.caseIds||[]).includes(c.id));
+  const invs = billableInvoices().filter(inv => (inv.caseIds||[]).includes(c.id));
   const addBtn = hasPerm('invoices') ? `<button class="btn btn-secondary" onclick="closeModal('case-detail-modal',{});openInvoiceModalForCase('${c.id}')">➕ عقد أتعاب لهذه القضية</button>` : '';
   if (!invs.length) {
     return `<div class="card" style="text-align:center;padding:36px 20px">
@@ -2725,7 +2740,7 @@ function renderCdmContract(c, cl) {
     </div>`; }).join('') + `<div style="text-align:center">${addBtn}</div>`;
 }
 function renderCdmPayments(c) {
-  const invs = DB.invoices.filter(inv => (inv.caseIds||[]).includes(c.id));
+  const invs = billableInvoices().filter(inv => (inv.caseIds||[]).includes(c.id));
   const rows = [];
   invs.forEach(inv => inv.installments.forEach((s,i) => rows.push({inv, s, i})));
   if (!rows.length) return '<div class="card"><p class="color-gray text-sm">لا توجد دفعات مسجلة. تُنشأ الدفعات تلقائياً عند إضافة عقد أتعاب لهذه القضية من تبويب «العقد».</p></div>';
@@ -3507,8 +3522,8 @@ async function deleteClient(id) {
 //  INVOICES
 // ═══════════════════════════════════
 function renderInvoices() {
-  const total = DB.invoices.reduce((s,i)=>s+invTotal(i),0);
-  const paid = DB.invoices.reduce((s,i)=>s+invPaidAmount(i),0);
+  const total = billableInvoices().reduce((s,i)=>s+invTotal(i),0);
+  const paid = billableInvoices().reduce((s,i)=>s+invPaidAmount(i),0);
   const unpaid = total - paid;
   const stLabel = { paid:'مسدَّدة', partial:'سداد جزئي', unpaid:'مستحقة' };
   const stBadge = { paid:'badge-active', partial:'badge-partial', unpaid:'badge-urgent' };
@@ -3654,6 +3669,7 @@ async function payInstallment(invId, idx) {
 //  REPORTS
 // ═══════════════════════════════════
 function renderReports() {
+  const fin = financeTotals();
   const byType = {};
   DB.cases.forEach(c => { byType[c.type] = (byType[c.type]||0)+1; });
   const byLawyer = {};
@@ -3691,7 +3707,7 @@ function renderReports() {
         ['الموكلون', DB.clients.length, '👥'],
         ['الجلسات القادمة', DB.hearings.filter(h=>new Date(h.date)>=new Date()).length, '📅'],
         ['المهام المعلقة', DB.tasks.filter(t=>!t.done).length, '✅'],
-        ['الفواتير المستحقة', DB.invoices.filter(i=>!i.paid).length, '💰'],
+        ['فواتير لم يكتمل سدادها', financeTotals().openCount, '💰'],
       ].map(([l,v,i]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
           <span style="font-size:14.9px">${i} ${l}</span>
@@ -3704,15 +3720,17 @@ function renderReports() {
     <div style="display:flex;gap:20px;flex-wrap:wrap">
       <div style="flex:1;min-width:200px">
         <div style="font-size:14.9px;color:var(--gray-light);margin-bottom:4px">إجمالي الفواتير</div>
-        <div style="font-size:32.2px;font-weight:800;color:var(--gold)">${DB.invoices.reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
+        <div style="font-size:32.2px;font-weight:800;color:var(--gold)">${fin.total.toLocaleString()} ر.س</div>
       </div>
       <div style="flex:1;min-width:200px">
         <div style="font-size:14.9px;color:var(--gray-light);margin-bottom:4px">المُحصَّل</div>
-        <div style="font-size:32.2px;font-weight:800;color:#1E7E34">${DB.invoices.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
+        <div style="font-size:32.2px;font-weight:800;color:#1E7E34">${fin.paid.toLocaleString()} ر.س</div>
+        <div class="color-gray text-sm" style="margin-top:2px">${fin.total ? Math.round(fin.paid/fin.total*100) : 0}% من الإجمالي</div>
       </div>
       <div style="flex:1;min-width:200px">
         <div style="font-size:14.9px;color:var(--gray-light);margin-bottom:4px">المستحق</div>
-        <div style="font-size:32.2px;font-weight:800;color:#C0392B">${DB.invoices.filter(i=>!i.paid).reduce((s,i)=>s+i.amount,0).toLocaleString()} ر.س</div>
+        <div style="font-size:32.2px;font-weight:800;color:#C0392B">${fin.due.toLocaleString()} ر.س</div>
+        <div class="color-gray text-sm" style="margin-top:2px">على ${arCount(fin.openCount,'عقد واحد','عقدين','عقود','عقداً')}</div>
       </div>
     </div>
   </div>`;
@@ -4855,6 +4873,43 @@ function openUpdateReport(caseId, updateId) {
   openModal('report-modal');
 }
 // يُطبع التقرير على ورق المكتب الرسمي باسم محرره وبختم المكتب
+// ── مشاركة التقرير مع الموكل عبر واتساب ──
+// واتساب يطلب الرقم بصيغة دولية بلا + ولا أصفار بادئة
+function waNumber(phone) {
+  let d = String(phone || '').replace(/[^\d]/g, '');
+  if (!d) return '';
+  d = d.replace(/^00/, '');
+  if (d.startsWith('0')) d = '966' + d.slice(1);              // 05XXXXXXXX
+  else if (d.length === 9 && d.startsWith('5')) d = '966' + d; // 5XXXXXXXX
+  return d;
+}
+function shareUpdateWhatsApp(caseId, updateId) {
+  const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
+  const u = (c.updates || []).find(x => x.id === updateId); if (!u || !u.report) return;
+  const cl = DB.clients.find(x=>x.id===c.clientId);
+  const num = waNumber(cl && cl.phone);
+  if (!num) {
+    alert(`لا يوجد رقم جوال مسجَّل للموكل${cl ? ` «${cl.name}»` : ''}.\nأضف الرقم من صفحة الموكلين ثم أعد المحاولة.`);
+    return;
+  }
+  const lines = [
+    `السلام عليكم ورحمة الله وبركاته`,
+    cl ? `الأستاذ/ة ${cl.name}` : null,
+    '',
+    `تقرير ${u.kind === 'hearing' ? 'جلسة' : 'إنجاز مهمة'} بتاريخ ${formatDateText(u.date)}`,
+    `القضية: ${c.num || 'غير مقيَّدة'} — ${c.title}`,
+    c.court ? `المحكمة: ${c.court}` : null,
+    `الموضوع: ${u.text}`,
+    '',
+    u.report,
+    '',
+    u.reportBy ? `حرَّره: ${u.reportBy}` : null,
+    OFFICE.shortName,
+  ].filter(l => l !== null);
+  const url = 'https://wa.me/' + num + '?text=' + encodeURIComponent(lines.join('\n'));
+  window.open(url, '_blank');
+}
+
 function printUpdateReport(caseId, updateId) {
   const c = DB.cases.find(x=>x.id===caseId); if (!c) return;
   const u = (c.updates || []).find(x => x.id === updateId); if (!u || !u.report) return;
@@ -4883,7 +4938,13 @@ function printUpdateReport(caseId, updateId) {
     .sign { position:absolute; bottom:0; right:0; left:0; display:flex; justify-content:space-between; align-items:flex-end; }
     .sign-by { font-size:12.5px; line-height:1.9; }
     .sign-by b { display:block; color:#7C5F16; }
-    .stamp { width:34mm; height:34mm; object-fit:contain; opacity:.92; }
+    .casenum { text-align:center; font-size:13px; color:#44423A; margin:-14px 0 18px; }
+    .casenum b { color:#7C5F16; font-family:'IBM Plex Mono', monospace; font-size:14px; }
+    /* أثر ختم حقيقي: ميل بسيط ودمج الحبر مع الورق بدل وضعه فوقه */
+    .stamp {
+      width:36mm; height:36mm; object-fit:contain;
+      transform: rotate(-9deg); mix-blend-mode: multiply; opacity:.9;
+    }
     .stamp-fallback { width:34mm; height:34mm; border:1.5px dashed #BBB; border-radius:50%; display:flex;
       align-items:center; justify-content:center; font-size:10px; color:#AAA; text-align:center; padding:6px; }
     .toolbar { position:fixed; top:12px; left:12px; z-index:50; }
@@ -4896,8 +4957,9 @@ function printUpdateReport(caseId, updateId) {
     <div class="pagecontent">
       <h1>تقرير ${u.kind === 'hearing' ? 'جلسة' : 'إنجاز مهمة'}</h1>
       <div class="sub">${esc(formatDateText(u.date))}</div>
+      <div class="casenum">رقم القضية: <b>${esc(c.num || 'غير مقيَّدة')}</b></div>
       <div class="meta">
-        <div><b>القضية:</b> ${esc(c.title)}${c.num ? ' — رقم (' + esc(c.num) + ')' : ''}</div>
+        <div><b>موضوع القضية:</b> ${esc(c.title)}</div>
         <div><b>الموكل:</b> ${esc(cl ? cl.name : '—')}</div>
         ${c.court ? `<div><b>المحكمة:</b> ${esc(c.court)}</div>` : ''}
         <div><b>الموضوع:</b> ${esc(u.text)}</div>
