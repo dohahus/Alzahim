@@ -5095,7 +5095,12 @@ async function saveInvoiceContract(print) {
       subject: nullIfBlank(document.getElementById('inv-subject').value),
       valid_days: invKind === 'quote' ? (+document.getElementById('inv-valid').value || 30) : null,
       due_date: invKind === 'invoice' ? nullIfBlank(document.getElementById('inv-due').value) : null,
-      bank_info: isDoc ? nullIfBlank(document.getElementById('inv-bank').value) : null,
+      // لا يُحفظ إلا إن عدّله المستخدم، فيبقى الباقي تابعاً لبيانات المكتب
+      bank_info: (() => {
+        if (!isDoc) return null;
+        const v = document.getElementById('inv-bank').value.trim();
+        return (!v || v === OFFICE.bankInfo.trim()) ? null : v;
+      })(),
     }).select('id').single();
     if (ins.error) return ins;
     newId = ins.data.id;
@@ -5280,7 +5285,7 @@ function buildQuoteHTML(inv) {
       <li>هذا العرض لا يُعدّ عقداً ملزماً ما لم يُوقَّع من الطرفين أو يصدر قبول خطي به.</li>
       ${inv.notes ? `<li>${escHtml(inv.notes)}</li>` : ''}
     </ol>
-    ${inv.bankInfo ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(inv.bankInfo).replace(/\n/g,'<br>')}</p>` : ''}
+    ${(() => { const bk = inv.bankInfo || OFFICE.bankInfo; return bk ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(bk).replace(/\n/g,'<br>')}</p>` : ''; })()}
     <p class="center">وتفضلوا بقبول فائق الاحترام والتقدير</p>
     <div class="sig-row">
       <div class="sig"><div class="sig-title">قبول العميل</div><div>${escHtml(cl.name)}</div><div class="sig-line">التوقيع: ..................... التاريخ: ...........</div></div>
@@ -5309,7 +5314,7 @@ function buildInvoiceHTML(inv) {
     ${inv.subject ? `<p><b>وصف الخدمة:</b> ${escHtml(inv.subject)}</p>` : ''}
     ${cases.length ? `<p><b>بخصوص:</b> ${cases.map(c=>(c.num?'قضية رقم ('+c.num+') — ':'')+escHtml(c.title)).join('، ')}</p>` : ''}
     ${itemsTableHTML(inv)}
-    ${inv.bankInfo ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(inv.bankInfo).replace(/\n/g,'<br>')}</p>` : ''}
+    ${(() => { const bk = inv.bankInfo || OFFICE.bankInfo; return bk ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(bk).replace(/\n/g,'<br>')}</p>` : ''; })()}
     ${inv.notes ? `<h3>ملاحظات</h3><p>${escHtml(inv.notes)}</p>` : ''}
     <p class="center">شكراً لثقتكم بنا</p>`;
 }
