@@ -1928,8 +1928,8 @@ async function dbWrite(label, fn, opts) {
     return true;
   } catch (e) {
     console.error('[' + label + ']', e);
-    alert(isConnectionError(e)
-      ? CONNECTION_MSG
+    alert(isConnectionError(e) ? CONNECTION_MSG
+      : isSchemaError(e) ? SCHEMA_MSG + '\n\nالتفاصيل: ' + (e.message || e.code)
       : 'تعذّر حفظ «' + label + '»\n' + (e.message || e.code || 'خطأ غير معروف'));
     return false;
   } finally {
@@ -2046,6 +2046,15 @@ async function doLogin() {
 }
 const CONNECTION_MSG = 'تعذّر الوصول إلى قاعدة البيانات.\n'
   + 'تحقق من اتصالك بالإنترنت. فإن كان الاتصال سليماً فقد تكون قاعدة البيانات متوقفة — راجع مزوّد الخدمة.';
+const SCHEMA_MSG = 'قاعدة البيانات لم تُحدَّث بعد لهذه الميزة.\n\n'
+  + 'افتح Supabase ← SQL Editor ونفّذ كود التحديث مرة واحدة، ثم أعد المحاولة.\n'
+  + '(الملفات في مجلد supabase داخل المشروع)';
+// عمود أو جدول غير موجود: المخطط أقدم من الواجهة، لا خطأ في المدخلات
+function isSchemaError(err) {
+  if (!err) return false;
+  if (['PGRST204', '42703', '42P01'].includes(err.code)) return true;
+  return /schema cache|undefined column|does not exist/i.test((err.message || '') + ' ' + (err.details || ''));
+}
 // أخطاء الشبكة لا تحمل رمزاً من الخادم، بخلاف أخطاء البيانات التي يردّها
 function isConnectionError(err) {
   if (!err) return false;
