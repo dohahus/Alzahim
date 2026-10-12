@@ -168,6 +168,11 @@ alter table invoices add column if not exists vat_number text;
 alter table invoices add column if not exists valid_days int;
 alter table invoices add column if not exists due_date date;
 alter table invoices add column if not exists bank_info text;
+-- عرض السعر قد يُوجَّه لعميل محتمل لم يُسجَّل موكلاً بعد
+alter table invoices alter column client_id drop not null;
+alter table invoices add column if not exists client_name text;
+-- العرض المعتمَد يشير إلى الفاتورة الصادرة عنه، فلا يُحوَّل مرتين
+alter table invoices add column if not exists converted_to uuid references invoices(id) on delete set null;
 
 create table if not exists invoice_cases (
   invoice_id uuid not null references invoices(id) on delete cascade,

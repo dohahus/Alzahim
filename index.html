@@ -1349,6 +1349,10 @@ tbody td { padding:13px 16px; font-size:14.9px; }
       <div class="form-row">
         <div class="form-group-v"><label id="inv-client-label">الموكل (الطرف الثاني)</label>
           <select id="inv-client" onchange="invClientChanged()"><option value="">اختر الموكل</option></select>
+          <input type="text" id="inv-client-free" list="inv-client-list" style="display:none"
+                 placeholder="اكتب الاسم، أو اختر من الموكلين المسجَّلين" oninput="invClientChanged()" />
+          <datalist id="inv-client-list"></datalist>
+          <div class="color-gray text-sm" id="inv-client-hint" style="margin-top:4px;display:none"></div>
         </div>
         <div class="form-group-v"><label id="inv-date-label">تاريخ التحرير</label>
           <input type="date" id="inv-date" onchange="updateInvDatePreview()" oninput="updateInvDatePreview()" />
@@ -1867,6 +1871,7 @@ async function loadFromDatabase() {
       kind: inv.kind || 'fee', subject: inv.subject || '',
       validDays: inv.valid_days || null, dueDate: inv.due_date || '',
       bankInfo: inv.bank_info || '',
+      clientName: inv.client_name || '', convertedTo: inv.converted_to || null,
       caseIds: (casesByInv[inv.id] || []).map(r => r.case_id),
       installments: (instByInv[inv.id] || []).map(s => ({
         id: s.id, label: s.label, amount: s.amount, paid: s.paid,
@@ -3540,7 +3545,7 @@ function renderInvoices() {
       <tbody>
         ${DB.invoices.length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد مستندات بعد — اضغط «مستند جديد» لإصدار عقد أو عرض سعر أو فاتورة</td></tr>' : ''}
         ${DB.invoices.map(inv => {
-          const cl = DB.clients.find(x=>x.id===inv.clientId);
+          const cl = docClient(inv);
           const nums = (inv.caseIds||[]).map(id=>{const c=DB.cases.find(x=>x.id===id);return c?c.num:'';}).filter(Boolean).join('، ') || '—';
           const st = invStatus(inv);
           const paidCnt = inv.installments.filter(i=>i.paid).length;
@@ -3548,7 +3553,7 @@ function renderInvoices() {
             <td><span class="badge badge-partial" style="white-space:nowrap">${DOC_KIND_BADGE[inv.kind||'fee']}</span></td>
             <td style="color:var(--gold);font-weight:700">${inv.ref}</td>
             <td>${nums}</td>
-            <td>${cl?cl.name:'—'}</td>
+            <td>${cl.name}${inv.kind==='quote'&&inv.convertedTo?'<div class="color-gray text-sm">✅ حُوِّل إلى فاتورة</div>':''}</td>
             <td style="font-weight:700;color:var(--gold)">${invTotal(inv).toLocaleString()}</td>
             <td style="color:#1E7E34">${invPaidAmount(inv).toLocaleString()}</td>
             <td class="color-gray">${paidCnt} / ${inv.installments.length}</td>
@@ -3556,6 +3561,7 @@ function renderInvoices() {
             <td style="white-space:nowrap">
               <button class="btn btn-secondary btn-sm" onclick="openInvoiceDetail('${inv.id}')">📄 الدفعات</button>
               <button class="btn btn-primary btn-sm" onclick="openDocPDF('${inv.id}')">🖨️ ${docKindLabel(inv.kind)} PDF</button>
+              ${inv.kind==='quote' && !inv.convertedTo ? `<button class="btn btn-primary btn-sm" onclick="convertQuoteToInvoice('${inv.id}')">✅ اعتماد وإصدار فاتورة</button>` : ''}
               <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteInvoice('${inv.id}')">🗑️ حذف</button>
             </td>
           </tr>`;
@@ -3566,8 +3572,8 @@ function renderInvoices() {
 }
 function openInvoiceDetail(id) {
   const inv = DB.invoices.find(i=>i.id===id); if(!inv) return;
-  const cl = DB.clients.find(c=>c.id===inv.clientId);
-  document.getElementById('ivd-title').textContent = `عقد ${inv.ref} — ${cl?cl.name:''}`;
+  const cl = docClient(inv);
+  document.getElementById('ivd-title').textContent = `${docKindLabel(inv.kind)} ${inv.ref} — ${cl.name}`;
   document.getElementById('ivd-body').innerHTML = iconify(`
     <div style="margin-bottom:14px;font-size:14.9px;color:var(--gray-light)">
       تاريخ العقد: ${formatDate(inv.date)} — الإجمالي: <b style="color:var(--gold)">${invTotal(inv).toLocaleString()} ر.س</b>
@@ -4351,8 +4357,24 @@ function setInvKind(kind) {
   document.querySelectorAll('#add-invoice-modal [data-for]').forEach(el => {
     el.style.display = el.dataset.for.split(' ').includes(kind) ? '' : 'none';
   });
+  // عرض السعر وحده يقبل اسماً مكتوباً، فقد يُوجَّه لعميل محتمل
+  const freeClient = kind === 'quote';
+  document.getElementById('inv-client').style.display = freeClient ? 'none' : '';
+  document.getElementById('inv-client-free').style.display = freeClient ? '' : 'none';
+  if (freeClient) {
+    document.getElementById('inv-client-list').innerHTML =
+      DB.clients.map(c => `<option value="${escHtml(c.name)}"></option>`).join('');
+    // الاسم المختار من القائمة يُنقل إلى الحقل الحر عند التبديل
+    const sel = document.getElementById('inv-client');
+    const free = document.getElementById('inv-client-free');
+    if (!free.value && sel.value) {
+      const c = DB.clients.find(x => x.id === sel.value);
+      if (c) free.value = c.name;
+    }
+  }
   rebuildInstRows();
   updateInvTotalPreview();
+  invClientChanged();
 }
 // تبديل النوع يغيّر شكل الصفوف، فتُعاد بناؤها مع الحفاظ على ما أُدخل
 function rebuildInstRows() {
@@ -4381,6 +4403,7 @@ function populateInvoiceModal(kind) {
   document.getElementById('inv-valid').value = '30';
   document.getElementById('inv-due').value = '';
   document.getElementById('inv-bank').value = OFFICE.bankInfo;
+  document.getElementById('inv-client-free').value = '';
   document.getElementById('inv-cases-box').innerHTML = '<span class="color-gray text-sm">اختر الموكل أولاً لعرض قضاياه</span>';
   document.getElementById('inv-installments').innerHTML = '';
   addInstRow(); addInstRow();
@@ -4398,8 +4421,24 @@ function updateInvDatePreview() {
   const v = document.getElementById('inv-date').value;
   el.innerHTML = v ? ic('calendar',13) + ' ' + formatDate(v) : '';
 }
+// الاسم المكتوب إن طابق موكلاً مسجَّلاً رُبط به، وإلا حُفظ اسماً حراً
+function resolveInvClient() {
+  if (invKind !== 'quote') return { id: document.getElementById('inv-client').value || null, name: '' };
+  const typed = document.getElementById('inv-client-free').value.trim();
+  if (!typed) return { id: null, name: '' };
+  const hit = DB.clients.find(c => normSearch(c.name) === normSearch(typed));
+  return hit ? { id: hit.id, name: '' } : { id: null, name: typed };
+}
 function invClientChanged() {
-  const cid = document.getElementById('inv-client').value;
+  const r = invKind === 'quote' ? resolveInvClient() : null;
+  if (r) {
+    const hint = document.getElementById('inv-client-hint');
+    hint.style.display = r.name || r.id ? '' : 'none';
+    hint.textContent = r.id ? '✓ مرتبط بالموكل المسجَّل' : (r.name ? 'اسم جديد — لن يُضاف لقائمة الموكلين' : '');
+  } else {
+    document.getElementById('inv-client-hint').style.display = 'none';
+  }
+  const cid = r ? r.id : document.getElementById('inv-client').value;
   const box = document.getElementById('inv-cases-box');
   const cs = DB.cases.filter(c=>c.clientId===cid);
   box.innerHTML = cs.length ? cs.map(c=>`
@@ -4817,6 +4856,50 @@ async function deleteCase(caseId) {
   buildSidebar();
 }
 
+// ── اعتماد عرض السعر: تُصدَر عنه فاتورة ويبقى العرض سجلاً ──
+async function convertQuoteToInvoice(quoteId) {
+  const q = DB.invoices.find(i => i.id === quoteId); if (!q || q.kind !== 'quote') return;
+  if (q.convertedTo) {
+    const made = DB.invoices.find(i => i.id === q.convertedTo);
+    alert(`هذا العرض حُوِّل سابقاً إلى الفاتورة ${made ? '«' + made.ref + '»' : ''}.`);
+    return;
+  }
+  const who = docClient(q);
+  const total = invTotal(q);
+  if (!confirm(
+      `اعتماد عرض السعر «${q.ref}» وإصدار فاتورة به؟\n\n`
+      + `العميل: ${who.name}\nالمبلغ: ${total.toLocaleString()} ر.س\nالبنود: ${q.installments.length}\n\n`
+      + `يبقى العرض محفوظاً كما هو، وتُنشأ فاتورة جديدة بنفس البنود.`)) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  let newId = null;
+  const ok = await dbWrite('تحويل العرض إلى فاتورة', async () => {
+    const ins = await sb.from('invoices').insert({
+      ref: nextDocRef(today), kind: 'invoice',
+      client_id: q.clientId || null, client_name: nullIfBlank(q.clientName),
+      date: today, city: q.city || OFFICE.city,
+      subject: nullIfBlank(q.subject), notes: nullIfBlank(q.notes),
+      bank_info: nullIfBlank(q.bankInfo),
+    }).select('id').single();
+    if (ins.error) return ins;
+    newId = ins.data.id;
+    if ((q.caseIds || []).length) {
+      const link = await sb.from('invoice_cases')
+        .insert(q.caseIds.map(cid => ({ invoice_id: newId, case_id: cid })));
+      if (link.error) return link;
+    }
+    const items = await sb.from('installments').insert(q.installments.map((x, i) => ({
+      invoice_id: newId, label: x.label, amount: x.amount, sort: i,
+    })));
+    if (items.error) return items;
+    // يُوسَم العرض بالفاتورة الصادرة عنه فلا يُحوَّل مرتين
+    return sb.from('invoices').update({ converted_to: newId }).eq('id', quoteId);
+  });
+  if (!ok) return;
+  navTo('invoices');
+  if (newId && confirm('أُصدرت الفاتورة.\nهل تريد فتحها الآن؟')) openDocPDF(newId, true);
+}
+
 async function deleteInvoice(invId) {
   const inv = DB.invoices.find(i => i.id === invId); if (!inv) return;
   const cl    = DB.clients.find(c => c.id === inv.clientId);
@@ -5079,8 +5162,13 @@ async function saveUpdateReport() {
 
 async function saveInvoiceContract(print) {
   const k = DOC_KINDS[invKind];
-  const clientId = document.getElementById('inv-client').value;
-  if (!clientId) { alert('يرجى اختيار ' + (invKind === 'fee' ? 'الموكل' : 'العميل')); return; }
+  const who = resolveInvClient();
+  if (!who.id && !who.name) {
+    alert(invKind === 'quote' ? 'يرجى كتابة اسم العميل أو اختياره من الموكلين'
+                              : 'يرجى اختيار ' + (invKind === 'fee' ? 'الموكل' : 'العميل'));
+    return;
+  }
+  const clientId = who.id;
   const caseIds = [...document.querySelectorAll('.inv-case-chk:checked')].map(c=>c.value);
   if (k.casesRequired && !caseIds.length) { alert('يرجى اختيار قضية واحدة على الأقل من القضايا المتمثلة'); return; }
   // بنود عرض السعر والفاتورة لها وصف يكتبه المستخدم، ودفعات العقود تُرقَّم تلقائياً
@@ -5101,7 +5189,7 @@ async function saveInvoiceContract(print) {
   let newId = null;
   const ok = await dbWrite(k.title.replace(/^\S+\s/,''), async () => {
     const ins = await sb.from('invoices').insert({
-      ref, client_id: clientId, kind: invKind,
+      ref, client_id: clientId, client_name: nullIfBlank(who.name), kind: invKind,
       date: document.getElementById('inv-date').value || new Date().toISOString().split('T')[0],
       city: document.getElementById('inv-city').value.trim() || 'المدينة المنورة',
       notes: nullIfBlank(document.getElementById('inv-notes').value),
@@ -5189,7 +5277,7 @@ function contractDates(dstr) {
   return { weekday, greg, hijri };
 }
 function buildContractHTML(inv) {
-  const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
+  const cl = docClient(inv);
   const cases = (inv.caseIds||[]).map(id=>DB.cases.find(c=>c.id===id)).filter(Boolean);
   const dt = contractDates(inv.date);
   const total = invTotal(inv);
@@ -5273,7 +5361,7 @@ function clientLine(cl) {
 
 // ── عرض سعر — صفحة واحدة ──
 function buildQuoteHTML(inv) {
-  const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
+  const cl = docClient(inv);
   const dt = contractDates(inv.date);
   const days = +(inv.validDays || 30);
   const until = new Date(inv.date + 'T12:00:00'); until.setDate(until.getDate() + days);
@@ -5308,7 +5396,7 @@ function buildQuoteHTML(inv) {
 
 // ── فاتورة — صفحة واحدة ──
 function buildInvoiceHTML(inv) {
-  const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
+  const cl = docClient(inv);
   const dt = contractDates(inv.date);
   const cases = (inv.caseIds||[]).map(id=>DB.cases.find(c=>c.id===id)).filter(Boolean);
   return `
@@ -5334,7 +5422,7 @@ function buildInvoiceHTML(inv) {
 
 // ── عقد استشارات قانونية سنوي ──
 function buildConsultingHTML(inv) {
-  const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
+  const cl = docClient(inv);
   const dt = contractDates(inv.date);
   const total = invTotal(inv);
   const end = new Date(inv.date + 'T12:00:00'); end.setFullYear(end.getFullYear() + 1); end.setDate(end.getDate() - 1);
@@ -5758,6 +5846,11 @@ function arCount(n, one, two, few, singular) {
 const DOC_KIND_LABEL = { fee:'عقد الأتعاب', consulting:'عقد الاستشارات', quote:'عرض السعر', invoice:'الفاتورة' };
 const DOC_KIND_BADGE = { fee:'عقد أتعاب', consulting:'استشارات سنوي', quote:'عرض سعر', invoice:'فاتورة' };
 function docKindLabel(k) { return DOC_KIND_LABEL[k || 'fee'] || DOC_KIND_LABEL.fee; }
+// العميل إمّا موكل مسجَّل وإمّا اسم مكتوب في عرض السعر
+function docClient(inv) {
+  const cl = inv.clientId ? DB.clients.find(c => c.id === inv.clientId) : null;
+  return cl || { name: inv.clientName || '—', idNum:'', phone:'', email:'', nationality:'' };
+}
 
 function statusLabel(s) {
   return {active:'جارية',pending:'معلقة',closed:'مغلقة',won:'مكسوبة',lost:'مخسورة',new:'جديدة'}[s]||s;
