@@ -700,6 +700,22 @@ tbody td { padding:13px 16px; font-size:14.9px; }
   color:var(--white); font-family:inherit; font-size:14.9px; outline:none;
 }
 .task-filter-bar select:focus { border-color:var(--gold); }
+.task-icon-btn {
+  background:none; border:1px solid var(--border); color:var(--gray-light);
+  border-radius:7px; width:30px; height:30px; cursor:pointer; font-family:inherit;
+  display:inline-flex; align-items:center; justify-content:center; position:relative;
+  margin:6px 0 0 4px; transition:.15s; vertical-align:middle;
+}
+.task-icon-btn:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
+.task-icon-btn.danger { color:var(--red); }
+.task-icon-btn.danger:hover { border-color:var(--red); color:var(--red); background:rgba(192,57,43,.07); }
+.task-icon-btn svg { width:14px; height:14px; }
+.tib-count {
+  position:absolute; top:-5px; left:-5px; min-width:15px; height:15px; padding:0 3px;
+  border-radius:9px; background:var(--gold); color:#FFFDF6; font-size:9.5px;
+  font-weight:700; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono);
+}
 .task-open-btn { background:none; border:1px solid var(--border); color:var(--gray-light); border-radius:7px; padding:5px 10px; font-size:12.6px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; margin-top:6px; transition:.15s; }
 .task-open-btn:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
 .task-open-btn svg { width:12px; height:12px; }
@@ -1139,7 +1155,6 @@ tbody td { padding:13px 16px; font-size:14.9px; }
         <div class="form-group-v"><label>البريد الإلكتروني</label><input type="email" id="nc-email" placeholder="example@email.com" /></div>
       </div>
       <div class="form-group-v"><label>الجنسية</label><input type="text" id="nc-nationality" placeholder="سعودي / مقيم..." /></div>
-      <div class="form-group-v"><label>ملاحظات</label><textarea id="nc-notes" placeholder="أي ملاحظات..."></textarea></div>
 
       <div class="acct-block" id="nc-account-block">
         <label class="acct-toggle">
@@ -3097,10 +3112,14 @@ function renderTasks() {
       return `<span class="task-assignee">👤 ${u?u.name:'—'}</span>`;
     }).join('');
   };
-  const discussBtn = t => `<button class="task-open-btn" onclick="openTaskDetail('${t.id}')">💬 نقاش${(t.comments||[]).length ? ' ('+t.comments.length+')' : ''}</button>`;
+  const discussBtn = t => {
+    const n = (t.comments || []).length;
+    return `<button class="task-icon-btn" title="النقاش والمرفقات${n ? ' — ' + n + ' رسالة' : ''}"
+      onclick="openTaskDetail('${t.id}')">💬${n ? `<span class="tib-count">${n}</span>` : ''}</button>`;
+  };
   const rowActions = t => `
-    <button class="task-open-btn" onclick="event.stopPropagation();openTaskModal('${t.id}')">✏️ تعديل</button>
-    <button class="task-open-btn" style="color:var(--red)" onclick="event.stopPropagation();deleteTask('${t.id}')">🗑️ حذف</button>`;
+    <button class="task-icon-btn" title="تعديل المهمة" onclick="event.stopPropagation();openTaskModal('${t.id}')">✏️</button>
+    <button class="task-icon-btn danger" title="حذف المهمة" onclick="event.stopPropagation();deleteTask('${t.id}')">🗑️</button>`;
   return `
   <div class="section-header">
     <div class="section-title">✅ ${owner ? 'المهام' : 'مهامي'} <span>(${pending.length} معلقة)</span></div>
@@ -5470,7 +5489,6 @@ function openClientModal(id) {
   document.getElementById('nc-phone').value = cl ? (cl.phone || '') : '';
   document.getElementById('nc-email').value = cl ? (cl.email || '') : '';
   document.getElementById('nc-nationality').value = cl ? (cl.nationality || '') : '';
-  document.getElementById('nc-notes').value = cl ? (cl.notes || '') : '';
   // الحساب يُنشأ مع الإضافة فقط؛ تعديل بيانات موكل قائم لا يمسّ حسابه.
   // وإنشاء الحسابات لمدير المكتب وحده — قاعدة البيانات ترفضه من غيره
   const canMakeAccount = !cl && isOfficeOwner();
@@ -5497,7 +5515,6 @@ async function saveNewClient() {
     phone: nullIfBlank(document.getElementById('nc-phone').value),
     email: nullIfBlank(document.getElementById('nc-email').value),
     nationality: nullIfBlank(document.getElementById('nc-nationality').value),
-    notes: nullIfBlank(document.getElementById('nc-notes').value),
   };
   const editId = clientModalEditId;
   const makeAccount = !editId && isOfficeOwner() && document.getElementById('nc-make-account').checked;
