@@ -1060,7 +1060,7 @@ tbody td { padding:13px 16px; font-size:13px; }
               <input type="text" id="nc-user" placeholder="يُولَّد من رقم الجوال" oninput="this.dataset.touched='1'" /></div>
             <div class="form-group-v"><label>الرمز السري</label>
               <div class="pass-wrap">
-                <input type="text" id="nc-pass" />
+                <input type="text" id="nc-pass" inputmode="numeric" />
                 <button type="button" class="pass-eye" onclick="regenClientPass()" aria-label="توليد رمز جديد" title="توليد رمز جديد">🔄</button>
               </div>
             </div>
@@ -4131,12 +4131,17 @@ async function saveCaseModal() {
 
 let clientModalEditId = null;
 // ── حساب بوابة الموكل يُنشأ مع إضافته ──
-// أبجدية بلا حروف متشابهة (0/O، 1/l/I) حتى لا يخطئ الموكل في النسخ
-const PASS_ALPHABET = 'abcdefghjkmnpqrstuvwxyzACDEFGHJKLMNPQRTUVWXY23456789';
-function genPassword(len) {
-  const a = new Uint32Array(len || 10);
-  crypto.getRandomValues(a);
-  return [...a].map(n => PASS_ALPHABET[n % PASS_ALPHABET.length]).join('');
+// ثمانية أرقام لا يتكرر فيها رقم — أسهل على الموكل في القراءة والإدخال من الحروف.
+// خلط فيشر–ييتس على الأرقام العشرة ثم أخذ أول ثمانية، فالتوزيع متساوٍ ولا تكرار
+function genPassword() {
+  const d = [0,1,2,3,4,5,6,7,8,9];
+  const r = new Uint32Array(9);
+  crypto.getRandomValues(r);
+  for (let i = 9; i > 0; i--) {
+    const j = r[9 - i] % (i + 1);
+    [d[i], d[j]] = [d[j], d[i]];
+  }
+  return d.slice(0, 8).join('');
 }
 // اسم المستخدم من رقم الجوال، فالهوية، وإلا رقم متسلسل — ويُزاد حتى لا يتكرر
 function suggestClientUsername(phone, idNum) {
@@ -4159,7 +4164,7 @@ function toggleClientAccountFields() {
   document.getElementById('nc-account-fields').style.display = on ? 'block' : 'none';
 }
 function regenClientPass() {
-  document.getElementById('nc-pass').value = genPassword(10);
+  document.getElementById('nc-pass').value = genPassword();
 }
 // رقم الجوال يُكتب بعد الاسم عادةً، فيُحدَّث اسم المستخدم ما لم يعدّله المستخدم بنفسه
 function refreshSuggestedUsername() {
