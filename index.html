@@ -198,6 +198,12 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .period-btn:hover { border-color:var(--gold); color:var(--gold-deep); }
 .period-btn.sel { background:var(--olive-pale); border-color:var(--gold); color:var(--gold-deep); font-weight:700; }
 
+.acct-rows { display:flex; flex-direction:column; gap:10px; }
+.acct-rows > div { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
+.acct-rows > div:last-child { border-bottom:none; }
+.acct-rows span { color:var(--gray-light); font-size:13.8px; }
+.acct-rows b { font-weight:600; }
+
 .acct-block {
   margin-top:16px; padding:14px; border:1px dashed var(--border);
   border-radius:10px; background:var(--olive-pale);
@@ -2153,6 +2159,7 @@ async function afterAuth() {
     if (!clientRow) { await sb.auth.signOut(); alert('لا يوجد حساب مرتبط — راجع مكتب المحاماة'); return false; }
     DB.currentUser = {
       type: 'client', clientId: clientRow.id, name: clientRow.name, role: 'موكل',
+      user: clientRow.username || '', email: clientRow.email || '',
       initials: (clientRow.name || '').charAt(0), avatar: clientRow.avatar_path || '',
     };
   }
@@ -2393,6 +2400,7 @@ const CLIENT_NAV = [
   { id:'client-invoices', icon:ic('wallet',18), label:'فواتيري وعقودي' },
   { id:'client-docs', icon:ic('folder',18), label:'مستنداتي' },
   { id:'client-contact', icon:ic('phone',18), label:'التواصل مع المكتب' },
+  { id:'client-account', icon:ic('lock',18), label:'حسابي' },
 ];
 function buildSidebar() {
   const nav = document.getElementById('sidebar-nav');
@@ -2434,7 +2442,7 @@ function navTo(page) {
   const active = document.getElementById('nav-' + page);
   if (active) active.classList.add('active');
   const titles = {
-    dashboard:'لوحة التحكم', expenses:'المصروفات', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
+    dashboard:'لوحة التحكم', 'client-account':'حسابي', expenses:'المصروفات', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
     clients:'الموكلون', 'client-tickets':'رسائل الموكلين', invoices:'الفواتير', reports:'التقارير', settings:'الإعدادات',
     'client-portal':'قضاياي', 'client-hearings':'جلساتي', 'client-invoices':'فواتيري وعقودي',
     'client-docs':'مستنداتي', 'client-contact':'التواصل مع المكتب',
@@ -2455,6 +2463,7 @@ function renderPage(page) {
     case 'tasks': c.innerHTML = iconify(renderTasks()); initTaskChecks(); break;
     case 'clients': c.innerHTML = iconify(renderClients()); break;
     case 'client-tickets': c.innerHTML = iconify(renderTicketsAdmin()); break;
+    case 'client-account': c.innerHTML = iconify(renderClientAccount()); break;
     case 'invoices': c.innerHTML = iconify(renderInvoices()); break;
     case 'expenses': c.innerHTML = iconify(renderExpenses()); break;
     case 'reports': c.innerHTML = iconify(renderReports()); break;
@@ -4691,6 +4700,86 @@ function renderClientDocs() {
           </div>`).join('')}
       </div>`;
     }).join('')}`;
+}
+
+// ── حساب الموكل: تغيير كلمة المرور بنفسه ──
+function renderClientAccount() {
+  const u = DB.currentUser;
+  return `
+  <div class="section-title" style="margin-bottom:20px">🔒 حسابي</div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title" style="margin-bottom:16px">👤 بياناتي</div>
+    <div class="acct-rows">
+      <div><span>الاسم</span><b>${escHtml(u.name || '—')}</b></div>
+      <div><span>اسم المستخدم</span><b>${escHtml(u.user || '—')}</b></div>
+      ${u.email ? `<div><span>البريد الإلكتروني</span><b>${escHtml(u.email)}</b></div>` : ''}
+    </div>
+    <p class="color-gray text-sm" style="margin-top:12px">
+      لتعديل الاسم أو البريد أو اسم المستخدم، تواصل مع المكتب.</p>
+  </div>
+
+  <div class="card" style="max-width:520px">
+    <div class="card-title" style="margin-bottom:16px">🔑 تغيير كلمة المرور</div>
+    <div class="form-group-v"><label>كلمة المرور الحالية</label>
+      <div class="pass-wrap">
+        <input type="password" id="cp-old" autocomplete="current-password" />
+        <button type="button" class="pass-eye" onclick="togglePass('cp-old',this)" aria-label="إظهار كلمة المرور">👁️</button>
+      </div>
+    </div>
+    <div class="form-group-v"><label>كلمة المرور الجديدة</label>
+      <div class="pass-wrap">
+        <input type="password" id="cp-new" autocomplete="new-password" oninput="checkPassStrength()" />
+        <button type="button" class="pass-eye" onclick="togglePass('cp-new',this)" aria-label="إظهار كلمة المرور">👁️</button>
+      </div>
+      <div class="color-gray text-sm" id="cp-strength" style="margin-top:5px">٨ خانات على الأقل</div>
+    </div>
+    <div class="form-group-v"><label>تأكيد كلمة المرور الجديدة</label>
+      <div class="pass-wrap">
+        <input type="password" id="cp-new2" autocomplete="new-password" />
+        <button type="button" class="pass-eye" onclick="togglePass('cp-new2',this)" aria-label="إظهار كلمة المرور">👁️</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="cp-btn" onclick="changeMyPassword()">💾 حفظ كلمة المرور الجديدة</button>
+  </div>`;
+}
+function checkPassStrength() {
+  const v = document.getElementById('cp-new').value;
+  const el = document.getElementById('cp-strength');
+  if (!v) { el.textContent = '٨ خانات على الأقل'; el.style.color = ''; return; }
+  const score = (v.length >= 8) + (v.length >= 12) + /[A-Za-z]/.test(v) + /\d/.test(v) + /[^A-Za-z0-9]/.test(v);
+  const txt = v.length < 8 ? 'قصيرة — ٨ خانات على الأقل'
+            : score <= 2 ? 'ضعيفة' : score === 3 ? 'متوسطة' : 'قوية';
+  el.textContent = txt;
+  el.style.color = v.length < 8 ? 'var(--red)' : score <= 2 ? '#B35B00' : '#1E7E34';
+}
+async function changeMyPassword() {
+  const oldP = document.getElementById('cp-old').value;
+  const p1 = document.getElementById('cp-new').value;
+  const p2 = document.getElementById('cp-new2').value;
+  if (!oldP) { alert('أدخل كلمة المرور الحالية'); return; }
+  if (p1.length < 8) { alert('كلمة المرور الجديدة يجب أن تكون ٨ خانات على الأقل'); return; }
+  if (p1 !== p2) { alert('كلمتا المرور الجديدتان غير متطابقتين'); return; }
+  if (p1 === oldP) { alert('كلمة المرور الجديدة مطابقة للحالية'); return; }
+  const btn = document.getElementById('cp-btn');
+  const label = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = iconify('⏳ جارٍ الحفظ…');
+  try {
+    // تُتحقَّق كلمة المرور الحالية أولاً، فلا يغيّرها من وجد الجهاز مفتوحاً
+    const ident = DB.currentUser.user || DB.currentUser.email;
+    if (!ident) throw new Error('تعذّر التحقق من الحساب — راجع المكتب');
+    const { data, error } = await sb.rpc('claim_account', { p_identifier: ident, p_password: oldP });
+    if (error) throw new Error(isConnectionError(error) ? CONNECTION_MSG : 'تعذّر التحقق: ' + error.message);
+    const info = Array.isArray(data) ? data[0] : data;
+    if (!info) throw new Error('كلمة المرور الحالية غير صحيحة');
+    const up = await sb.auth.updateUser({ password: p1 });
+    if (up.error) throw new Error('تعذّر حفظ كلمة المرور: ' + up.error.message);
+    alert('تم تغيير كلمة المرور بنجاح.');
+    navTo('client-account');
+  } catch (e) {
+    alert(e.message || 'تعذّر تغيير كلمة المرور');
+  } finally {
+    btn.disabled = false; btn.innerHTML = label;
+  }
 }
 
 function renderClientContact() {
