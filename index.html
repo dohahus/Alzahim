@@ -4010,6 +4010,184 @@ function periodFinance(r) {
            margin: collected ? Math.round((collected - spent) / collected * 100) : 0 };
 }
 
+// ── ملخص الدخل السنوي للشركاء ──
+// يُبنى على الأساس النقدي: المحصَّل فعلاً ناقص المنصرف فعلاً،
+// والمستحق غير المحصَّل يُعرض منفصلاً لأنه ليس دخلاً بعد
+function incomeSummary(r) {
+  const pf = periodFinance(r);
+  const exps = scopedExpenses(r);
+  const byCat = {};
+  exps.forEach(e => { byCat[e.category] = (byCat[e.category] || 0) + e.amount; });
+  const direct = exps.filter(e => isDirectCat(e.category)).reduce((t,e) => t + e.amount, 0);
+  const recoverable = exps.filter(e => e.billable && !e.reimbursed).reduce((t,e) => t + e.amount, 0);
+  // توزيع التحصيل على الأشهر داخل الفترة
+  const months = {};
+  billableInvoices().forEach(i => (i.installments || []).forEach(s => {
+    if (!s.paid) return;
+    const d = s.paidAt || i.date;
+    if (!inPeriod(d, r)) return;
+    const k = d.slice(0, 7);
+    months[k] = months[k] || { in: 0, out: 0 };
+    months[k].in += parseInstAmount(s.amount);
+  }));
+  exps.forEach(e => {
+    const k = e.date.slice(0, 7);
+    months[k] = months[k] || { in: 0, out: 0 };
+    months[k].out += e.amount;
+  });
+  return { ...pf, byCat: Object.entries(byCat).sort((a,b)=>b[1]-a[1]),
+           direct, indirect: pf.spent - direct, recoverable,
+           months: Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])),
+           aging: agingBuckets(), acd: avgCollectionDays(), fin: financeTotals() };
+}
+function monthLabel(ym) {
+  const d = new Date(ym + '-15T12:00:00');
+  return new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { month:'long', year:'numeric' }).format(d);
+}
+function buildIncomeSummaryHTML(r) {
+  const x = incomeSummary(r);
+  const row = (l, v, cls) => `<tr class="${cls||''}"><td>${l}</td><td class="n">${money(v)}</td></tr>`;
+  return `
+    <h1>( ملخص الدخل )</h1>
+    <div class="sub2">${escHtml(r.label)} — من ${formatDateText(r.from)} إلى ${formatDateText(r.to)}</div>
+
+    <h3>أولاً / الإيرادات</h3>
+    <table class="items fin">
+      <tbody>
+        ${row('قيمة ما صدر من عقود وفواتير (مستحق)', x.billed)}
+        ${row('المُحصَّل فعلاً خلال الفترة', x.collected, 'sum')}
+      </tbody>
+    </table>
+    <p class="muted">الملخص على الأساس النقدي: يُحتسب الدخل بما حُصِّل فعلاً، لا بما صدرت به المستندات.</p>
+
+    <h3>ثانياً / المصروفات</h3>
+    <table class="items fin">
+      <tbody>
+        ${x.byCat.map(([k,v]) => row(k + (isDirectCat(k) ? ' (مباشرة)' : ''), v)).join('')}
+        ${row('إجمالي المصروفات', x.spent, 'sum')}
+      </tbody>
+    </table>
+    <p class="muted">منها ${money(x.direct)} ريال مباشرة على القضايا، و${money(x.indirect)} ريال مصروفات تشغيلية عامة.</p>
+
+    <h3>ثالثاً / النتيجة</h3>
+    <table class="items fin">
+      <tbody>
+        ${row('المُحصَّل', x.collected)}
+        ${row('يُخصم: المصروفات', x.spent)}
+        <tr class="grand"><td>صافي الدخل عن الفترة</td><td class="n">${money(x.net)}</td></tr>
+        <tr class="sum"><td>هامش الربح</td><td class="n">${pctAr(x.margin)}</td></tr>
+      </tbody>
+    </table>
+
+    <h3>رابعاً / الذمم المدينة</h3>
+    <table class="items fin">
+      <tbody>
+        ${row('لم يحن موعد استحقاقها', x.aging.future.v)}
+        ${row('متأخرة من ١ إلى ٣٠ يوماً', x.aging.d30.v)}
+        ${row('متأخرة من ٣١ إلى ٩٠ يوماً', x.aging.d90.v)}
+        ${row('متأخرة أكثر من ٩٠ يوماً', x.aging.over.v)}
+        ${row('إجمالي المستحق غير المحصَّل', x.fin.due, 'sum')}
+      </tbody>
+    </table>
+    <p class="muted">متوسط فترة التحصيل: ${x.acd === null ? 'لا توجد دفعات مسدَّدة بعد' : arNum(x.acd) + ' يوماً'} ·
+      نسبة التحصيل التراكمية: ${pctAr(x.fin.total ? x.fin.paid / x.fin.total * 100 : 0)}
+      ${x.recoverable ? ' · مصروفات مستردّة من الموكلين لم تُحصَّل: ' + money(x.recoverable) + ' ريال' : ''}</p>
+
+    ${x.months.length > 1 ? `
+    <h3>خامساً / التوزيع الشهري</h3>
+    <table class="items">
+      <thead><tr><th>الشهر</th><th class="n">المُحصَّل</th><th class="n">المصروفات</th><th class="n">الصافي</th></tr></thead>
+      <tbody>${x.months.map(([k,v]) => `<tr>
+        <td>${monthLabel(k)}</td><td class="n">${money(v.in)}</td>
+        <td class="n">${money(v.out)}</td><td class="n">${money(v.in - v.out)}</td></tr>`).join('')}</tbody>
+    </table>` : ''}
+
+    <p class="closing">أُعدّ هذا الملخص للاطلاع الداخلي</p>
+    <p class="muted" style="text-align:center">صدر بتاريخ ${formatDateText(new Date().toISOString().split('T')[0])}</p>`;
+}
+function openIncomeSummaryPDF() {
+  const r = periodRange(periodMode);
+  openContractPDF(null, {
+    title: 'ملخص الدخل', compact: true,
+    html: buildIncomeSummaryHTML(r),
+    refText: 'ملخص الدخل — ' + r.label,
+  }, true);
+}
+
+// ── تصدير دفاتر المحاسبة إلى Excel ──
+async function exportAccountingXlsx() {
+  if (!window.XLSX) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  const r = periodRange(periodMode);
+  const x = incomeSummary(r);
+  const wb = XLSX.utils.book_new();
+  const add = (name, rows) => {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!views'] = [{ RTL: true }];                       // ورقة بالاتجاه العربي
+    ws['!cols'] = (rows[0] || []).map(() => ({ wch: 22 }));
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  };
+
+  add('ملخص', [
+    ['ملخص الدخل — ' + r.label], ['من', r.from, 'إلى', r.to], [],
+    ['البند', 'المبلغ (ر.س)'],
+    ['الإيراد المستحق (ما صدر)', x.billed],
+    ['المُحصَّل فعلاً', x.collected],
+    ['إجمالي المصروفات', x.spent],
+    ['منها مباشرة على القضايا', x.direct],
+    ['منها تشغيلية عامة', x.indirect],
+    ['صافي الدخل', x.net],
+    ['هامش الربح %', x.margin],
+    [],
+    ['الذمم المدينة — لم يحن موعدها', x.aging.future.v],
+    ['متأخرة ١-٣٠ يوماً', x.aging.d30.v],
+    ['متأخرة ٣١-٩٠ يوماً', x.aging.d90.v],
+    ['متأخرة أكثر من ٩٠ يوماً', x.aging.over.v],
+    ['إجمالي المستحق غير المحصَّل', x.fin.due],
+    [],
+    ['متوسط فترة التحصيل (يوم)', x.acd === null ? '' : x.acd],
+    ['مصروفات مستردّة لم تُحصَّل', x.recoverable],
+  ]);
+
+  add('المستندات', [
+    ['النوع','الرقم','التاريخ','العميل','القضايا','الإجمالي','المُحصَّل','المتبقي','الحالة'],
+    ...DB.invoices.map(i => {
+      const cl = docClient(i);
+      const nums = (i.caseIds||[]).map(id => { const c = DB.cases.find(x=>x.id===id); return c ? c.num : ''; }).filter(Boolean).join('، ');
+      const t = invTotal(i), p = invPaidAmount(i);
+      return [DOC_KIND_BADGE[i.kind||'fee'], i.ref, i.date, cl.name, nums, t, p, t - p,
+              { paid:'مسدَّدة', partial:'سداد جزئي', unpaid:'مستحقة' }[invStatus(i)]];
+    }),
+  ]);
+
+  add('الدفعات', [
+    ['المستند','النوع','العميل','بند الدفعة','المبلغ','تاريخ الاستحقاق','مسدَّدة','تاريخ السداد','أيام التأخر'],
+    ...DB.invoices.flatMap(i => (i.installments||[]).map(s => {
+      const due = s.dueDate || i.dueDate || i.date;
+      const late = s.paid ? '' : Math.max(0, Math.floor((new Date() - new Date(due)) / 86400000));
+      return [i.ref, DOC_KIND_BADGE[i.kind||'fee'], docClient(i).name, s.label,
+              parseInstAmount(s.amount), due, s.paid ? 'نعم' : 'لا', s.paidAt || '', late];
+    })),
+  ]);
+
+  add('المصروفات', [
+    ['التاريخ','البند','التصنيف','مباشر/غير مباشر','القضية','المبلغ','طريقة الدفع','المورّد','يُستردّ','حُصِّل','ملاحظات'],
+    ...DB.expenses.map(e => {
+      const c = e.caseId ? DB.cases.find(x => x.id === e.caseId) : null;
+      return [e.date, e.title, e.category, isDirectCat(e.category) ? 'مباشر' : 'غير مباشر',
+              c ? (c.num || c.title) : '', e.amount, e.method, e.vendor,
+              e.billable ? 'نعم' : 'لا', e.reimbursed ? 'نعم' : 'لا', e.notes];
+    }),
+  ]);
+
+  add('التوزيع الشهري', [
+    ['الشهر','المُحصَّل','المصروفات','الصافي'],
+    ...x.months.map(([k,v]) => [k, v.in, v.out, v.in - v.out]),
+  ]);
+
+  const name = `دفاتر مكتب الزاحم — ${r.label} — ${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, name);
+}
+
 function renderReports() {
   const fin = financeTotals();
   const r = periodRange(periodMode);
@@ -4028,7 +4206,13 @@ function renderReports() {
   const byLawyer = {};
   DB.cases.forEach(c => { byLawyer[c.lawyer] = (byLawyer[c.lawyer]||0)+1; });
   return `
-  <div class="section-title" style="margin-bottom:16px">📊 التقارير والإحصاءات</div>
+  <div class="section-header">
+    <div class="section-title">📊 التقارير والإحصاءات</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="exportAccountingXlsx()">📊 تصدير Excel للمحاسب</button>
+      <button class="btn btn-primary" onclick="openIncomeSummaryPDF()">🖨️ ملخص الدخل PDF</button>
+    </div>
+  </div>
   ${periodPicker()}
 
   <div class="card" style="margin-bottom:18px">
@@ -4059,9 +4243,9 @@ function renderReports() {
         <thead><tr><th>الفئة</th><th>الدفعات</th><th>المبلغ (ر.س)</th><th>النسبة</th></tr></thead>
         <tbody>${agRows.map(([l,b,col]) => `<tr>
           <td style="color:${col};font-weight:600">${l}</td>
-          <td class="color-gray">${arNum(b.n)}</td>
+          <td class="color-gray">${b.n}</td>
           <td style="font-weight:700">${b.v.toLocaleString()}</td>
-          <td class="color-gray">${arNum(agTotal?Math.round(b.v/agTotal*100):0)}٪</td>
+          <td class="color-gray">${agTotal?Math.round(b.v/agTotal*100):0}%</td>
         </tr>`).join('')}</tbody>
       </table></div>
       ${ag.over.v > 0 ? `<p class="text-sm" style="color:#8B1A1A;margin-top:10px">⚠️ ${ag.over.v.toLocaleString()} ر.س متأخرة أكثر من ٩٠ يوماً — تستدعي متابعة</p>` : ''}`}
@@ -4070,10 +4254,10 @@ function renderReports() {
       <div class="card-title" style="margin-bottom:14px">🕐 مؤشرات التحصيل</div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <div><div class="color-gray text-sm">متوسط فترة التحصيل</div>
-          <div style="font-size:27.6px;font-weight:800;color:var(--gold)">${acd === null ? '—' : arNum(acd) + ' يوماً'}</div>
+          <div style="font-size:27.6px;font-weight:800;color:var(--gold)">${acd === null ? '—' : acd + ' يوماً'}</div>
           <div class="color-gray text-sm">من تاريخ المستند حتى سداد الدفعة</div></div>
         <div><div class="color-gray text-sm">نسبة التحصيل التراكمية</div>
-          <div style="font-size:27.6px;font-weight:800;color:#1E7E34">${arNum(fin.total?Math.round(fin.paid/fin.total*100):0)}٪</div>
+          <div style="font-size:27.6px;font-weight:800;color:#1E7E34">${fin.total?Math.round(fin.paid/fin.total*100):0}%</div>
           <div class="color-gray text-sm">${fin.paid.toLocaleString()} من ${fin.total.toLocaleString()} ر.س</div></div>
       </div>
     </div>
@@ -5893,16 +6077,20 @@ function openDocPDF(id, noPrint) {
   openContractPDF(id, DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee, noPrint);
 }
 
+// تفتح نافذة الطباعة على ورق المكتب. تقبل مستنداً من الفواتير،
+// أو محتوى جاهزاً عبر spec.html لما ليس له صفّ في الجدول (كملخص الدخل)
 function openContractPDF(id, spec, noPrint) {
-  const inv = DB.invoices.find(i=>i.id===id); if (!inv) return;
-  spec = spec || DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee;
-  const contractBody = spec.build(inv);
+  const inv = id ? DB.invoices.find(i=>i.id===id) : null;
+  if (id && !inv) return;
+  spec = spec || DOC_PRINT[(inv && inv.kind) || 'fee'] || DOC_PRINT.fee;
+  const contractBody = spec.html || spec.build(inv);
+  const refText = spec.refText || (spec.ref + ': ' + arNum(inv.ref));
   const base = location.href.replace(/[^/]*$/, '');
   const bg = base + 'assets/letterhead.png?v=' + ASSET_V;
   const w = window.open('', '_blank');
   if (!w) { alert('يرجى السماح بالنوافذ المنبثقة في المتصفح لإصدار ملف الـ PDF'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
-  <title>${spec.title} — ${inv.ref}</title>
+  <title>${spec.title}${inv ? ' — ' + inv.ref : ''}</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
@@ -5943,6 +6131,10 @@ function openContractPDF(id, spec, noPrint) {
     table.items tr.grand td { background:#F2EBD9; font-weight:800; color:#7C5F16; font-size:13px; }
     .estab { font-size:10.8px; color:#6B6757; text-align:center; margin-top:6px; border-top:1px solid #E6DFC9; padding-top:4px; }
     .docref { unicode-bidi:isolate; direction:ltr; white-space:nowrap; font-family:'IBM Plex Mono', monospace; }
+    .sub2 { text-align:center; font-size:12.5px; color:#6B6757; margin-bottom:14px; }
+    table.items.fin td:first-child { width:auto; }
+    table.items.fin .n { width:130px; font-weight:600; }
+    table.items.fin tr.sum td { background:#FBF9F3; font-weight:700; }
     .tafqit { font-size:11.8px; color:#44423A; margin-bottom:8px; }
     .bank { background:#FBF9F3; border:1px solid #D8CDB0; border-radius:4px; padding:7px 9px; font-size:11.8px; }
     /* عرض السعر والفاتورة صفحة واحدة، فتُضغط مسافاتهما دون المساس بالعقود */
@@ -5980,7 +6172,7 @@ function openContractPDF(id, spec, noPrint) {
   <scr` + `ipt>
   (function(){
     var BG = ${JSON.stringify(bg)};
-    var REF = ${JSON.stringify(spec.ref + ': ' + arNum(inv.ref))};
+    var REF = ${JSON.stringify(refText)};
     function arNumJS(v){ return String(v).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[+d]; }); }
     function paginate() {
       var flow = document.getElementById('flow');
@@ -6279,7 +6471,12 @@ function money(n) {
   const v = Math.round(n);
   return v < 0 ? '(' + Math.abs(v).toLocaleString() + ')' : v.toLocaleString();
 }
+// الواجهة بأرقام لاتينية كبقية الشاشات، والنسخة العربية للمستندات المطبوعة
 function pct(n) {
+  const v = Math.round(n);
+  return v < 0 ? '(' + Math.abs(v) + '%)' : v + '%';
+}
+function pctAr(n) {
   const v = Math.round(n);
   return v < 0 ? '(' + arNum(Math.abs(v)) + '٪)' : arNum(v) + '٪';
 }
