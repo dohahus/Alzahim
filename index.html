@@ -987,8 +987,9 @@ tbody td { padding:13px 16px; font-size:14.9px; }
         <div class="form-group-v">
           <label>نوع القضية</label>
           <select id="new-case-type">
-            <option>تجارية</option><option>مدنية</option><option>جزائية</option>
+            <option>تجارية</option><option>عامة</option><option>جزائية</option>
             <option>عمالية</option><option>أسرية</option><option>إدارية</option>
+            <option>تنفيذ</option>
           </select>
         </div>
       </div>
@@ -4178,7 +4179,15 @@ function openCaseModal(id) {
   document.getElementById('case-modal-save-btn').textContent = c ? '💾 حفظ التعديلات' : '💾 حفظ القضية';
   document.getElementById('new-case-num').value = c ? c.num : '';
   document.getElementById('new-case-title').value = c ? c.title : '';
-  document.getElementById('new-case-type').value = c ? c.type : 'تجارية';
+  // قضية مسجَّلة بنوع لم يعد في القائمة يُضاف نوعها مؤقتاً، لئلا يتبدّل عند الحفظ
+  const typeSel = document.getElementById('new-case-type');
+  [...typeSel.querySelectorAll('option[data-legacy]')].forEach(o => o.remove());
+  if (c && c.type && ![...typeSel.options].some(o => o.value === c.type)) {
+    const o = document.createElement('option');
+    o.value = o.textContent = c.type; o.dataset.legacy = '1';
+    typeSel.appendChild(o);
+  }
+  typeSel.value = c ? c.type : 'تجارية';
   document.getElementById('new-case-client').value = c ? (c.clientId||'') : '';
   document.getElementById('new-case-court').value = c ? c.court : '';
   document.getElementById('new-case-dept').value = c ? c.dept : '';
