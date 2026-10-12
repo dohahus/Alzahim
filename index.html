@@ -4684,6 +4684,8 @@ function printUpdateReport(caseId, updateId) {
   const esc = t => String(t||'').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
   <title>تقرير — ${esc(c.title)}</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     @page { size: A4; margin: 0; }
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -4874,25 +4876,27 @@ function openContractPDF(id) {
   if (!w) { alert('يرجى السماح بالنوافذ المنبثقة في المتصفح لإصدار ملف الـ PDF'); return; }
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
   <title>عقد أتعاب محاماة — ${inv.ref}</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     @page { size: A4; margin: 0; }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif; direction:rtl; color:#211C10; background:#555; }
     .page { width:210mm; height:296.5mm; position:relative; background:#fff; margin:10px auto; box-shadow:0 4px 18px rgba(0,0,0,.35); overflow:hidden; }
     .pagebg { position:absolute; top:0; right:0; width:100%; height:100%; }
-    .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; overflow:hidden; font-size:12.8px; line-height:1.85; }
-    h1 { text-align:center; font-size:21px; color:#7C5F16; margin-bottom:12px; }
-    h2 { text-align:center; font-size:15px; margin:10px 0 4px; }
-    h3 { font-size:14px; color:#7C5F16; margin:10px 0 3px; }
-    p { text-align:justify; margin-bottom:5px; }
-    ol { padding-right:24px; margin-bottom:5px; }
-    li { margin-bottom:3px; text-align:justify; }
+    .pagecontent { position:absolute; top:45mm; right:20mm; left:20mm; bottom:42mm; overflow:hidden; font-size:12.8px; line-height:1.66; }
+    h1 { text-align:center; font-size:21px; color:#7C5F16; margin-bottom:9px; }
+    h2 { text-align:center; font-size:15px; margin:8px 0 3px; }
+    h3 { font-size:14px; color:#7C5F16; margin:8px 0 2px; }
+    p { text-align:justify; margin-bottom:3px; }
+    ol { padding-right:24px; margin-bottom:4px; }
+    li { margin-bottom:2px; text-align:justify; }
     .muted { color:#666; font-size:11.5px; }
-    .center { text-align:center; margin-top:14px; font-weight:600; }
-    .sig-row { display:flex; justify-content:space-between; margin-top:34px; gap:40px; }
+    .center { text-align:center; margin-top:11px; font-weight:600; }
+    .sig-row { display:flex; justify-content:space-between; margin-top:20px; gap:40px; }
     .sig { text-align:center; flex:1; }
     .sig-title { font-weight:700; color:#7C5F16; margin-bottom:6px; }
-    .sig-line { margin-top:20px; color:#444; }
+    .sig-line { margin-top:14px; color:#444; }
     .ref-line { position:absolute; bottom:30mm; right:20mm; left:20mm; text-align:center; font-size:10.5px; color:#8C8C8C; font-family:'IBM Plex Mono', monospace; }
     .toolbar { position:fixed; top:12px; left:12px; z-index:50; }
     .toolbar button { padding:11px 22px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; background:#A3801C; color:#FFFDF6; box-shadow:0 2px 10px rgba(0,0,0,.4); }
@@ -4942,8 +4946,9 @@ function openContractPDF(id) {
       }
     }
     window.onload = function(){
-      paginate();
-      setTimeout(function(){ window.print(); }, 700);
+      // القياس قبل تحميل الخط يقسّم الصفحات على مقاسات الخط البديل
+      var go = function(){ paginate(); setTimeout(function(){ window.print(); }, 500); };
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else setTimeout(go, 900);
     };
   })();
   </scr` + `ipt>
