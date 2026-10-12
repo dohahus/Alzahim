@@ -3178,7 +3178,7 @@ function renderTasks() {
             ${taskTimelineHTML(t)}
           </div>
           <div style="text-align:left">
-            ${t.due ? `<span class="task-due">📅 ${formatDateHijri(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
+            ${t.due ? `<span class="task-due">📅 ${formatDateHijri(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : ''}
             ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
@@ -3195,7 +3195,7 @@ function renderTasks() {
             ${taskTimelineHTML(t)}
           </div>
           <div style="text-align:left">
-            <span class="task-due" style="color:var(--gray)">✔ ${t.due ? formatDateHijri(t.due) : 'بدون تاريخ استحقاق'}</span><br>
+            ${t.due ? `<span class="task-due" style="color:var(--gray)">✔ ${formatDateHijri(t.due)}</span><br>` : ''}
             ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
