@@ -3464,6 +3464,7 @@ function renderInvoices() {
             <td style="white-space:nowrap">
               <button class="btn btn-secondary btn-sm" onclick="openInvoiceDetail('${inv.id}')">📄 الدفعات</button>
               <button class="btn btn-primary btn-sm" onclick="openContractPDF('${inv.id}')">🖨️ العقد PDF</button>
+              <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteInvoice('${inv.id}')">🗑️ حذف</button>
             </td>
           </tr>`;
         }).join('')}
@@ -3493,7 +3494,8 @@ function openInvoiceDetail(id) {
         </tr>`).join('')}
       </tbody>
     </table></div>
-    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+    <div style="display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn btn-secondary" style="color:var(--red)" onclick="deleteInvoice('${inv.id}')">🗑️ حذف العقد</button>
       <button class="btn btn-primary" onclick="openContractPDF('${inv.id}')">🖨️ عرض / طباعة عقد الأتعاب PDF</button>
     </div>`);
   openModal('invoice-detail-modal');
@@ -4576,12 +4578,14 @@ async function deleteCase(caseId) {
   const invoices = DB.invoices.filter(i => (i.caseIds || []).includes(caseId)).length;
 
   const lines = [
-    `${(c.updates || []).length} مستجد`,
-    `${hearings.length} جلسة`,
-    `${tasks.length} مهمة`,
-    `${docs.length} مستند`,
+    arCount((c.updates || []).length, 'مستجد واحد', 'مستجدان', 'مستجدات', 'مستجد'),
+    arCount(hearings.length, 'جلسة واحدة', 'جلستان', 'جلسات', 'جلسة'),
+    arCount(tasks.length, 'مهمة واحدة', 'مهمتان', 'مهام', 'مهمة'),
+    arCount(docs.length, 'مستند واحد', 'مستندان', 'مستندات', 'مستند'),
   ];
-  if (invoices) lines.push(`${invoices} عقد أتعاب (يبقى محفوظاً لكن بلا ارتباط بالقضية)`);
+  if (invoices) lines.push(
+    arCount(invoices, 'عقد أتعاب واحد', 'عقدا أتعاب', 'عقود أتعاب', 'عقد أتعاب')
+    + ' (يبقى محفوظاً لكن بلا ارتباط بالقضية)');
 
   if (!confirm(
     `حذف القضية «${c.title}» نهائياً؟\n\nسيُحذف معها:\n• ${lines.join('\n• ')}\n\n`
@@ -4610,6 +4614,42 @@ async function deleteCase(caseId) {
   if (document.getElementById('case-detail-modal').style.display === 'flex') closeModal('case-detail-modal',{});
   navTo('cases');
   buildSidebar();
+}
+
+async function deleteInvoice(invId) {
+  const inv = DB.invoices.find(i => i.id === invId); if (!inv) return;
+  const cl    = DB.clients.find(c => c.id === inv.clientId);
+  const nums  = (inv.caseIds || []).map(id => {
+    const c = DB.cases.find(x => x.id === id); return c ? (c.num || c.title) : '';
+  }).filter(Boolean);
+  const insts    = inv.installments || [];
+  const paid     = insts.filter(x => x.paid);
+  const receipts = insts.map(x => x.receiptPath).filter(Boolean);
+
+  const lines = [arCount(insts.length, 'دفعة واحدة', 'دفعتان', 'دفعات', 'دفعة')];
+  if (receipts.length) lines.push(
+    arCount(receipts.length, 'إيصال سداد واحد', 'إيصالا سداد', 'إيصالات سداد', 'إيصال سداد'));
+
+  let msg = `حذف عقد الأتعاب «${inv.ref}»${cl ? ` الخاص بـ «${cl.name}»` : ''} نهائياً؟\n\n`
+    + `سيُحذف معه:\n• ${lines.join('\n• ')}\n\n`;
+  // سجلّ مالي فيه مبالغ محصَّلة لا يُحذف باستخفاف
+  if (paid.length) {
+    const sum = paid.reduce((t, x) => t + parseInstAmount(x.amount), 0);
+    const pc = arCount(paid.length, 'دفعة مسدَّدة واحدة', 'دفعتان مسدَّدتان', 'دفعات مسدَّدة', 'دفعة مسدَّدة');
+    msg += `⚠️ تنبيه: هذا العقد فيه ${pc} بمجموع ${sum.toLocaleString()} ر.س — `
+         + `سيختفي سجلّها من التقارير والإحصاءات.\n\n`;
+  }
+  msg += `لن تُحذف ${nums.length ? `القضية المرتبطة (${nums.join('، ')})` : 'القضايا المرتبطة'}`
+       + `${cl ? ` ولا الموكل «${cl.name}»` : ''}.\n\nلا يمكن التراجع عن هذا الإجراء.`;
+  if (!confirm(msg)) return;
+
+  // الدفعات والارتباط بالقضايا تُحذف تلقائياً مع العقد، أما ملفات الإيصالات فلا
+  const ok = await dbWrite('حذف العقد', () => sb.from('invoices').delete().eq('id', invId));
+  if (!ok) return;
+  if (receipts.length) await sb.storage.from('receipts').remove(receipts).catch(()=>{});
+  if (document.getElementById('invoice-detail-modal').style.display === 'flex') closeModal('invoice-detail-modal',{});
+  refreshCdmIfOpen();
+  if (currentPage === 'invoices') renderPage('invoices'); else navTo('invoices');
 }
 
 async function setCaseStatus(caseId, status) {
@@ -5138,6 +5178,14 @@ function searchKeydown(ev) {
 // ═══════════════════════════════════
 //  HELPERS
 // ═══════════════════════════════════
+// صيغ العدد في العربية أربع: ١ مفرد، ٢ مثنى، ٣–١٠ جمع، ١١ فأكثر مفرد مُميَّز
+function arCount(n, one, two, few, singular) {
+  if (n === 0) return 'لا ' + few;
+  if (n === 1) return one;
+  if (n === 2) return two;
+  if (n <= 10) return n + ' ' + few;
+  return n + ' ' + (singular || one);
+}
 function statusLabel(s) {
   return {active:'جارية',pending:'معلقة',closed:'مغلقة',won:'مكسوبة',lost:'مخسورة',new:'جديدة'}[s]||s;
 }
