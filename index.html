@@ -6162,8 +6162,8 @@ function buildInvoiceHTML(inv) {
       <tr>
         <td><b>المُصدِر</b><br>${OFFICE.name}<br>
           ترخيص رقم (${arNum(OFFICE.license)}) · سجل المنشأة ${arNum(OFFICE.cr)} · الرقم المميز ${arNum(OFFICE.uniqueNo)}<br>
-          العنوان الوطني المختصر: ${OFFICE.shortAddress}<br>${arNum(OFFICE.phone)} — ${OFFICE.email}</td>
-        <td><b>المفوتَر عليه</b><br>${escHtml(clientLine(cl)).replace(/، /g,'<br>')}</td>
+          العنوان الوطني المختصر: ${OFFICE.shortAddress}</td>
+        <td><b>المفوتَر عليه</b><br>${escHtml(cl.name)}${cl.idNum ? '<br>هوية رقم (' + arNum(cl.idNum) + ')' : ''}</td>
       </tr>
     </table>
     ${inv.subject ? `<p><b>وصف الخدمة:</b> ${escHtml(inv.subject)}</p>` : ''}
