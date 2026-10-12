@@ -2688,7 +2688,6 @@ function renderCdmDocs(c, key, label, hint) {
           <div class="doc-name">${d.name}</div>
           <div class="doc-meta">${formatBytes(d.size)} — رُفع بتاريخ ${formatDate(d.uploadedAt)}${d.uploadedBy ? ' بواسطة '+d.uploadedBy : ''}</div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="previewStoredFile('case-docs','${d.path}','${escHtml(d.name)}')">👁️ استعراض</button>
         <button class="btn btn-secondary btn-sm" onclick="openStoredFile('case-docs','${d.path}','${d.name}')">تنزيل</button>
         <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteCaseDoc('${c.id}','${key}','${d.id}')">🗑️</button>
       </div>`).join('')}
@@ -4000,7 +3999,6 @@ function renderClientDocs() {
               <div class="doc-name">${d.name}</div>
               <div class="doc-meta">${d.kind} — ${formatBytes(d.size)} — بتاريخ ${formatDate(d.uploadedAt)}</div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="previewStoredFile('case-docs','${d.path}','${escHtml(d.name)}')">👁️ استعراض</button>
             <button class="btn btn-secondary btn-sm" onclick="openStoredFile('case-docs','${d.path}','${d.name}')">تنزيل</button>
           </div>`).join('')}
       </div>`;
