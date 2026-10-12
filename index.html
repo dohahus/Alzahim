@@ -5031,8 +5031,9 @@ function setInvKind(kind) {
   document.querySelectorAll('#add-invoice-modal [data-for]').forEach(el => {
     el.style.display = el.dataset.for.split(' ').includes(kind) ? '' : 'none';
   });
-  // عرض السعر وحده يقبل اسماً مكتوباً، فقد يُوجَّه لعميل محتمل
-  const freeClient = kind === 'quote';
+  // عرض السعر والفاتورة يقبلان اسماً مكتوباً، فقد يُوجَّهان لمن ليس موكلاً مسجَّلاً.
+  // أما العقود فتُبرم مع موكل مسجَّل له ملف وقضايا
+  const freeClient = kind === 'quote' || kind === 'invoice';
   document.getElementById('inv-client').style.display = freeClient ? 'none' : '';
   document.getElementById('inv-client-free').style.display = freeClient ? '' : 'none';
   if (freeClient) {
@@ -5099,14 +5100,14 @@ function updateInvDatePreview() {
 }
 // الاسم المكتوب إن طابق موكلاً مسجَّلاً رُبط به، وإلا حُفظ اسماً حراً
 function resolveInvClient() {
-  if (invKind !== 'quote') return { id: document.getElementById('inv-client').value || null, name: '' };
+  if (!['quote','invoice'].includes(invKind)) return { id: document.getElementById('inv-client').value || null, name: '' };
   const typed = document.getElementById('inv-client-free').value.trim();
   if (!typed) return { id: null, name: '' };
   const hit = DB.clients.find(c => normSearch(c.name) === normSearch(typed));
   return hit ? { id: hit.id, name: '' } : { id: null, name: typed };
 }
 function invClientChanged() {
-  const r = invKind === 'quote' ? resolveInvClient() : null;
+  const r = ['quote','invoice'].includes(invKind) ? resolveInvClient() : null;
   if (r) {
     const hint = document.getElementById('inv-client-hint');
     hint.style.display = r.name || r.id ? '' : 'none';
@@ -5841,8 +5842,9 @@ async function saveInvoiceContract(print) {
   const k = DOC_KINDS[invKind];
   const who = resolveInvClient();
   if (!who.id && !who.name) {
-    alert(invKind === 'quote' ? 'يرجى كتابة اسم العميل أو اختياره من الموكلين'
-                              : 'يرجى اختيار ' + (invKind === 'fee' ? 'الموكل' : 'العميل'));
+    alert(['quote','invoice'].includes(invKind)
+      ? 'يرجى كتابة اسم العميل أو اختياره من الموكلين'
+      : 'يرجى اختيار ' + (invKind === 'fee' ? 'الموكل' : 'العميل'));
     return;
   }
   const clientId = who.id;
