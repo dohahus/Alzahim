@@ -491,6 +491,13 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 .timeline-text { font-size:14.9px; line-height:1.6; }
 
 /* ═══════════ HEARING LIST ═══════════ */
+.hearing-edit {
+  background:none; border:1px solid var(--border); color:var(--gray-light); border-radius:8px;
+  width:34px; height:34px; cursor:pointer; flex-shrink:0; display:flex;
+  align-items:center; justify-content:center; transition:.15s; align-self:center;
+}
+.hearing-edit:hover { border-color:var(--gold); color:var(--gold-deep); background:var(--olive-pale); }
+.hearing-edit svg { width:16px; height:16px; }
 .hearing-item {
   display:flex; align-items:center; gap:14px; padding:14px;
   background:var(--dark-2); border-radius:9px; margin-bottom:10px;
@@ -1228,7 +1235,7 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 <div class="modal-overlay" id="add-hearing-modal" style="display:none" onclick="closeModal('add-hearing-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <span class="modal-title">📅 إضافة جلسة</span>
+      <span class="modal-title" id="nh-modal-title">📅 إضافة جلسة</span>
       <button class="modal-close" onclick="closeModal('add-hearing-modal',event)">×</button>
     </div>
     <div class="modal-body">
@@ -1251,8 +1258,10 @@ tbody td { padding:13px 16px; font-size:14.9px; }
       <div class="form-group-v"><label>ملاحظات</label><textarea id="nh-notes" placeholder="تفاصيل إضافية..."></textarea></div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-secondary" id="nh-delete-btn" style="margin-left:auto;color:var(--red);display:none"
+        onclick="deleteHearing()">🗑️ حذف الجلسة</button>
       <button class="btn btn-secondary" onclick="closeModal('add-hearing-modal',event)">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveNewHearing()">💾 حفظ الجلسة</button>
+      <button class="btn btn-primary" id="nh-save-btn" onclick="saveNewHearing()">💾 حفظ الجلسة</button>
     </div>
   </div>
 </div>
@@ -2558,7 +2567,7 @@ function renderDashboard() {
       <div class="card" style="margin-bottom:16px">
         <div class="card-header">
           <span class="card-title">📅 الجلسات القادمة</span>
-          <button class="btn btn-secondary btn-sm" onclick="openModal('add-hearing-modal');populateHearingModal()">+ إضافة</button>
+          <button class="btn btn-secondary btn-sm" onclick="openHearingModal()">+ إضافة</button>
         </div>
         ${hearings.slice().sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3).map(h => {
           const c = DB.cases.find(x=>x.id===h.caseId);
@@ -2939,7 +2948,7 @@ function renderHearings() {
   return `
   <div class="section-header">
     <div class="section-title">📅 ${isOfficeOwner() ? 'الجلسات' : 'جلساتي'}</div>
-    <button class="btn btn-primary" onclick="openModal('add-hearing-modal');populateHearingModal()">➕ جلسة جديدة</button>
+    <button class="btn btn-primary" onclick="openHearingModal()">➕ جلسة جديدة</button>
   </div>
   <div class="two-col">
     <div>
@@ -2964,6 +2973,7 @@ function renderHearings() {
             ${isPast ? '<div style="font-size:12.6px;color:var(--gray);margin-top:4px">منتهية</div>' : '<div style="font-size:12.6px;color:var(--green);margin-top:4px">قادمة</div>'}
             ${!isPast ? `<button class="btn-ics" onclick="addHearingToCalendar('${h.id}')">📅 أضف للتقويم</button>` : ''}
           </div>
+          <button class="hearing-edit" title="تعديل الجلسة أو حذفها" onclick="openHearingModal('${h.id}')">${ic('pencil',16)}</button>
         </div>`;
       }).join('')}
     </div>
@@ -4972,9 +4982,42 @@ function openCaseModal(id) {
   document.getElementById('new-case-notes').value = c ? c.notes : '';
   openModal('add-case-modal');
 }
-function populateHearingModal() {
+let hearingEditId = null;
+function populateHearingModal(id) {
+  hearingEditId = id || null;
+  const h = id ? DB.hearings.find(x => x.id === id) : null;
   const sel = document.getElementById('nh-case');
   sel.innerHTML = '<option value="">اختر القضية</option>' + myScopedCases().map(c=>`<option value="${c.id}">${c.num || 'بدون رقم'} — ${c.title}</option>`).join('');
+  document.getElementById('nh-modal-title').innerHTML = iconify(h ? '✏️ تعديل الجلسة' : '📅 إضافة جلسة');
+  document.getElementById('nh-save-btn').innerHTML = iconify(h ? '💾 حفظ التعديلات' : '💾 حفظ الجلسة');
+  document.getElementById('nh-delete-btn').style.display = h ? '' : 'none';
+  sel.value = h ? h.caseId : '';
+  document.getElementById('nh-date').value = h ? h.date : '';
+  document.getElementById('nh-time').value = h ? (h.time || '') : '';
+  document.getElementById('nh-court').value = h ? (h.court || '') : '';
+  document.getElementById('nh-purpose').value = h ? (h.purpose || 'نظر') : 'نظر';
+  document.getElementById('nh-notes').value = h ? (h.notes || '') : '';
+}
+function openHearingModal(id) {
+  populateHearingModal(id);
+  openModal('add-hearing-modal');
+}
+async function deleteHearing() {
+  const h = DB.hearings.find(x => x.id === hearingEditId); if (!h) return;
+  const c = DB.cases.find(x => x.id === h.caseId);
+  if (!confirm(`حذف جلسة ${formatDateText(h.date)}${c ? ` من قضية «${c.title}»` : ''} نهائياً؟\n\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+  const ok = await dbWrite('حذف الجلسة', () => sb.from('hearings').delete().eq('id', h.id));
+  if (!ok) return;
+  // موعد الجلسة القادمة على القضية يُعاد حسابه من الجلسات الباقية
+  if (c) {
+    const rest = DB.hearings.filter(x => x.caseId === c.id && x.id !== h.id).map(x => x.date).sort();
+    const next = rest.filter(d => d >= new Date().toISOString().split('T')[0])[0] || rest[rest.length-1] || null;
+    await sb.from('cases').update({ next_hearing: next }).eq('id', c.id).then(()=>{}, ()=>{});
+  }
+  hearingEditId = null;
+  closeModal('add-hearing-modal', {});
+  navTo('hearings');
+  refreshCdmIfOpen();
 }
 // ── أنواع المستندات المالية ──
 // كل نوع يغيّر مسمّيات الحقول وما يظهر منها وشكل جدول البنود
@@ -5363,21 +5406,30 @@ async function saveNewHearing() {
   const caseId = document.getElementById('nh-case').value;
   const date = document.getElementById('nh-date').value;
   if (!caseId || !date) { alert('يرجى اختيار القضية والتاريخ'); return; }
+  const row = {
+    case_id: caseId, date,
+    time: nullIfBlank(document.getElementById('nh-time').value),
+    court: nullIfBlank(document.getElementById('nh-court').value),
+    purpose: nullIfBlank(document.getElementById('nh-purpose').value),
+    notes: nullIfBlank(document.getElementById('nh-notes').value),
+  };
+  const editId = hearingEditId;
   const ok = await dbWrite('الجلسة', async () => {
-    const ins = await sb.from('hearings').insert({
-      case_id: caseId, date,
-      time: nullIfBlank(document.getElementById('nh-time').value),
-      court: nullIfBlank(document.getElementById('nh-court').value),
-      purpose: nullIfBlank(document.getElementById('nh-purpose').value),
-      notes: nullIfBlank(document.getElementById('nh-notes').value),
-    });
-    if (ins.error) return ins;
-    // موعد الجلسة القادمة على القضية يتبع آخر جلسة مُضافة
-    return sb.from('cases').update({ next_hearing: date }).eq('id', caseId);
+    const res = editId
+      ? await sb.from('hearings').update(row).eq('id', editId)
+      : await sb.from('hearings').insert(row);
+    if (res.error) return res;
+    // موعد الجلسة القادمة على القضية يتبع أقرب جلسة لم تمض بعد
+    const today = new Date().toISOString().split('T')[0];
+    const dates = DB.hearings.filter(h => h.caseId === caseId && h.id !== editId).map(h => h.date).concat(date).sort();
+    const next = dates.filter(d => d >= today)[0] || dates[dates.length-1] || date;
+    return sb.from('cases').update({ next_hearing: next }).eq('id', caseId);
   });
   if (!ok) return;
+  hearingEditId = null;
   closeModal('add-hearing-modal', {});
   navTo('hearings');
+  refreshCdmIfOpen();
 }
 
 // آخر جلسة لم يُكتب عنها تقرير — تمنع إضافة جلسة جديدة
@@ -6165,8 +6217,13 @@ function buildConsultingHTML(inv) {
     ${inv.notes ? `<h3>شروط خاصة</h3><p>${escHtml(inv.notes)}</p>` : ''}
     <p class="center">وصلى الله على نبينا محمد وعلى آله وصحبه أجمعين</p>
     <div class="sig-row">
+      <div class="sig"><div class="sig-title">الطرف الأول</div><div>${OFFICE.lawyer}</div>
+        <div class="sig-mark">
+          <img class="sig-img" src="${portalBaseUrl()}assets/signature.png?v=${ASSET_V}" alt="التوقيع">
+          <img class="sig-stamp" src="${portalBaseUrl()}assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب">
+        </div>
+      </div>
       <div class="sig"><div class="sig-title">الطرف الثاني</div><div>${escHtml(cl.name)}</div><div class="sig-line">التوقيع: ..............................</div></div>
-      <div class="sig"><div class="sig-title">الطرف الأول</div><div>${OFFICE.lawyer}</div><div class="sig-line">التوقيع: ..............................</div></div>
     </div>`;
 }
 
