@@ -5400,12 +5400,12 @@ const DOC_PRINT = {
   quote:      { build: inv => buildQuoteHTML(inv),      title: 'عرض سعر', ref: 'عرض سعر رقم', compact: true },
   invoice:    { build: inv => buildInvoiceHTML(inv),    title: 'فاتورة', ref: 'فاتورة رقم', compact: true },
 };
-function openDocPDF(id) {
+function openDocPDF(id, noPrint) {
   const inv = DB.invoices.find(i => i.id === id); if (!inv) return;
-  openContractPDF(id, DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee);
+  openContractPDF(id, DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee, noPrint);
 }
 
-function openContractPDF(id, spec) {
+function openContractPDF(id, spec, noPrint) {
   const inv = DB.invoices.find(i=>i.id===id); if (!inv) return;
   spec = spec || DOC_PRINT[inv.kind || 'fee'] || DOC_PRINT.fee;
   const contractBody = spec.build(inv);
@@ -5514,9 +5514,10 @@ function openContractPDF(id, spec) {
         pages[i].appendChild(f);
       }
     }
+    var AUTO_PRINT = ${noPrint ? 'false' : 'true'};
     window.onload = function(){
       // القياس قبل تحميل الخط يقسّم الصفحات على مقاسات الخط البديل
-      var go = function(){ paginate(); setTimeout(function(){ window.print(); }, 500); };
+      var go = function(){ paginate(); if (AUTO_PRINT) setTimeout(function(){ window.print(); }, 500); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else setTimeout(go, 900);
     };
   })();
