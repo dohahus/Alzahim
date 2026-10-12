@@ -147,6 +147,21 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 }
 .pass-eye:hover { color:var(--gold-deep); background:var(--olive-pale); }
 .pass-eye svg { width:17px; height:17px; }
+
+/* ═══════════ إنشاء حساب الموكل مع إضافته ═══════════ */
+.acct-block {
+  margin-top:16px; padding:14px; border:1px dashed var(--border);
+  border-radius:10px; background:var(--olive-pale);
+}
+.acct-toggle { display:flex; align-items:flex-start; gap:10px; cursor:pointer; }
+.acct-toggle input { width:17px; height:17px; margin-top:2px; flex-shrink:0; accent-color:var(--gold); }
+.acct-toggle > span { display:flex; flex-direction:column; gap:2px; font-size:13px; }
+#nc-account-fields { margin-top:12px; }
+.invite-text {
+  width:100%; min-height:260px; padding:14px; background:var(--dark-2);
+  border:1px solid var(--gold); border-radius:10px; color:var(--white);
+  font-family:inherit; font-size:13px; line-height:2; outline:none; resize:vertical;
+}
 .login-link {
   width:100%; margin-top:12px; background:none; border:none; color:var(--gold-deep);
   font-family:inherit; font-size:12.5px; cursor:pointer; text-decoration:underline; padding:4px;
@@ -1024,18 +1039,58 @@ tbody td { padding:13px 16px; font-size:13px; }
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group-v"><label>الاسم الكامل</label><input type="text" id="nc-name" placeholder="اسم الموكل" /></div>
-        <div class="form-group-v"><label>رقم الهوية / الإقامة</label><input type="text" id="nc-id" placeholder="10XXXXXXXX" /></div>
+        <div class="form-group-v"><label>رقم الهوية / الإقامة</label><input type="text" id="nc-id" placeholder="10XXXXXXXX" oninput="refreshSuggestedUsername()" /></div>
       </div>
       <div class="form-row">
-        <div class="form-group-v"><label>رقم الجوال</label><input type="text" id="nc-phone" placeholder="+966XXXXXXXXX" /></div>
+        <div class="form-group-v"><label>رقم الجوال</label><input type="text" id="nc-phone" placeholder="+966XXXXXXXXX" oninput="refreshSuggestedUsername()" /></div>
         <div class="form-group-v"><label>البريد الإلكتروني</label><input type="email" id="nc-email" placeholder="example@email.com" /></div>
       </div>
       <div class="form-group-v"><label>الجنسية</label><input type="text" id="nc-nationality" placeholder="سعودي / مقيم..." /></div>
       <div class="form-group-v"><label>ملاحظات</label><textarea id="nc-notes" placeholder="أي ملاحظات..."></textarea></div>
+
+      <div class="acct-block" id="nc-account-block">
+        <label class="acct-toggle">
+          <input type="checkbox" id="nc-make-account" checked onchange="toggleClientAccountFields()" />
+          <span><b>أنشئ له حساب بوابة عند الحفظ</b>
+          <span class="color-gray text-sm">يُولَّد اسم مستخدم ورمز سري، وتظهر رسالة جاهزة للإرسال</span></span>
+        </label>
+        <div id="nc-account-fields">
+          <div class="form-row">
+            <div class="form-group-v"><label>اسم المستخدم</label>
+              <input type="text" id="nc-user" placeholder="يُولَّد من رقم الجوال" oninput="this.dataset.touched='1'" /></div>
+            <div class="form-group-v"><label>الرمز السري</label>
+              <div class="pass-wrap">
+                <input type="text" id="nc-pass" />
+                <button type="button" class="pass-eye" onclick="regenClientPass()" aria-label="توليد رمز جديد" title="توليد رمز جديد">🔄</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('add-client-modal',event)">إلغاء</button>
       <button class="btn btn-primary" id="client-modal-save-btn" onclick="saveNewClient()">💾 حفظ الموكل</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="client-invite-modal" style="display:none" onclick="closeModal('client-invite-modal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">✅ جاهزة للإرسال</span>
+      <button class="modal-close" onclick="closeModal('client-invite-modal',event)">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="color-gray text-sm" style="margin-bottom:12px" id="invite-intro"></p>
+      <textarea id="invite-text" class="invite-text" readonly onclick="this.select()"></textarea>
+      <p class="color-gray text-sm" style="margin-top:10px">
+        ⚠️ الرمز السري لن يظهر مرة أخرى بعد إغلاق هذه النافذة. أرسله للموكل الآن، ويُنصح بأن يغيّره بعد أول دخول.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('client-invite-modal',event)">إغلاق</button>
+      <button class="btn btn-primary" id="invite-copy-btn" onclick="copyInviteMessage()">📋 نسخ الرسالة</button>
     </div>
   </div>
 </div>
@@ -4075,6 +4130,89 @@ async function saveCaseModal() {
 }
 
 let clientModalEditId = null;
+// ── حساب بوابة الموكل يُنشأ مع إضافته ──
+// أبجدية بلا حروف متشابهة (0/O، 1/l/I) حتى لا يخطئ الموكل في النسخ
+const PASS_ALPHABET = 'abcdefghjkmnpqrstuvwxyzACDEFGHJKLMNPQRTUVWXY23456789';
+function genPassword(len) {
+  const a = new Uint32Array(len || 10);
+  crypto.getRandomValues(a);
+  return [...a].map(n => PASS_ALPHABET[n % PASS_ALPHABET.length]).join('');
+}
+// اسم المستخدم من رقم الجوال، فالهوية، وإلا رقم متسلسل — ويُزاد حتى لا يتكرر
+function suggestClientUsername(phone, idNum) {
+  const digits = v => String(v || '').replace(/[^\d]/g, '');
+  let base = digits(phone);
+  // ‎+966 5XXXXXXXX و00966 5XXXXXXXX و5XXXXXXXX كلها تُردّ إلى 05XXXXXXXX
+  if (base) {
+    base = base.replace(/^00966/, '').replace(/^966/, '');
+    if (base.length === 9 && base.startsWith('5')) base = '0' + base;
+  }
+  if (!base) base = digits(idNum);
+  if (base.length < 6) base = 'client' + Math.floor(1000 + Math.random() * 9000);
+  const taken = u => DB.clients.some(c => c.user === u) || DB.users.some(x => x.user === u);
+  let u = base, n = 1;
+  while (taken(u)) u = base + '-' + (++n);
+  return u;
+}
+function toggleClientAccountFields() {
+  const on = document.getElementById('nc-make-account').checked;
+  document.getElementById('nc-account-fields').style.display = on ? 'block' : 'none';
+}
+function regenClientPass() {
+  document.getElementById('nc-pass').value = genPassword(10);
+}
+// رقم الجوال يُكتب بعد الاسم عادةً، فيُحدَّث اسم المستخدم ما لم يعدّله المستخدم بنفسه
+function refreshSuggestedUsername() {
+  const el = document.getElementById('nc-user');
+  if (clientModalEditId || el.dataset.touched === '1') return;
+  el.value = suggestClientUsername(
+    document.getElementById('nc-phone').value,
+    document.getElementById('nc-id').value);
+}
+function portalBaseUrl() {
+  return location.origin + location.pathname.replace(/[^/]*$/, '');
+}
+function buildClientInvite(name, user, pass) {
+  return `السلام عليكم ورحمة الله وبركاته
+الأستاذ/ة ${name}
+
+تم تفعيل حسابكم في بوابة موكلي مكتب الزاحم للمحاماة والاستشارات القانونية،
+وتمكّنكم من متابعة قضاياكم وجلساتكم ومستنداتكم أولاً بأول.
+
+رابط الدخول:
+${portalBaseUrl()}
+
+اسم المستخدم: ${user}
+الرمز السري: ${pass}
+
+عند فتح الرابط اختاروا تبويب «دخول العميل».
+ويُنصح بتغيير الرمز السري بعد أول دخول.
+
+مكتب الزاحم للمحاماة والاستشارات القانونية`;
+}
+function showClientInvite(name, user, pass) {
+  document.getElementById('invite-intro').textContent =
+    `أُنشئ حساب بوابة العميل لـ «${name}». انسخ الرسالة وأرسلها له عبر واتساب أو البريد.`;
+  document.getElementById('invite-text').value = buildClientInvite(name, user, pass);
+  const btn = document.getElementById('invite-copy-btn');
+  btn.innerHTML = iconify('📋 نسخ الرسالة'); btn.disabled = false;
+  openModal('client-invite-modal');
+}
+async function copyInviteMessage() {
+  const el = document.getElementById('invite-text');
+  const btn = document.getElementById('invite-copy-btn');
+  try {
+    await navigator.clipboard.writeText(el.value);
+  } catch (e) {
+    // المتصفحات تمنع الحافظة خارج السياق الآمن — يُحدَّد النص ليَنسخه المستخدم
+    el.focus(); el.select();
+    try { document.execCommand('copy'); }
+    catch (e2) { alert('تعذّر النسخ تلقائياً — النص محدَّد، انسخه بـ Ctrl+C'); return; }
+  }
+  btn.innerHTML = iconify('✅ نُسخت');
+  setTimeout(() => { btn.innerHTML = iconify('📋 نسخ الرسالة'); }, 2000);
+}
+
 function openClientModal(id) {
   clientModalEditId = id || null;
   const cl = id ? DB.clients.find(c => c.id === id) : null;
@@ -4086,6 +4224,19 @@ function openClientModal(id) {
   document.getElementById('nc-email').value = cl ? (cl.email || '') : '';
   document.getElementById('nc-nationality').value = cl ? (cl.nationality || '') : '';
   document.getElementById('nc-notes').value = cl ? (cl.notes || '') : '';
+  // الحساب يُنشأ مع الإضافة فقط؛ تعديل بيانات موكل قائم لا يمسّ حسابه.
+  // وإنشاء الحسابات لمدير المكتب وحده — قاعدة البيانات ترفضه من غيره
+  const canMakeAccount = !cl && isOfficeOwner();
+  const block = document.getElementById('nc-account-block');
+  const userEl = document.getElementById('nc-user');
+  block.style.display = canMakeAccount ? 'block' : 'none';
+  userEl.dataset.touched = '';
+  if (canMakeAccount) {
+    document.getElementById('nc-make-account').checked = true;
+    toggleClientAccountFields();
+    userEl.value = '';
+    regenClientPass();
+  }
   openModal('add-client-modal');
 }
 async function saveNewClient() {
@@ -4102,12 +4253,37 @@ async function saveNewClient() {
     notes: nullIfBlank(document.getElementById('nc-notes').value),
   };
   const editId = clientModalEditId;
-  const ok = await dbWrite('الموكل', () => editId
-    ? sb.from('clients').update(row).eq('id', editId)
-    : sb.from('clients').insert(row));
+  const makeAccount = !editId && isOfficeOwner() && document.getElementById('nc-make-account').checked;
+  let user = '', pass = '';
+  if (makeAccount) {
+    user = document.getElementById('nc-user').value.trim() || suggestClientUsername(row.phone, row.id_num);
+    pass = document.getElementById('nc-pass').value.trim();
+    if (pass.length < 6) { alert('الرمز السري يجب أن يكون ٦ أحرف على الأقل'); return; }
+    // تُفحَص التعارضات هنا للرسالة الواضحة، وتُفحَص مرة أخرى في قاعدة البيانات
+    if (DB.clients.some(c => c.user === user)) { alert('اسم المستخدم مستخدم لموكل آخر — اختر اسماً غيره'); return; }
+    if (DB.users.some(u => u.user === user)) { alert('اسم المستخدم مستخدم لأحد حسابات المكتب — اختر اسماً غيره'); return; }
+  }
+  // يُحفظ الموكل أولاً؛ فشل إنشاء الحساب لا يضيّع بياناته، ويُنشأ لاحقاً من الإعدادات
+  let newClientId = null;
+  const ok = await dbWrite('الموكل', async () => {
+    if (editId) return sb.from('clients').update(row).eq('id', editId);
+    const ins = await sb.from('clients').insert(row).select('id').single();
+    if (!ins.error) newClientId = ins.data.id;
+    return ins;
+  });
   if (!ok) return;
   clientModalEditId = null;
   closeModal('add-client-modal', {});
+
+  if (makeAccount && newClientId) {
+    const made = await dbWrite('حساب الموكل', () => sb.rpc('create_pending_account', {
+      p_username: user, p_password: pass, p_kind: 'client',
+      p_name: name, p_role: null, p_perms: {},
+      p_client_id: newClientId, p_email: row.email || null,
+    }));
+    if (made) { navTo('clients'); showClientInvite(name, user, pass); return; }
+    alert('حُفظ الموكل، لكن تعذّر إنشاء حساب البوابة. أنشئه من صفحة الإعدادات.');
+  }
   navTo('clients');
 }
 
