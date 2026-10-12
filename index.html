@@ -4599,12 +4599,13 @@ function renderClientPortal() {
         <div class="two-col" style="gap:16px">
           <div>
             <div style="font-size:13.8px;color:var(--gray-light);margin-bottom:8px;font-weight:600">📜 المستجدات</div>
-            ${c.updates.length === 0 ? '<p class="text-sm color-gray">لا توجد مستجدات</p>' :
-              c.updates.slice().reverse().slice(0,3).map(u => `
+            ${(() => { const vis = clientVisibleUpdates(c); return vis.length === 0
+              ? '<p class="text-sm color-gray">لا توجد مستجدات</p>'
+              : vis.slice().reverse().slice(0,3).map(u => `
               <div style="padding:10px;background:var(--dark-3);border-radius:8px;margin-bottom:8px;border-right:3px solid var(--gold)">
                 <div style="font-size:12.6px;color:var(--gray);margin-bottom:3px">${formatDate(u.date)}</div>
                 <div style="font-size:14.9px">${u.text}</div>
-              </div>`).join('')}
+              </div>`).join(''); })()}
           </div>
           <div>
             <div style="font-size:13.8px;color:var(--gray-light);margin-bottom:8px;font-weight:600">📅 الجلسات</div>
@@ -6455,6 +6456,11 @@ const DOC_KIND_LABEL = { fee:'عقد الأتعاب', consulting:'عقد الا�
 const DOC_KIND_BADGE = { fee:'عقد أتعاب', consulting:'استشارات سنوي', quote:'عرض سعر', invoice:'فاتورة' };
 function docKindLabel(k) { return DOC_KIND_LABEL[k || 'fee'] || DOC_KIND_LABEL.fee; }
 // العميل إمّا موكل مسجَّل وإمّا اسم مكتوب في عرض السعر
+// المهام عمل داخلي للمكتب، فلا تُعرض في بوابة الموكل.
+// يرى الموكل الجلسات والمستجدات العامة فقط
+function clientVisibleUpdates(c) {
+  return (c.updates || []).filter(u => u.kind !== 'task');
+}
 function docClient(inv) {
   const cl = inv.clientId ? DB.clients.find(c => c.id === inv.clientId) : null;
   return cl || { name: inv.clientName || '—', idNum:'', phone:'', email:'', nationality:'' };
