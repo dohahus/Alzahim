@@ -374,7 +374,11 @@ create policy cases_owner_delete on cases for delete using (is_owner());
 
 -- ───────── مستجدات ومستندات وجلسات القضية: تتبع صلاحية القضية نفسها ─────────
 drop policy if exists case_updates_read on case_updates;
-create policy case_updates_read on case_updates for select using (can_see_case(case_id));
+-- المستجد من نوع «مهمة» عمل داخلي للمكتب: يُمنع عن الموكل في قاعدة البيانات
+-- نفسها لا في الواجهة فقط، فلا يبلغه ولو استعلم مباشرةً
+create policy case_updates_read on case_updates for select using (
+  can_see_case(case_id) and (is_staff() or kind is distinct from 'task')
+);
 drop policy if exists case_updates_write on case_updates;
 create policy case_updates_write on case_updates for insert with check (is_staff() and can_see_case(case_id));
 drop policy if exists case_updates_update on case_updates;
