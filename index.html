@@ -680,6 +680,15 @@ tbody td { padding:13px 16px; font-size:14.9px; }
   border:1px solid rgba(163,136,80,.3); padding:6px 10px 6px 6px; border-radius:20px; font-size:14.4px; font-weight:600; margin-top:8px;
 }
 .assignee-chip button { background:var(--gold-deep); color:#FFFDF6; border:none; width:16px; height:16px; border-radius:50%; cursor:pointer; font-size:12.6px; line-height:1; display:flex; align-items:center; justify-content:center; }
+.prio-count {
+  display:inline-block; min-width:24px; padding:1px 8px; border-radius:20px;
+  background:rgba(192,57,43,.14); color:#C0392B; font-size:12.6px; font-weight:700;
+  font-family:var(--font-mono); margin-right:6px;
+}
+.prio-count.later { background:rgba(179,91,0,.13); color:#B35B00; }
+.prio-note { font-size:12.1px; color:var(--gray); padding:0 0 10px; border-bottom:1px solid var(--border); margin-bottom:4px; }
+.task-item.is-overdue { border-right:3px solid var(--red); padding-right:11px; background:rgba(192,57,43,.04); }
+
 .task-filter-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
 .task-filter-bar select {
   padding:8px 12px; background:var(--dark-2); border:1px solid var(--border); border-radius:8px;
@@ -2943,16 +2952,27 @@ function openInvoiceModalForCase(caseId) {
 // ═══════════════════════════════════
 //  HEARINGS PAGE
 // ═══════════════════════════════════
+let showPastHearings = false;
+function togglePastHearings() { showPastHearings = !showPastHearings; renderPage('hearings'); }
 function renderHearings() {
-  const sorted = myScopedHearings().slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const all = myScopedHearings().slice().sort((a,b)=>a.date.localeCompare(b.date));
+  // الجلسة المنتهية تخرج من القائمة ويبقى سجلّها في مستجدات القضية.
+  // تُقارن بالتاريخ لا باللحظة، فجلسة اليوم تبقى قائمة حتى ينتهي يومها
+  const today = todayISO();
+  const upcoming = all.filter(h => h.date >= today);
+  const past = all.filter(h => h.date < today);
+  const sorted = showPastHearings ? all : upcoming;
   return `
   <div class="section-header">
-    <div class="section-title">📅 ${isOfficeOwner() ? 'الجلسات' : 'جلساتي'}</div>
-    <button class="btn btn-primary" onclick="openHearingModal()">➕ جلسة جديدة</button>
+    <div class="section-title">📅 ${isOfficeOwner() ? 'الجلسات' : 'جلساتي'} <span>(${upcoming.length} قادمة)</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${past.length ? `<button class="btn btn-secondary" onclick="togglePastHearings()">${showPastHearings ? '🔍 إخفاء المنتهية' : '🔍 عرض المنتهية ('+past.length+')'}</button>` : ''}
+      <button class="btn btn-primary" onclick="openHearingModal()">➕ جلسة جديدة</button>
+    </div>
   </div>
   <div class="two-col">
     <div>
-      ${sorted.length === 0 ? '<div class="card"><p class="color-gray text-sm">لا توجد جلسات مسجلة بعد — اضغط «جلسة جديدة» لإضافة أول جلسة</p></div>' : ''}
+      ${sorted.length === 0 ? `<div class="card"><p class="color-gray text-sm">${all.length ? 'لا توجد جلسات قادمة — الجلسات المنتهية محفوظة في مستجدات القضايا' : 'لا توجد جلسات مسجلة بعد — اضغط «جلسة جديدة» لإضافة أول جلسة'}</p></div>` : ''}
       ${sorted.map(h => {
         const c = DB.cases.find(x=>x.id===h.caseId);
         const d = new Date(h.date);
@@ -3018,6 +3038,25 @@ function renderMiniCalendar(year, month) {
 let taskFilterMode = 'all';
 function lawyerUsers() { return DB.users.filter(u => u.perms && u.perms.cases); }
 function setTaskFilter(v) { taskFilterMode = v; document.getElementById('content').innerHTML = iconify(renderTasks()); }
+// الأسبوع الجاري: من السبت إلى الخميس.
+// getDay(): الأحد 0 … السبت 6، فالسبت هو بداية الأسبوع
+function weekWindow() {
+  const now = new Date(); now.setHours(12,0,0,0);
+  const back = (now.getDay() + 1) % 7;          // كم يوماً مضى منذ السبت
+  const sat = new Date(now); sat.setDate(sat.getDate() - back);
+  const thu = new Date(sat); thu.setDate(sat.getDate() + 5);   // السبت + ٥ = الخميس
+  const iso = d => d.toISOString().split('T')[0];
+  return { from: iso(sat), to: iso(thu), today: iso(now) };
+}
+// هام عاجل: متأخرة أو يحلّ أجلها ضمن أسبوع العمل الجاري.
+// هام غير عاجل: أبعد من ذلك، أو بلا تاريخ استحقاق فلا أجل يضغط
+function taskUrgency(t) {
+  const w = weekWindow();
+  if (!t.due) return 'later';
+  if (t.due < w.today) return 'overdue';
+  return t.due <= w.to ? 'urgent' : 'later';
+}
+
 function renderTasks() {
   const owner = isOfficeOwner();
   const scoped = myScopedTasks();
@@ -3033,6 +3072,11 @@ function renderTasks() {
       pending = pending.filter(t=>(t.assigneeIds||[]).includes(uid)); done = done.filter(t=>(t.assigneeIds||[]).includes(uid));
     }
   }
+  // الأعجل أولاً داخل كل مجموعة
+  const byDue = (a,b) => (a.due || '9999').localeCompare(b.due || '9999');
+  const w = weekWindow();
+  const urgent = pending.filter(t => ['overdue','urgent'].includes(taskUrgency(t))).sort(byDue);
+  const later  = pending.filter(t => taskUrgency(t) === 'later').sort(byDue);
   const assigneeChip = t => {
     const ids = t.assigneeIds || [];
     if (!ids.length) return '';
@@ -3059,9 +3103,7 @@ function renderTasks() {
       ${lawyers.map(u=>`<option value="${u.id}" ${taskFilterMode===String(u.id)?'selected':''}>مهام موكلة إلى ${u.name}</option>`).join('')}
     </select>
   </div>` : ''}
-  <div class="two-col">
-    <div class="card">
-      <div class="card-header"><span class="card-title">🔴 المهام المعلقة</span></div>
+  <div class="card" style="margin-bottom:18px">
       <div class="quick-task" id="quick-task-box">
         <div class="quick-task-trigger" id="quick-task-trigger" onclick="openQuickTask()">
           <span class="qt-plus">+</span>
@@ -3081,8 +3123,15 @@ function renderTasks() {
           </div>
         </div>
       </div>
-      ${pending.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام معلقة ضمن هذا الفلتر</p>' : pending.map(t => `
-        <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔴 هام عاجل <span class="prio-count">${urgent.length}</span></span>
+      </div>
+      <div class="prio-note">يحلّ أجلها خلال أسبوع العمل الجاري — من ${formatDateShort(w.from)} إلى ${formatDateShort(w.to)}</div>
+      ${urgent.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام عاجلة</p>' : urgent.map(t => `
+        <div class="task-item ${taskUrgency(t)==='overdue'?'is-overdue':''}" id="task-${t.id}" style="flex-wrap:wrap">
           <div class="task-check" onclick="toggleTask('${t.id}')"></div>
           <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail('${t.id}')">
             <div class="task-text">${t.title}</div>
@@ -3100,6 +3149,30 @@ function renderTasks() {
         </div>`).join('')}
     </div>
     <div class="card">
+      <div class="card-header">
+        <span class="card-title">🟡 هام غير عاجل <span class="prio-count later">${later.length}</span></span>
+      </div>
+      <div class="prio-note">أجلها أبعد من أسبوع، أو بلا تاريخ استحقاق</div>
+      ${later.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام في هذا التصنيف</p>' : later.map(t => `
+        <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
+          <div class="task-check" onclick="toggleTask('${t.id}')"></div>
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskDetail('${t.id}')">
+            <div class="task-text">${t.title}</div>
+            ${t.desc ? `<div class="text-sm color-gray" style="margin-top:3px">${t.desc}</div>` : ''}
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
+              ${t.caseId ? `<span class="text-sm color-gray">📋 ${DB.cases.find(c=>c.id===t.caseId)?.num||'بدون رقم'}</span>` : ''}
+              ${assigneeChip(t)}
+            </div>
+            ${taskTimelineHTML(t)}
+          </div>
+          <div style="text-align:left">
+            ${t.due ? `<span class="task-due">📅 ${formatDate(t.due)}</span><br><button class="btn-ics" onclick="addTaskToCalendar('${t.id}')">📅 أضف للتقويم</button><br>` : '<span class="task-due" style="color:var(--gray)">بدون تاريخ استحقاق</span><br>'}
+            ${discussBtn(t)}${rowActions(t)}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
       <div class="card-header"><span class="card-title">✅ المهام المنجزة</span></div>
       ${done.length===0 ? '<p class="color-gray text-sm" style="padding:6px 0">لا توجد مهام منجزة ضمن هذا الفلتر</p>' : done.map(t => `
         <div class="task-item" id="task-${t.id}" style="flex-wrap:wrap">
@@ -3114,7 +3187,6 @@ function renderTasks() {
             ${discussBtn(t)}${rowActions(t)}
           </div>
         </div>`).join('')}
-    </div>
   </div>`;
 }
 function taskTimelineHTML(t) {
@@ -5006,7 +5078,12 @@ async function deleteHearing() {
   const h = DB.hearings.find(x => x.id === hearingEditId); if (!h) return;
   const c = DB.cases.find(x => x.id === h.caseId);
   if (!confirm(`حذف جلسة ${formatDateText(h.date)}${c ? ` من قضية «${c.title}»` : ''} نهائياً؟\n\nلا يمكن التراجع عن هذا الإجراء.`)) return;
-  const ok = await dbWrite('حذف الجلسة', () => sb.from('hearings').delete().eq('id', h.id));
+  const ok = await dbWrite('حذف الجلسة', async () => {
+    // المستجد المرتبط يُحذف معها فلا يبقى في سجل القضية مستجدٌ بلا جلسة
+    const del = await sb.from('case_updates').delete().eq('hearing_id', h.id);
+    if (del.error) return del;
+    return sb.from('hearings').delete().eq('id', h.id);
+  });
   if (!ok) return;
   // موعد الجلسة القادمة على القضية يُعاد حسابه من الجلسات الباقية
   if (c) {
@@ -5419,6 +5496,13 @@ async function saveNewHearing() {
       ? await sb.from('hearings').update(row).eq('id', editId)
       : await sb.from('hearings').insert(row);
     if (res.error) return res;
+    // الجلسة المضافة من المستجدات لها صفّ في سجل القضية، فيتبعها تاريخاً ونصاً
+    if (editId) {
+      const link = await sb.from('case_updates')
+        .update({ date, text: row.purpose || undefined })
+        .eq('hearing_id', editId);
+      if (link.error) return link;
+    }
     // موعد الجلسة القادمة على القضية يتبع أقرب جلسة لم تمض بعد
     const today = new Date().toISOString().split('T')[0];
     const dates = DB.hearings.filter(h => h.caseId === caseId && h.id !== editId).map(h => h.date).concat(date).sort();
@@ -6654,6 +6738,11 @@ function pctAr(n) {
 }
 function arNum(v) {
   return String(v == null ? '' : v).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+// toISOString يعطي تاريخ غرينتش، فيتأخر يوماً بين منتصف الليل والثالثة فجراً بتوقيت المملكة
+function todayISO() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 }
 function escHtml(t) {
   return String(t == null ? '' : t).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
