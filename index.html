@@ -81,7 +81,10 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .inv-case-item { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:14.9px; border-bottom:1px solid var(--border); cursor:pointer; }
 .inv-case-item:last-child { border-bottom:none; }
 .inv-case-item input { accent-color:var(--gold); width:16px; height:16px; flex-shrink:0; }
-.inst-row { display:grid; grid-template-columns:1fr 1fr 34px; gap:8px; margin-bottom:8px; align-items:center; }
+.inst-row { display:grid; grid-template-columns:1fr 1fr 130px 34px; gap:8px; margin-bottom:8px; align-items:center; }
+.inst-row .inst-due { padding:8px 9px; background:var(--dark-2); border:1px solid var(--border); border-radius:7px; color:var(--white); font-family:inherit; font-size:13px; outline:none; }
+.inst-row .inst-due:focus { border-color:var(--gold); }
+@media (max-width: 680px) { .inst-row, .inst-row.desc { grid-template-columns:1fr 34px; } .inst-row .inst-due { grid-column:1; } }
 .inst-label-auto {
   padding:10px 12px; background:var(--dark-3); border:1px solid var(--border); border-radius:7px;
   color:var(--gold-deep); font-size:14.9px; font-weight:600;
@@ -104,7 +107,7 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .doc-kind .dk-icon svg { width:20px; height:20px; }
 .doc-kind.sel { border-color:var(--gold); background:var(--olive-pale); box-shadow:inset 0 0 0 1px var(--gold); }
 .doc-kind.sel b, .doc-kind.sel .dk-icon { color:var(--gold-deep); }
-.inst-row.desc { grid-template-columns:1.7fr 1fr 34px; }
+.inst-row.desc { grid-template-columns:1.7fr 1fr 130px 34px; }
 .inst-row .inst-desc {
   padding:8px 11px; background:var(--dark-2); border:1px solid var(--border);
   border-radius:7px; color:var(--white); font-family:inherit; font-size:14.9px; outline:none;
@@ -172,6 +175,29 @@ svg.ic { flex-shrink:0; vertical-align:-3px; color:var(--white); }
 .pass-eye svg { width:17px; height:17px; }
 
 /* ═══════════ إنشاء حساب الموكل مع إضافته ═══════════ */
+/* ═══════════ الملخص التنفيذي ═══════════ */
+.exec-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.exec-cell {
+  background:var(--dark-3); border:1px solid var(--border); border-radius:10px;
+  padding:13px 15px; display:flex; flex-direction:column; gap:2px;
+}
+.exec-cell.hi { background:var(--olive-pale); border-color:var(--gold); }
+.exec-cell > span { font-size:12.6px; color:var(--gray-light); }
+.exec-cell > b { font-size:25.3px; font-weight:800; font-variant-numeric:tabular-nums; }
+.exec-cell > small { font-size:11.5px; color:var(--gray); }
+@media (max-width: 900px) { .exec-grid { grid-template-columns:repeat(2,1fr); } }
+@media (max-width: 560px) { .exec-grid { grid-template-columns:1fr; } }
+
+/* ═══════════ شريط الفترة ═══════════ */
+.period-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.period-btn {
+  padding:6px 14px; border:1px solid var(--border); background:var(--dark-2);
+  color:var(--gray-light); border-radius:20px; cursor:pointer; font-family:inherit;
+  font-size:12.6px; transition:.15s;
+}
+.period-btn:hover { border-color:var(--gold); color:var(--gold-deep); }
+.period-btn.sel { background:var(--olive-pale); border-color:var(--gold); color:var(--gold-deep); font-weight:700; }
+
 .acct-block {
   margin-top:16px; padding:14px; border:1px dashed var(--border);
   border-radius:10px; background:var(--olive-pale);
@@ -1115,6 +1141,48 @@ tbody td { padding:13px 16px; font-size:14.9px; }
   </div>
 </div>
 
+<div class="modal-overlay" id="expense-modal" style="display:none" onclick="closeModal('expense-modal',event)">
+  <div class="modal" style="width:680px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="exp-modal-title">➕ مصروف جديد</span>
+      <button class="modal-close" onclick="closeModal('expense-modal',event)">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group-v"><label>البند</label>
+          <input type="text" id="exp-title" placeholder="مثال: رسوم رفع دعوى تجارية" /></div>
+        <div class="form-group-v"><label>المبلغ (ر.س)</label>
+          <input type="number" id="exp-amount" inputmode="decimal" step="0.01" placeholder="0.00" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group-v"><label>التصنيف</label>
+          <select id="exp-cat" onchange="expenseCatChanged()"></select></div>
+        <div class="form-group-v"><label>التاريخ</label>
+          <input type="date" id="exp-date" /></div>
+      </div>
+      <div class="color-gray text-sm" id="exp-direct-hint" style="margin:-8px 0 14px;display:none"></div>
+      <div class="form-group-v"><label>القضية المرتبطة</label>
+        <select id="exp-case"></select></div>
+      <label class="acct-toggle" style="margin-bottom:16px">
+        <input type="checkbox" id="exp-billable" />
+        <span><b>يُستردّ من الموكل</b>
+        <span class="color-gray text-sm">رسوم وأتعاب يتحملها الموكل بنص العقد — تُتابَع حتى تُحصَّل</span></span>
+      </label>
+      <div class="form-row">
+        <div class="form-group-v"><label>طريقة الدفع</label><select id="exp-method"></select></div>
+        <div class="form-group-v"><label>المورّد / الجهة</label>
+          <input type="text" id="exp-vendor" placeholder="اسم الجهة المستفيدة" /></div>
+      </div>
+      <div class="form-group-v"><label>ملاحظات</label>
+        <textarea id="exp-notes" placeholder="أي تفاصيل إضافية..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('expense-modal',event)">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveExpense()">💾 حفظ المصروف</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="file-preview-modal" style="display:none" onclick="closeFilePreview(event)">
   <div class="modal" style="width:900px" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -1267,6 +1335,7 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 </div>
 <input type="file" id="doc-upload-input" style="display:none" onchange="handleDocUpload(event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
 <input type="file" id="receipt-upload-input" style="display:none" onchange="handleReceiptUpload(event)" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+<input type="file" id="expense-receipt-input" style="display:none" onchange="handleExpenseReceipt(event)" accept=".pdf,.jpg,.jpeg,.png,.webp" />
 
 <!-- ═══════════════ MODAL: ADD UPDATE ═══════════════ -->
 <div class="modal-overlay" id="add-update-modal" style="display:none" onclick="closeModal('add-update-modal',event)">
@@ -1731,6 +1800,7 @@ let DB = {
   users: [],
   clients: [],
   cases: [],
+  expenses: [],
   hearings: [],
   tasks: [],
   invoices: [],
@@ -1782,7 +1852,7 @@ function dbError(where, error) {
 }
 async function loadFromDatabase() {
   const [staff, clients, cases, updates, docs, hearings, tasks, comments, assignees,
-         invoices, invCases, insts, tickets, tmsgs, notifs] = await Promise.all([
+         invoices, invCases, insts, tickets, tmsgs, notifs, expenses] = await Promise.all([
     sb.from('staff').select('*'),
     sb.from('clients').select('*'),
     sb.from('cases').select('*'),
@@ -1798,12 +1868,23 @@ async function loadFromDatabase() {
     sb.from('tickets').select('*').order('created_at'),
     sb.from('ticket_messages').select('*').order('created_at'),
     sb.from('notifications').select('*').order('created_at', { ascending: false }),
+    // المصروفات لا يراها إلا صاحب صلاحية الفواتير، وسياسة الحماية تُرجع فارغاً لغيره
+    sb.from('expenses').select('*').order('date', { ascending: false }),
   ]);
   const anyErr = [['staff',staff],['clients',clients],['cases',cases],['case_updates',updates],
     ['case_documents',docs],['hearings',hearings],['tasks',tasks],['task_comments',comments],
     ['task_assignees',assignees],['invoices',invoices],['invoice_cases',invCases],['installments',insts],
-    ['tickets',tickets],['ticket_messages',tmsgs],['notifications',notifs]
+    ['tickets',tickets],['ticket_messages',tmsgs],['notifications',notifs],['expenses',expenses]
   ].map(([n,r]) => dbError(n, r.error)).some(Boolean);
+
+  DB.expenses = (expenses.data || []).map(e => ({
+    id: e.id, date: e.date, title: e.title, category: e.category,
+    amount: +(e.amount || 0), caseId: e.case_id || null,
+    billable: !!e.billable, reimbursed: !!e.reimbursed,
+    method: e.method || '', vendor: e.vendor || '', notes: e.notes || '',
+    receiptPath: e.receipt_path || '', receiptName: e.receipt_name || '',
+    createdBy: e.created_by || null,
+  }));
 
   DB.users = (staff.data || []).map(s => ({
     id: s.id, name: s.name, user: s.username, role: s.role,
@@ -1876,7 +1957,7 @@ async function loadFromDatabase() {
       installments: (instByInv[inv.id] || []).map(s => ({
         id: s.id, label: s.label, amount: s.amount, paid: s.paid,
         receiptPath: s.receipt_path || '', receiptName: s.receipt_name || '',
-        receiptSize: s.receipt_size || 0, paidAt: s.paid_at || '',
+        receiptSize: s.receipt_size || 0, paidAt: s.paid_at || '', dueDate: s.due_date || '',
       })),
     };
     syncInvoiceDerived(o);
@@ -2300,6 +2381,7 @@ const ADMIN_NAV = [
   { id:'client-tickets', icon:ic('message-circle',18), label:'رسائل الموكلين', perm:'clients', badge: () => myScopedTickets().filter(t=>t.status==='open').length },
   { section: 'المالية' },
   { id:'invoices', icon:ic('wallet',18), label:'الفواتير', perm:'invoices' },
+  { id:'expenses', icon:ic('trending',18), label:'المصروفات', perm:'invoices' },
   { section: 'التقارير' },
   { id:'reports', icon:ic('chart',18), label:'التقارير والإحصاءات', perm:'reports' },
   { id:'settings', icon:ic('settings',18), label:'الإعدادات', perm:'settings' },
@@ -2333,7 +2415,7 @@ function buildSidebar() {
   });
 }
 let currentPage = '';
-const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', 'client-tickets':'clients', invoices:'invoices', reports:'reports', settings:'settings' };
+const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', 'client-tickets':'clients', invoices:'invoices', expenses:'invoices', reports:'reports', settings:'settings' };
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-backdrop').classList.toggle('open');
@@ -2352,7 +2434,7 @@ function navTo(page) {
   const active = document.getElementById('nav-' + page);
   if (active) active.classList.add('active');
   const titles = {
-    dashboard:'لوحة التحكم', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
+    dashboard:'لوحة التحكم', expenses:'المصروفات', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
     clients:'الموكلون', 'client-tickets':'رسائل الموكلين', invoices:'الفواتير', reports:'التقارير', settings:'الإعدادات',
     'client-portal':'قضاياي', 'client-hearings':'جلساتي', 'client-invoices':'فواتيري وعقودي',
     'client-docs':'مستنداتي', 'client-contact':'التواصل مع المكتب',
@@ -2374,6 +2456,7 @@ function renderPage(page) {
     case 'clients': c.innerHTML = iconify(renderClients()); break;
     case 'client-tickets': c.innerHTML = iconify(renderTicketsAdmin()); break;
     case 'invoices': c.innerHTML = iconify(renderInvoices()); break;
+    case 'expenses': c.innerHTML = iconify(renderExpenses()); break;
     case 'reports': c.innerHTML = iconify(renderReports()); break;
     case 'settings': c.innerHTML = iconify(renderSettings()); break;
     case 'client-portal': c.innerHTML = iconify(renderClientPortal()); break;
@@ -3584,7 +3667,7 @@ function openInvoiceDetail(id) {
       <tbody>
         ${inv.installments.map((s,i)=>`<tr>
           <td style="color:var(--gray)">${i+1}</td>
-          <td>${s.label}</td>
+          <td>${s.label}${s.dueDate?`<div class="color-gray text-sm">تستحق ${formatDateShort(s.dueDate)}</div>`:''}</td>
           <td style="font-weight:700;color:var(--gold)">${instAmountDisplay(s.amount)}</td>
           <td><span class="badge ${s.paid?'badge-active':'badge-urgent'}">${s.paid?'مسدَّدة':'مستحقة'}</span>${s.paidAt?`<div class="color-gray" style="font-size:12.6px">${formatDateShort(s.paidAt)}</div>`:''}</td>
           <td>${receiptCell(inv.id, i)}</td>
@@ -3669,16 +3752,333 @@ async function payInstallment(invId, idx) {
 }
 
 // ═══════════════════════════════════
+//  المصروفات
+// ═══════════════════════════════════
+// التصنيف المباشر يُحمَّل على قضية ويدخل في حساب ربحيتها،
+// وغير المباشر مصروف تشغيلي عام على المكتب
+const EXPENSE_CATS = [
+  { k:'رسوم قضائية وحكومية', direct:true },
+  { k:'أتعاب خبراء ومحاسبين', direct:true },
+  { k:'ترجمة وتصديقات',       direct:true },
+  { k:'انتقالات ومهمات',      direct:true },
+  { k:'رواتب وأجور',          direct:false },
+  { k:'إيجار المكتب',         direct:false },
+  { k:'مرافق واتصالات',       direct:false },
+  { k:'اشتراكات وبرمجيات',    direct:false },
+  { k:'تسويق ودعاية',         direct:false },
+  { k:'قرطاسية وضيافة',       direct:false },
+  { k:'رسوم مهنية وتراخيص',   direct:false },
+  { k:'أخرى',                 direct:false },
+];
+const EXPENSE_METHODS = ['تحويل بنكي', 'نقد', 'بطاقة', 'شيك', 'خصم مباشر'];
+function isDirectCat(k) { const c = EXPENSE_CATS.find(x => x.k === k); return c ? c.direct : false; }
+
+// الفترة المختارة تُستخدم في المصروفات والملخص التنفيذي معاً
+let periodMode = 'month';     // month | quarter | hijri | all
+function periodRange(mode) {
+  const now = new Date();
+  const iso = d => d.toISOString().split('T')[0];
+  if (mode === 'all') return { from: '0000-01-01', to: '9999-12-31', label: 'منذ البداية' };
+  if (mode === 'month') {
+    const a = new Date(now.getFullYear(), now.getMonth(), 1);
+    const b = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const mn = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { month:'long', year:'numeric' }).format(a);
+    return { from: iso(a), to: iso(b), label: 'هذا الشهر — ' + mn };
+  }
+  if (mode === 'quarter') {
+    const q = Math.floor(now.getMonth() / 3);
+    const a = new Date(now.getFullYear(), q * 3, 1);
+    const b = new Date(now.getFullYear(), q * 3 + 3, 0);
+    return { from: iso(a), to: iso(b), label: 'هذا الربع' };
+  }
+  // السنة الهجرية الجارية: يُبحث عن أول وآخر يوم ميلادي يقعان فيها
+  const y = hijriYear(iso(now));
+  let a = new Date(now), b = new Date(now);
+  while (hijriYear(iso(a)) === y) a.setDate(a.getDate() - 1);
+  a.setDate(a.getDate() + 1);
+  while (hijriYear(iso(b)) === y) b.setDate(b.getDate() + 1);
+  b.setDate(b.getDate() - 1);
+  return { from: iso(a), to: iso(b), label: 'السنة الهجرية ' + arNum(y) + 'هـ' };
+}
+function inPeriod(dateStr, r) { return dateStr && dateStr >= r.from && dateStr <= r.to; }
+function setPeriod(m) { periodMode = m; renderPage(currentPage); }
+function periodPicker() {
+  const opts = [['month','هذا الشهر'],['quarter','هذا الربع'],['hijri','السنة الهجرية'],['all','منذ البداية']];
+  return `<div class="period-bar">
+    <span class="color-gray text-sm">الفترة:</span>
+    ${opts.map(([k,l]) => `<button class="period-btn ${periodMode===k?'sel':''}" onclick="setPeriod('${k}')">${l}</button>`).join('')}
+    <span class="color-gray text-sm" style="margin-right:auto">${periodRange(periodMode).label}</span>
+  </div>`;
+}
+
+function scopedExpenses(r) {
+  return DB.expenses.filter(e => !r || inPeriod(e.date, r));
+}
+function renderExpenses() {
+  const r = periodRange(periodMode);
+  const all = scopedExpenses(r);
+  const total = all.reduce((t,e) => t + e.amount, 0);
+  const direct = all.filter(e => isDirectCat(e.category)).reduce((t,e) => t + e.amount, 0);
+  const owed = all.filter(e => e.billable && !e.reimbursed).reduce((t,e) => t + e.amount, 0);
+  const byCat = {};
+  all.forEach(e => { byCat[e.category] = (byCat[e.category] || 0) + e.amount; });
+  const cats = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
+  return `
+  <div class="section-header">
+    <div class="section-title">📈 مصروفات المكتب</div>
+    <button class="btn btn-primary" onclick="openExpenseModal()">➕ مصروف جديد</button>
+  </div>
+  ${periodPicker()}
+  <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px">
+    <div class="stat-card red"><div class="stat-icon">📈</div><div class="stat-value">${total.toLocaleString()}</div><div class="stat-label">إجمالي المصروفات (ر.س)</div></div>
+    <div class="stat-card gold"><div class="stat-icon">⚖️</div><div class="stat-value">${direct.toLocaleString()}</div><div class="stat-label">مباشرة على القضايا</div></div>
+    <div class="stat-card blue"><div class="stat-icon">🏢</div><div class="stat-value">${(total-direct).toLocaleString()}</div><div class="stat-label">تشغيلية عامة</div></div>
+    <div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-value">${owed.toLocaleString()}</div><div class="stat-label">مستردّة من الموكل ولم تُحصَّل</div></div>
+  </div>
+  ${cats.length ? `<div class="card" style="margin-bottom:18px">
+    <div class="card-title" style="margin-bottom:14px">📊 التوزيع حسب التصنيف</div>
+    ${cats.map(([k,v]) => `
+      <div style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;font-size:13.8px;margin-bottom:3px">
+          <span>${k} ${isDirectCat(k)?'<span class="color-gray text-sm">(مباشرة)</span>':''}</span>
+          <span style="color:var(--gold)">${v.toLocaleString()} — ${Math.round(v/total*100)}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${(v/total)*100}%"></div></div>
+      </div>`).join('')}
+  </div>` : ''}
+  <div class="table-wrap"><table>
+    <thead><tr><th>التاريخ</th><th>البند</th><th>التصنيف</th><th>القضية</th><th>المبلغ</th><th>الإيصال</th><th>إجراءات</th></tr></thead>
+    <tbody>
+      ${all.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد مصروفات في هذه الفترة — اضغط «مصروف جديد» لتسجيل أول مصروف</td></tr>' : ''}
+      ${all.map(e => {
+        const c = e.caseId ? DB.cases.find(x => x.id === e.caseId) : null;
+        return `<tr>
+          <td class="color-gray" style="white-space:nowrap">${formatDateShort(e.date)}</td>
+          <td><strong>${escHtml(e.title)}</strong>${e.vendor?`<div class="color-gray text-sm">${escHtml(e.vendor)}</div>`:''}</td>
+          <td class="text-sm">${e.category}</td>
+          <td class="text-sm">${c ? (c.num || c.title) : '<span class="color-gray">—</span>'}
+            ${e.billable ? `<div class="text-sm" style="color:${e.reimbursed?'#1E7E34':'#B35B00'}">${e.reimbursed?'✔ حُصِّلت':'بانتظار التحصيل'}</div>` : ''}</td>
+          <td style="font-weight:700;color:var(--red)">${e.amount.toLocaleString()}</td>
+          <td>${e.receiptPath
+            ? `<button class="receipt-link" onclick="previewStoredFile('expense-docs','${e.receiptPath}','${escHtml(e.receiptName)}')">📎 ${escHtml(e.receiptName)}</button>`
+            : `<button class="btn btn-secondary btn-sm" onclick="triggerExpenseReceipt('${e.id}')">📎 إرفاق</button>`}</td>
+          <td style="white-space:nowrap">
+            ${e.billable && !e.reimbursed ? `<button class="btn btn-secondary btn-sm" onclick="markExpenseReimbursed('${e.id}')">✓ حُصِّلت</button>` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="openExpenseModal('${e.id}')">✏️ تعديل</button>
+            <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteExpense('${e.id}')">🗑️</button>
+          </td>
+        </tr>`; }).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+let expenseEditId = null;
+function openExpenseModal(id) {
+  expenseEditId = id || null;
+  const e = id ? DB.expenses.find(x => x.id === id) : null;
+  document.getElementById('exp-modal-title').textContent = e ? '✏️ تعديل المصروف' : '➕ مصروف جديد';
+  document.getElementById('exp-date').value = e ? e.date : new Date().toISOString().split('T')[0];
+  document.getElementById('exp-title').value = e ? e.title : '';
+  document.getElementById('exp-cat').innerHTML = EXPENSE_CATS
+    .map(c => `<option value="${c.k}">${c.k}${c.direct ? ' — مباشرة' : ''}</option>`).join('');
+  document.getElementById('exp-cat').value = e ? e.category : EXPENSE_CATS[0].k;
+  document.getElementById('exp-amount').value = e ? e.amount : '';
+  document.getElementById('exp-method').innerHTML = '<option value="">—</option>'
+    + EXPENSE_METHODS.map(m => `<option>${m}</option>`).join('');
+  document.getElementById('exp-method').value = e ? e.method : '';
+  document.getElementById('exp-vendor').value = e ? e.vendor : '';
+  document.getElementById('exp-notes').value = e ? e.notes : '';
+  document.getElementById('exp-case').innerHTML = '<option value="">بدون قضية — مصروف تشغيلي</option>'
+    + DB.cases.map(c => `<option value="${c.id}">${c.num || 'بدون رقم'} — ${escHtml(c.title)}</option>`).join('');
+  document.getElementById('exp-case').value = e ? (e.caseId || '') : '';
+  document.getElementById('exp-billable').checked = e ? e.billable : false;
+  expenseCatChanged();
+  openModal('expense-modal');
+}
+// التصنيف المباشر يقترح ربط القضية وإعادة التحميل على الموكل
+function expenseCatChanged() {
+  const direct = isDirectCat(document.getElementById('exp-cat').value);
+  const hint = document.getElementById('exp-direct-hint');
+  hint.style.display = direct ? '' : 'none';
+  hint.textContent = direct
+    ? 'مصروف مباشر — اربطه بالقضية ليدخل في حساب ربحيتها، وحدِّد إن كان يُستردّ من الموكل'
+    : '';
+}
+async function saveExpense() {
+  const title = document.getElementById('exp-title').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  if (!title) { alert('يرجى إدخال بند المصروف'); return; }
+  if (!(amount > 0)) { alert('يرجى إدخال مبلغ صحيح أكبر من صفر'); return; }
+  const row = {
+    date: document.getElementById('exp-date').value || new Date().toISOString().split('T')[0],
+    title, category: document.getElementById('exp-cat').value,
+    amount, case_id: document.getElementById('exp-case').value || null,
+    billable: document.getElementById('exp-billable').checked,
+    method: nullIfBlank(document.getElementById('exp-method').value),
+    vendor: nullIfBlank(document.getElementById('exp-vendor').value),
+    notes: nullIfBlank(document.getElementById('exp-notes').value),
+  };
+  const editId = expenseEditId;
+  const ok = await dbWrite('المصروف', () => editId
+    ? sb.from('expenses').update(row).eq('id', editId)
+    : sb.from('expenses').insert({ ...row, created_by: DB.currentUser.userId }));
+  if (!ok) return;
+  expenseEditId = null;
+  closeModal('expense-modal', {});
+  navTo('expenses');
+}
+async function markExpenseReimbursed(id) {
+  const e = DB.expenses.find(x => x.id === id); if (!e) return;
+  if (!confirm(`تأكيد تحصيل «${e.title}» (${e.amount.toLocaleString()} ر.س) من الموكل؟`)) return;
+  const ok = await dbWrite('تحصيل المصروف', () => sb.from('expenses').update({ reimbursed: true }).eq('id', id));
+  if (ok) navTo('expenses');
+}
+async function deleteExpense(id) {
+  const e = DB.expenses.find(x => x.id === id); if (!e) return;
+  if (!confirm(`حذف المصروف «${e.title}» بمبلغ ${e.amount.toLocaleString()} ر.س نهائياً؟`)) return;
+  const path = e.receiptPath;
+  const ok = await dbWrite('حذف المصروف', () => sb.from('expenses').delete().eq('id', id));
+  if (!ok) return;
+  if (path) await sb.storage.from('expense-docs').remove([path]).catch(()=>{});
+  navTo('expenses');
+}
+let expenseReceiptTarget = null;
+function triggerExpenseReceipt(id) {
+  expenseReceiptTarget = id;
+  document.getElementById('expense-receipt-input').click();
+}
+async function handleExpenseReceipt(ev) {
+  const file = ev.target.files[0]; ev.target.value = '';
+  if (!file || !expenseReceiptTarget) return;
+  if (file.size > 8*1024*1024) { alert('حجم الملف كبير جداً — الحد الأقصى 8 ميغابايت'); return; }
+  const id = expenseReceiptTarget;
+  const path = `${id}/${Date.now()}-${safeFileName(file.name)}`;
+  const ok = await dbWrite('إرفاق الإيصال', async () => {
+    const up = await sb.storage.from('expense-docs').upload(path, file);
+    if (up.error) return up;
+    const upd = await sb.from('expenses')
+      .update({ receipt_path: path, receipt_name: file.name }).eq('id', id);
+    if (upd.error) await sb.storage.from('expense-docs').remove([path]).catch(()=>{});
+    return upd;
+  });
+  if (ok) navTo('expenses');
+}
+
+// ═══════════════════════════════════
 //  REPORTS
 // ═══════════════════════════════════
+// ── أعمار الذمم: تصنيف المستحق بحسب تأخره عن تاريخ استحقاقه ──
+// الدفعة بلا تاريخ استحقاق تُقاس من تاريخ المستند نفسه
+function agingBuckets() {
+  const today = new Date().toISOString().split('T')[0];
+  const days = d => Math.floor((new Date(today) - new Date(d)) / 86400000);
+  const b = { future:{n:0,v:0}, d30:{n:0,v:0}, d90:{n:0,v:0}, over:{n:0,v:0} };
+  billableInvoices().forEach(inv => {
+    (inv.installments || []).forEach(s => {
+      if (s.paid) return;
+      const amt = parseInstAmount(s.amount);
+      if (!amt) return;
+      const due = s.dueDate || inv.dueDate || inv.date;
+      const age = days(due);
+      const k = age <= 0 ? 'future' : age <= 30 ? 'd30' : age <= 90 ? 'd90' : 'over';
+      b[k].n++; b[k].v += amt;
+    });
+  });
+  return b;
+}
+// متوسط أيام التحصيل: من تاريخ المستند إلى تاريخ سداد الدفعة
+function avgCollectionDays() {
+  const gaps = [];
+  billableInvoices().forEach(inv => (inv.installments || []).forEach(s => {
+    if (s.paid && s.paidAt && inv.date) {
+      const g = Math.floor((new Date(s.paidAt) - new Date(inv.date)) / 86400000);
+      if (g >= 0) gaps.push(g);
+    }
+  }));
+  return gaps.length ? Math.round(gaps.reduce((a,b)=>a+b,0) / gaps.length) : null;
+}
+// الإيراد والمصروف داخل فترة: الإيراد بتاريخ المستند، والتحصيل بتاريخ السداد
+function periodFinance(r) {
+  const invs = billableInvoices();
+  const billed = invs.filter(i => inPeriod(i.date, r)).reduce((t,i) => t + invTotal(i), 0);
+  let collected = 0;
+  invs.forEach(i => (i.installments || []).forEach(s => {
+    if (s.paid && inPeriod(s.paidAt || i.date, r)) collected += parseInstAmount(s.amount);
+  }));
+  const spent = scopedExpenses(r).reduce((t,e) => t + e.amount, 0);
+  return { billed, collected, spent, net: collected - spent,
+           margin: collected ? Math.round((collected - spent) / collected * 100) : 0 };
+}
+
 function renderReports() {
   const fin = financeTotals();
+  const r = periodRange(periodMode);
+  const pf = periodFinance(r);
+  const ag = agingBuckets();
+  const acd = avgCollectionDays();
+  const agRows = [
+    ['لم يحن موعدها', ag.future, '#1E7E34'],
+    ['متأخرة ١–٣٠ يوماً', ag.d30, '#B35B00'],
+    ['متأخرة ٣١–٩٠ يوماً', ag.d90, '#C0392B'],
+    ['متأخرة أكثر من ٩٠ يوماً', ag.over, '#8B1A1A'],
+  ];
+  const agTotal = agRows.reduce((t,[,b]) => t + b.v, 0);
   const byType = {};
   DB.cases.forEach(c => { byType[c.type] = (byType[c.type]||0)+1; });
   const byLawyer = {};
   DB.cases.forEach(c => { byLawyer[c.lawyer] = (byLawyer[c.lawyer]||0)+1; });
   return `
-  <div class="section-title" style="margin-bottom:20px">📊 التقارير والإحصاءات</div>
+  <div class="section-title" style="margin-bottom:16px">📊 التقارير والإحصاءات</div>
+  ${periodPicker()}
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title" style="margin-bottom:16px">📈 الملخص التنفيذي — ${r.label}</div>
+    <div class="exec-grid">
+      <div class="exec-cell"><span>الإيراد المستحق</span><b style="color:var(--gold)">${money(pf.billed)}</b>
+        <small>قيمة ما صدر من عقود وفواتير</small></div>
+      <div class="exec-cell"><span>المُحصَّل فعلاً</span><b style="color:#1E7E34">${money(pf.collected)}</b>
+        <small>النقد الداخل في الفترة</small></div>
+      <div class="exec-cell"><span>المصروفات</span><b style="color:var(--red)">${money(pf.spent)}</b>
+        <small>المنصرف في الفترة</small></div>
+      <div class="exec-cell hi"><span>صافي الربح</span>
+        <b style="color:${pf.net>=0?'#1E7E34':'var(--red)'}">${money(pf.net)}</b>
+        <small>المُحصَّل ناقص المصروفات</small></div>
+      <div class="exec-cell hi"><span>هامش الربح</span>
+        <b style="color:${pf.margin>=0?'#1E7E34':'var(--red)'}">${pct(pf.margin)}</b>
+        <small>من كل ١٠٠ ريال محصَّلة</small></div>
+      <div class="exec-cell"><span>الذمم المدينة</span><b style="color:#B35B00">${money(fin.due)}</b>
+        <small>المستحق غير المحصَّل — تراكمي</small></div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">⏰ أعمار الذمم المدينة</div>
+      ${agTotal === 0 ? '<p class="color-gray text-sm">لا توجد مستحقات غير محصَّلة</p>' : `
+      <div class="table-wrap"><table>
+        <thead><tr><th>الفئة</th><th>الدفعات</th><th>المبلغ (ر.س)</th><th>النسبة</th></tr></thead>
+        <tbody>${agRows.map(([l,b,col]) => `<tr>
+          <td style="color:${col};font-weight:600">${l}</td>
+          <td class="color-gray">${arNum(b.n)}</td>
+          <td style="font-weight:700">${b.v.toLocaleString()}</td>
+          <td class="color-gray">${arNum(agTotal?Math.round(b.v/agTotal*100):0)}٪</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+      ${ag.over.v > 0 ? `<p class="text-sm" style="color:#8B1A1A;margin-top:10px">⚠️ ${ag.over.v.toLocaleString()} ر.س متأخرة أكثر من ٩٠ يوماً — تستدعي متابعة</p>` : ''}`}
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">🕐 مؤشرات التحصيل</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><div class="color-gray text-sm">متوسط فترة التحصيل</div>
+          <div style="font-size:27.6px;font-weight:800;color:var(--gold)">${acd === null ? '—' : arNum(acd) + ' يوماً'}</div>
+          <div class="color-gray text-sm">من تاريخ المستند حتى سداد الدفعة</div></div>
+        <div><div class="color-gray text-sm">نسبة التحصيل التراكمية</div>
+          <div style="font-size:27.6px;font-weight:800;color:#1E7E34">${arNum(fin.total?Math.round(fin.paid/fin.total*100):0)}٪</div>
+          <div class="color-gray text-sm">${fin.paid.toLocaleString()} من ${fin.total.toLocaleString()} ر.س</div></div>
+      </div>
+    </div>
+  </div>
+
   <div class="three-col" style="margin-bottom:20px">
     <div class="card">
       <div class="card-title" style="margin-bottom:14px">📂 القضايا حسب النوع</div>
@@ -4382,9 +4782,11 @@ function rebuildInstRows() {
   const prev = [...box.querySelectorAll('.inst-row')].map(r => ({
     desc: r.querySelector('.inst-desc') ? r.querySelector('.inst-desc').value : '',
     amount: r.querySelector('.inst-amount').value,
+    due: r.querySelector('.inst-due') ? r.querySelector('.inst-due').value : '',
   }));
   box.innerHTML = '';
-  (prev.length ? prev : [{desc:'',amount:''},{desc:'',amount:''}]).forEach(v => addInstRow(v.amount, v.desc));
+  (prev.length ? prev : [{desc:'',amount:'',due:''},{desc:'',amount:'',due:''}])
+    .forEach(v => addInstRow(v.amount, v.desc, v.due));
 }
 function updateInvTotalPreview() {
   const el = document.getElementById('inv-total-preview'); if (!el) return;
@@ -4468,7 +4870,7 @@ function ordinalInstLabel(n) { return 'الدفعة ' + (ORDINAL_AR[n-1] || ('ر
 function renumberInstRows() {
   document.querySelectorAll('#inv-installments .inst-label-auto').forEach((el,i) => { el.textContent = ordinalInstLabel(i+1); });
 }
-function addInstRow(amount, desc) {
+function addInstRow(amount, desc, due) {
   const box = document.getElementById('inv-installments');
   const useDesc = DOC_KINDS[invKind] && DOC_KINDS[invKind].desc;
   const row = document.createElement('div');
@@ -4480,6 +4882,7 @@ function addInstRow(amount, desc) {
     ${first}
     <input type="text" class="inst-amount" oninput="updateInvTotalPreview()"
       placeholder="${useDesc ? 'المبلغ بالريال' : 'المبلغ — رقم أو نص حر (مثال: 10000 أو 50% من قيمة الحكم)'}" value="${escHtml(amount||'')}" />
+    <input type="date" class="inst-due" title="تاريخ استحقاق الدفعة — عليه تُحسب أعمار الديون" value="${escHtml(due||'')}" />
     <button class="inst-del" title="حذف البند" onclick="this.parentElement.remove();renumberInstRows();updateInvTotalPreview()">${ic('trash',15)}</button>`;
   box.appendChild(row);
   renumberInstRows();
@@ -5176,9 +5579,11 @@ async function saveInvoiceContract(print) {
     .map(r => ({
       amount: r.querySelector('.inst-amount').value.trim(),
       desc: r.querySelector('.inst-desc') ? r.querySelector('.inst-desc').value.trim() : '',
+      due: r.querySelector('.inst-due') ? r.querySelector('.inst-due').value : '',
     }))
     .filter(x => x.amount !== '' || x.desc !== '')
-    .map((x,i) => ({ label: k.desc ? (x.desc || 'بند ' + (i+1)) : ordinalInstLabel(i+1), amount: x.amount, sort: i }));
+    .map((x,i) => ({ label: k.desc ? (x.desc || 'بند ' + (i+1)) : ordinalInstLabel(i+1),
+                     amount: x.amount, sort: i, due_date: x.due || null }));
   if (!insts.length) { alert(k.desc ? 'يرجى إدخال بند واحد على الأقل' : 'يرجى إدخال دفعة واحدة على الأقل'); return; }
   if (['quote','invoice'].includes(invKind) && !document.getElementById('inv-subject').value.trim()) {
     alert('يرجى كتابة الموضوع'); return;
@@ -5379,7 +5784,7 @@ function buildQuoteHTML(inv) {
     </table>
     <p><b>السادة / ${escHtml(cl.name)}</b> &nbsp; المحترمين</p>
     <p>السلام عليكم ورحمة الله وبركاته، وبعد:</p>
-    <p>يسر ${OFFICE.shortName} أن يقدّم لكم عرض السعر التالي بخصوص: <b>${escHtml(inv.subject || 'الخدمات القانونية المطلوبة')}</b>.</p>
+    <p>يسر ${OFFICE.name} أن يقدّم لكم عرض السعر التالي بخصوص: <b>${escHtml(inv.subject || 'الخدمات القانونية المطلوبة')}</b>.</p>
     ${itemsTableHTML(inv)}
     <h3>شروط العرض</h3>
     <ol>
@@ -5868,6 +6273,16 @@ function statusLabel(s) {
 }
 // أرقام عربية هندية (٠١٢…) لتوحيد شكل الأرقام في المستندات المطبوعة.
 // الآيبان والبريد يبقيان لاتينيَّين: الأول يُنسخ للتحويل البنكي، والثاني عنوان
+// السالب في العرض المحاسبي يُكتب بين قوسين، لا بإشارة ناقص —
+// وإشارة الناقص تُعاد ترتيبها في النص العربي فتظهر بعد الرقم
+function money(n) {
+  const v = Math.round(n);
+  return v < 0 ? '(' + Math.abs(v).toLocaleString() + ')' : v.toLocaleString();
+}
+function pct(n) {
+  const v = Math.round(n);
+  return v < 0 ? '(' + arNum(Math.abs(v)) + '٪)' : arNum(v) + '٪';
+}
 function arNum(v) {
   return String(v == null ? '' : v).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
 }

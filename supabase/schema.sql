@@ -194,6 +194,7 @@ alter table installments add column if not exists receipt_name text;
 alter table installments add column if not exists receipt_size bigint;
 alter table installments add column if not exists paid_at date;
 alter table installments add column if not exists qty numeric;
+alter table installments add column if not exists due_date date;
 
 -- تذاكر التواصل بين الموكل والمكتب
 create table if not exists tickets (
