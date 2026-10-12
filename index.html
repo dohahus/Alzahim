@@ -1384,17 +1384,6 @@ tbody td { padding:13px 16px; font-size:14.9px; }
           <input type="number" id="inv-valid" value="30" min="1" /></div>
         <div class="form-group-v" data-for="invoice"><label>تاريخ الاستحقاق</label>
           <input type="date" id="inv-due" /></div>
-        <div class="form-group-v">
-          <label>ضريبة القيمة المضافة</label>
-          <select id="inv-vat" onchange="invVatChanged();updateInvTotalPreview()">
-            <option value="0">بدون ضريبة</option>
-            <option value="15">١٥٪ — فاتورة ضريبية</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group-v" data-for="quote invoice" id="inv-vatnum-wrap" style="display:none">
-        <label>الرقم الضريبي للمكتب</label>
-        <input type="text" id="inv-vatnum" placeholder="١٥ رقماً — يلزم نظاماً لتسمية المستند «فاتورة ضريبية»" />
       </div>
       <div class="form-group-v" data-for="quote invoice">
         <label>بيانات السداد / التحويل (اختياري — تظهر أسفل المستند)</label>
@@ -1876,7 +1865,6 @@ async function loadFromDatabase() {
       id: inv.id, ref: inv.ref, clientId: inv.client_id, date: inv.date,
       city: inv.city, notes: inv.notes || '',
       kind: inv.kind || 'fee', subject: inv.subject || '',
-      vatRate: +(inv.vat_rate || 0), vatNumber: inv.vat_number || '',
       validDays: inv.valid_days || null, dueDate: inv.due_date || '',
       bankInfo: inv.bank_info || '',
       caseIds: (casesByInv[inv.id] || []).map(r => r.case_id),
@@ -4363,14 +4351,8 @@ function setInvKind(kind) {
   document.querySelectorAll('#add-invoice-modal [data-for]').forEach(el => {
     el.style.display = el.dataset.for.split(' ').includes(kind) ? '' : 'none';
   });
-  invVatChanged();
   rebuildInstRows();
   updateInvTotalPreview();
-}
-function invVatChanged() {
-  const on = (document.getElementById('inv-vat').value || '0') !== '0';
-  const w = document.getElementById('inv-vatnum-wrap');
-  w.style.display = (on && ['quote','invoice'].includes(invKind)) ? '' : 'none';
 }
 // تبديل النوع يغيّر شكل الصفوف، فتُعاد بناؤها مع الحفاظ على ما أُدخل
 function rebuildInstRows() {
@@ -4386,11 +4368,7 @@ function updateInvTotalPreview() {
   const el = document.getElementById('inv-total-preview'); if (!el) return;
   const amounts = [...document.querySelectorAll('#inv-installments .inst-amount')].map(i => i.value);
   const sum = amounts.reduce((t,v) => t + parseInstAmount(v), 0);
-  if (!sum) { el.textContent = ''; return; }
-  const vat = ['quote','invoice'].includes(invKind) ? (+document.getElementById('inv-vat').value || 0) : 0;
-  el.textContent = vat
-    ? `المجموع ${sum.toLocaleString()} + ضريبة ${Math.round(sum*vat/100).toLocaleString()} = ${Math.round(sum*(1+vat/100)).toLocaleString()} ر.س`
-    : `الإجمالي ${sum.toLocaleString()} ر.س`;
+  el.textContent = sum ? `الإجمالي ${sum.toLocaleString()} ر.س` : '';
 }
 
 function populateInvoiceModal(kind) {
@@ -4402,9 +4380,7 @@ function populateInvoiceModal(kind) {
   document.getElementById('inv-subject').value = '';
   document.getElementById('inv-valid').value = '30';
   document.getElementById('inv-due').value = '';
-  document.getElementById('inv-vat').value = '0';
-  document.getElementById('inv-vatnum').value = '';
-  document.getElementById('inv-bank').value = '';
+  document.getElementById('inv-bank').value = OFFICE.bankInfo;
   document.getElementById('inv-cases-box').innerHTML = '<span class="color-gray text-sm">اختر الموكل أولاً لعرض قضاياه</span>';
   document.getElementById('inv-installments').innerHTML = '';
   addInstRow(); addInstRow();
@@ -5103,7 +5079,6 @@ async function saveInvoiceContract(print) {
   if (['quote','invoice'].includes(invKind) && !document.getElementById('inv-subject').value.trim()) {
     alert('يرجى كتابة الموضوع'); return;
   }
-  const vat = +(document.getElementById('inv-vat').value || 0);
   const isDoc = ['quote','invoice'].includes(invKind);
   // الترقيم يتسلسل داخل كل نوع على حدة حتى لا تتداخل أرقام الفواتير بأرقام العقود
   const PREFIX = { fee:'ع', consulting:'س', quote:'ض', invoice:'ف' };
@@ -5118,8 +5093,6 @@ async function saveInvoiceContract(print) {
       city: document.getElementById('inv-city').value.trim() || 'المدينة المنورة',
       notes: nullIfBlank(document.getElementById('inv-notes').value),
       subject: nullIfBlank(document.getElementById('inv-subject').value),
-      vat_rate: isDoc ? vat : 0,
-      vat_number: isDoc && vat ? nullIfBlank(document.getElementById('inv-vatnum').value) : null,
       valid_days: invKind === 'quote' ? (+document.getElementById('inv-valid').value || 30) : null,
       due_date: invKind === 'invoice' ? nullIfBlank(document.getElementById('inv-due').value) : null,
       bank_info: isDoc ? nullIfBlank(document.getElementById('inv-bank').value) : null,
@@ -5156,7 +5129,13 @@ const OFFICE = {
   mobile: '+96659777374',
   email: 'abdullah@alzahimlaw.com',
   city: 'المدينة المنورة',
+  bank: 'بنك الجزيرة',
+  bankAccount: '012695004388001',
+  iban: 'SA84 6010 0012 6950 0437 8001',
 };
+// بيانات السداد الافتراضية في عروض الأسعار والفواتير — تُعدَّل لكل مستند عند الحاجة
+OFFICE.bankInfo = `المستفيد: ${OFFICE.name}\n${OFFICE.bank}\n`
+  + `رقم الحساب: ${OFFICE.bankAccount}\nالآيبان: ${OFFICE.iban}`;
 OFFICE.party1 = `${OFFICE.name} ترخيص رقم (${OFFICE.license})، وعنوانه ${OFFICE.address}؛ `
   + `ص.ب: ${OFFICE.pobox}، هاتف: ${OFFICE.phone}، بريد إلكتروني: ${OFFICE.email}.`;
 
@@ -5246,12 +5225,11 @@ function buildContractHTML(inv) {
   return page1 + page2;
 }
 // ── حساب الإجماليات لعرض السعر والفاتورة ──
+// لا سجل ضريبي للمكتب، فلا ضريبة على المستندات
 function docTotals(inv) {
   const items = (inv.installments || []);
   const net = items.reduce((t, x) => t + parseInstAmount(x.amount), 0);
-  const rate = +(inv.vatRate || 0);
-  const vat = Math.round(net * rate) / 100;
-  return { items, net, rate, vat, gross: net + vat };
+  return { items, net, gross: net };
 }
 function itemsTableHTML(inv) {
   const t = docTotals(inv);
@@ -5261,8 +5239,6 @@ function itemsTableHTML(inv) {
       <td class="n">${isPureInstAmount(x.amount) ? parseInstAmount(x.amount).toLocaleString('ar-SA') : escHtml(x.amount || '')}</td>
     </tr>`).join('');
   const totals = `
-    <tr class="sum"><td colspan="2">المجموع قبل الضريبة</td><td class="n">${t.net.toLocaleString('ar-SA')}</td></tr>
-    ${t.rate ? `<tr class="sum"><td colspan="2">ضريبة القيمة المضافة (${t.rate}%)</td><td class="n">${t.vat.toLocaleString('ar-SA')}</td></tr>` : ''}
     <tr class="grand"><td colspan="2">الإجمالي المستحق</td><td class="n">${t.gross.toLocaleString('ar-SA')}</td></tr>`;
   return `<table class="items">
     <thead><tr><th class="c" style="width:34px">#</th><th>البيان</th><th class="n" style="width:120px">المبلغ (ر.س)</th></tr></thead>
@@ -5283,7 +5259,6 @@ function buildQuoteHTML(inv) {
   const dt = contractDates(inv.date);
   const days = +(inv.validDays || 30);
   const until = new Date(inv.date + 'T12:00:00'); until.setDate(until.getDate() + days);
-  const t = docTotals(inv);
   return `
     <h1>( عرض سعر )</h1>
     <table class="meta">
@@ -5297,7 +5272,7 @@ function buildQuoteHTML(inv) {
     ${itemsTableHTML(inv)}
     <h3>شروط العرض</h3>
     <ol>
-      <li>الأسعار أعلاه بالريال السعودي، و${t.rate ? 'شاملة ضريبة القيمة المضافة كما هو مبيّن' : 'غير شاملة ضريبة القيمة المضافة إن استُحقّت نظاماً'}.</li>
+      <li>الأسعار أعلاه بالريال السعودي.</li>
       <li>هذا العرض ساري لمدة ${days} يوماً من تاريخه، وبعد انقضائها يخضع للمراجعة.</li>
       <li>لا تشمل الأسعار الرسوم الحكومية والقضائية، ولا أتعاب الخبراء والمحاسبين والمترجمين والتصديقات، ويتحملها الطرف الثاني.</li>
       <li>يبدأ العمل بعد قبول العرض خطياً وسداد الدفعة الأولى المتفق عليها.</li>
@@ -5317,11 +5292,9 @@ function buildQuoteHTML(inv) {
 function buildInvoiceHTML(inv) {
   const cl = DB.clients.find(c=>c.id===inv.clientId) || { name:'—' };
   const dt = contractDates(inv.date);
-  const t = docTotals(inv);
-  const taxable = t.rate > 0 && (inv.vatNumber || '').trim();
   const cases = (inv.caseIds||[]).map(id=>DB.cases.find(c=>c.id===id)).filter(Boolean);
   return `
-    <h1>( ${taxable ? 'فاتورة ضريبية' : 'فاتورة'} )</h1>
+    <h1>( فاتورة )</h1>
     <table class="meta">
       <tr><td><b>رقم الفاتورة:</b> ${escHtml(inv.ref)}</td>
           <td><b>تاريخ الإصدار:</b> ${dt.hijri ? dt.hijri + 'هـ — ' + dt.greg + 'م' : dt.greg + 'م'}</td>
@@ -5329,7 +5302,7 @@ function buildInvoiceHTML(inv) {
     </table>
     <table class="parties">
       <tr>
-        <td><b>المُصدِر</b><br>${OFFICE.name}<br>ترخيص رقم (${OFFICE.license})<br>${OFFICE.address}<br>${OFFICE.phone} — ${OFFICE.email}${taxable ? '<br><b>الرقم الضريبي:</b> ' + escHtml(inv.vatNumber) : ''}</td>
+        <td><b>المُصدِر</b><br>${OFFICE.name}<br>ترخيص رقم (${OFFICE.license})<br>${OFFICE.address}<br>${OFFICE.phone} — ${OFFICE.email}</td>
         <td><b>المفوتَر عليه</b><br>${escHtml(clientLine(cl)).replace(/، /g,'<br>')}</td>
       </tr>
     </table>
@@ -5338,11 +5311,7 @@ function buildInvoiceHTML(inv) {
     ${itemsTableHTML(inv)}
     ${inv.bankInfo ? `<h3>بيانات السداد</h3><p class="bank">${escHtml(inv.bankInfo).replace(/\n/g,'<br>')}</p>` : ''}
     ${inv.notes ? `<h3>ملاحظات</h3><p>${escHtml(inv.notes)}</p>` : ''}
-    ${!taxable && t.rate > 0 ? `<p class="muted">* لم يُدرج الرقم الضريبي، فلا تُعدّ هذه فاتورة ضريبية نظاماً.</p>` : ''}
-    <p class="center">شكراً لثقتكم بنا</p>
-    <div class="sig-row">
-      <div class="sig"><div class="sig-title">عن المكتب</div><div>${OFFICE.lawyer}</div><div class="sig-line">التوقيع والختم: .....................</div></div>
-    </div>`;
+    <p class="center">شكراً لثقتكم بنا</p>`;
 }
 
 // ── عقد استشارات قانونية سنوي ──
@@ -5450,7 +5419,8 @@ function openContractPDF(id, spec, noPrint) {
     .tafqit { font-size:11.8px; color:#44423A; margin-bottom:8px; }
     .bank { background:#FBF9F3; border:1px solid #D8CDB0; border-radius:4px; padding:7px 9px; font-size:11.8px; }
     /* عرض السعر والفاتورة صفحة واحدة، فتُضغط مسافاتهما دون المساس بالعقود */
-    body.compact .pagecontent { line-height:1.55; }
+    /* مستند الصفحة الواحدة يُتوسَّط رأسياً بين الترويسة والتذييل */
+    body.compact .pagecontent { line-height:1.55; display:flex; flex-direction:column; justify-content:center; }
     body.compact h1 { margin-bottom:7px; }
     body.compact h3 { margin:6px 0 2px; }
     body.compact p { margin-bottom:2px; }
