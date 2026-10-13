@@ -1939,7 +1939,8 @@ async function loadFromDatabase() {
   ]);
   // بيانات المكتب تُقرأ من القاعدة فتظهر في المستندات محدَّثةً لكل من يفتحها
   const off = await sb.from('office_settings').select('*').eq('id', 1).maybeSingle();
-  if (!off.error && off.data) {
+  // الصف القديم (قبل توسعة الجدول) يحمل بيانات متقادمة، ويُعرف بخلوّه من اسم المحامي — فلا يُؤخذ به
+  if (!off.error && off.data && off.data.lawyer) {
     const r = off.data;
     const map = { name:'name', lawyer:'lawyer', license:'license', cr:'cr', uniqueNo:'unique_no',
       address:'address', shortAddress:'short_address', pobox:'pobox', phone:'phone',

@@ -227,16 +227,27 @@ create table if not exists notifications (
   created_at    timestamptz not null default now()
 );
 
+-- بيانات المكتب التي تُبنى منها العقود والفواتير وعروض الأسعار وتقارير الجلسات،
+-- وتُعدَّل من صفحة الإعدادات. صفٌّ واحد لا غير.
 create table if not exists office_settings (
-  id      int primary key default 1 check (id = 1),
-  name    text not null default 'مكتب الزاحم للمحاماة والاستشارات القانونية',
-  license text not null default '38/321',
-  phone   text not null default '0148482131',
-  mobile  text not null default '+966537475000',
-  email   text not null default 'Abdullah@alzahimlaw.com',
-  address text not null default 'طريق الملك عبدالله | الدائري الثاني | مقابل سوق بن داود'
+  id            int primary key default 1 check (id = 1),
+  name          text, lawyer text, license text, cr text, unique_no text,
+  address       text, short_address text, pobox text,
+  phone         text, mobile text, email text, city text,
+  bank          text, bank_account text, iban text,
+  updated_at    timestamptz not null default now()
 );
-insert into office_settings (id) values (1) on conflict (id) do nothing;
+insert into office_settings (id, name, lawyer, license, cr, unique_no,
+  address, short_address, pobox, phone, mobile, email, city, bank, bank_account, iban)
+values (1,
+  'مكتب المحامي / أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات القانونية',
+  'أ.د عبدالله بن إبراهيم الزاحم',
+  '38321', '7019939342', '3105777119',
+  'طريق الملك عبدالله (الدائري الثاني) مقابل سوق بن داود، المدينة المنورة',
+  'DMPA6717', 'DMPA6717',
+  '+966506475000', '+966559777374', 'abdullah@alzahimlaw.com', 'المدينة المنورة',
+  'بنك الجزيرة', '012695004378001', 'SA84 6010 0012 6950 0437 8001')
+on conflict (id) do nothing;
 
 -- حسابات يُنشئها المدير ويستكملها صاحبها عند أول دخول.
 -- كلمة المرور مُعمّاة، ولا يُقرأ هذا الجدول من المتصفح مطلقاً — فقط عبر claim_account
@@ -516,6 +527,8 @@ create policy notifications_update on notifications for update using (
 -- ───────── بيانات المكتب ─────────
 drop policy if exists office_read on office_settings;
 create policy office_read on office_settings for select using (true);
+drop policy if exists office_write on office_settings;
+create policy office_write on office_settings for insert with check (has_perm('settings'));
 drop policy if exists office_update on office_settings;
 create policy office_update on office_settings for update using (has_perm('settings'));
 
