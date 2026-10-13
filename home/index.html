@@ -235,22 +235,44 @@ html[dir="ltr"] .sec-head h2 { font-family:var(--font); }
 .vmg-card p { font-size:16.5px; color:var(--text-2); line-height:2.05; }
 
 /* ═══ الخدمات ═══ */
-.svc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(324px,1fr)); gap:16px; }
+/* ═══ حلقة الخدمات الدائرة ═══ */
+/* البطاقات الجانبية تمتدّ خارج عرض الشاشة، فيقصّها القسم كي لا ينزلق الصفحة أفقياً */
+#services { overflow:hidden; }
+.cf-stage {
+  position:relative; height:356px; perspective:1500px;
+  touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:grab;
+}
+.cf-stage.is-dragging { cursor:grabbing; }
 .svc {
-  background:var(--bg-2); border:1px solid var(--line); border-radius:16px; padding:24px 24px 26px;
-  box-shadow:var(--shadow); position:relative;
-  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  position:absolute; top:50%; left:50%; width:min(440px, 86%);
+  background:var(--bg-2); border:1px solid var(--line); border-radius:20px;
+  padding:30px 30px 32px; box-shadow:var(--shadow-lift);
+  transform-origin:50% 50%; will-change:transform, opacity;
+  transition:transform .55s cubic-bezier(.22,.75,.3,1), opacity .4s ease, filter .4s ease;
 }
-.svc:hover { transform:translateY(-4px); box-shadow:var(--shadow-lift); border-color:color-mix(in srgb, var(--gold) 45%, var(--line)); }
-.svc-top { display:flex; align-items:flex-start; gap:13px; margin-bottom:11px; }
-.svc-num {
-  flex:none; width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
-  background:var(--ink); color:var(--gold-light); font-size:14.5px; font-weight:700;
-  font-variant-numeric:tabular-nums;
+.cf-stage.is-dragging .svc { transition:opacity .2s ease, filter .2s ease; }
+.svc-top { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.svc-ico {
+  flex:none; width:52px; height:52px; border-radius:15px; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--gold) 13%, transparent); color:var(--gold-deep);
 }
-:root[data-theme="dark"] .svc-num { background:color-mix(in srgb, var(--gold) 18%, transparent); color:var(--gold-light); }
-.svc h3 { font-size:17.5px; font-weight:700; color:var(--text); padding-top:6px; }
-.svc p { font-size:14.8px; color:var(--text-2); line-height:2.05; }
+.svc-ico svg { width:26px; height:26px; }
+.svc h3 { font-size:21px; font-weight:700; color:var(--text); }
+.svc p { font-size:16px; color:var(--text-2); line-height:2.1; }
+
+.cf-bar { display:flex; align-items:center; justify-content:center; gap:18px; margin-top:26px; }
+.cf-nav {
+  width:42px; height:42px; display:grid; place-items:center; cursor:pointer;
+  border:1px solid var(--line); background:var(--bg-2); color:var(--text-2); border-radius:50%;
+  transition:border-color .18s, color .18s, transform .18s;
+}
+.cf-nav:hover { border-color:var(--gold); color:var(--gold-deep); transform:scale(1.07); }
+.cf-nav svg { width:18px; height:18px; }
+html[dir="ltr"] .cf-nav svg { transform:scaleX(-1); }
+.cf-count { font-size:14.5px; font-weight:600; color:var(--text-3); min-width:62px; text-align:center; }
+.cf-hint { text-align:center; font-size:12.5px; color:var(--text-3); margin-top:10px; }
+
+@media (max-width:620px) { .cf-stage { height:420px; } .svc { padding:26px 24px 28px; } .svc h3 { font-size:19px; } }
 
 /* ═══ التواصل ═══ */
 .contact { background:var(--bg-2); border-block:1px solid var(--line); }
@@ -421,7 +443,19 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
       <h2 data-ar="خدماتنا" data-en="Our Services">خدماتنا</h2>
       <div class="rule"></div>
     </div>
-    <div class="svc-grid" id="svc-grid"></div>
+    <div class="reveal">
+      <div class="cf-stage" id="cf-stage"></div>
+      <div class="cf-bar">
+        <button class="cf-nav" id="cf-prev" type="button" aria-label="السابق">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+        <div class="cf-count" id="cf-count"></div>
+        <button class="cf-nav" id="cf-next" type="button" aria-label="التالي">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+        </button>
+      </div>
+      <div class="cf-hint" data-ar="اسحب البطاقة أو انقر الجانبية للتنقّل بين الخدمات" data-en="Drag the card, or click a side card, to browse the services">اسحب البطاقة أو انقر الجانبية للتنقّل بين الخدمات</div>
+    </div>
   </div>
 </section>
 
@@ -477,52 +511,154 @@ var OFFICE = { whatsapp: '966559777374' };
 
 /* ═══ الخدمات العشر ═══ */
 var SERVICES = [
-  { ar:['الترافع','يتولّى مكتبنا وكالة عن العملاء في إقامة الدعاوى والترافع في كافّة القضايا والمنازعات لدى المحاكم واللجان القضائيّة وشبه القضائيّة، في القضايا التجاريّة والمدنيّة والإداريّة.'],
-    en:['Pleading','Our office acts as agent for clients in filing claims and pleading in all cases and disputes before the courts and the judicial and quasi-judicial committees — commercial, civil and administrative.'] },
-  { ar:['إعداد لوائح الاستئناف','إذا أصدرت المحكمة الابتدائيّة أو محكمة الاستئناف حكمها في القضية، فإنّ للمحكوم عليه إن لم يقنع بالحكم الحقَّ في طلب الاستئناف، أو الاعتراض على الحكم، أو التماس إعادة النظر. ومكتبنا يقوم بصياغة تلك اللوائح بمهنيّة واحترافيّة.'],
-    en:['Appellate memoranda','Where the Court of First Instance or the Court of Appeal has rendered judgment, a convicted party unsatisfied with it has the right to appeal, object, or petition for reconsideration. Our office drafts these memoranda with full professionalism.'] },
-  { ar:['الاستشارات','يقوم مكتبنا بتقديم كافّة أنواع الاستشارات الشرعيّة والقانونيّة التي يحتاجها العملاء لتعاقداتهم وتعاملاتهم التجاريّة والمدنيّة، بعد دراسة وافية للمستندات والوقائع؛ لتحقيق أقصى درجات الحماية لحقوقهم.'],
-    en:['Consultancy','Our office provides every kind of Shariah and legal advice clients need for their contracts and their commercial and civil dealings, after a thorough study of the documents and facts, to achieve the fullest protection of their rights.'] },
-  { ar:['صياغة العقود','يقوم مكتبنا بصياغة جميع أنواع العقود التجاريّة والمدنيّة ومراجعتها وتدقيقها: كعقود البيع، والإيجار، والرهن، والعمل، وعقود الشركات، والامتياز التجاري، والوكالات، والمقاولات، والتشغيل والصيانة، والاستثمار.'],
-    en:['Contract drafting','Our office drafts, reviews and audits every kind of commercial and civil contract: sale, lease, mortgage and employment, as well as corporate contracts, commercial franchises, agencies, contracting, operation and maintenance, and investment.'] },
-  { ar:['قضايا الأوراق التجاريّة وتحصيل الدّيون','مع صدور نظام التنفيذ، يقوم مكتبنا بإقامة الدعاوى والردّ عليها في القضايا والمنازعات المتعلّقة بالأوراق التجاريّة (السند لأمر، الكمبيالة، الشيك)، وتحصيل الديون المستحقّة من المماطلين.'],
-    en:['Commercial papers & debt collection','Under the Enforcement Law, our office files and responds to cases and disputes concerning commercial papers (promissory notes, bills of exchange, cheques), and collects debts due from defaulting parties.'] },
-  { ar:['قضايا الأحوال الشخصيّة','يقوم مكتبنا وكالةً عن العملاء بكافّة قضايا الأحوال الشخصيّة، ومنها: إثبات تعيين الأوصياء، وإقامة الأولياء، والإذن لهم في التصرّفات التي تستوجب إذن المحكمة، والمنازعات الأسريّة التي تتطلّب الطلاق أو الخلع أو الفسخ.'],
-    en:['Personal status','Our office represents clients in all personal status matters: establishing the appointment of executors and guardians, authorising them in acts requiring the court’s leave, and family disputes involving divorce, khul‘ or annulment.'] },
-  { ar:['التركات والوصايا والأوقاف','يقوم مكتبنا بحصر الورثة، وقسمة التركات، والحراسة القضائيّة، وإثبات الوصايا والأوقاف، وصياغة شروطها، والإشراف عليها.'],
-    en:['Estates, wills & endowments','Our office identifies heirs, divides estates, handles judicial receivership, establishes wills and endowments, drafts their conditions and supervises them.'] },
-  { ar:['إدارة الأملاك','يقوم مكتبنا بإدارة الأملاك، ومتابعة عقود التشغيل، وتحصيل الإيجارات.'],
-    en:['Property management','Our office manages properties, follows up operating contracts, and collects rents.'] },
-  { ar:['التحكيم','يقوم مكتبنا بأعمال التحكيم بين الأفراد أو الشركات أو الجهات الاعتباريّة في مختلف المنازعات التجاريّة والمدنيّة.'],
-    en:['Arbitration','Our office conducts arbitration between individuals, companies and legal entities across commercial and civil disputes.'] },
-  { ar:['التوثيق','يقدّم مكتبنا أعمال التوثيق لجميع أنواع العقود والوكالات والإفراغات والإقرارات.'],
-    en:['Documentation','Our office provides documentation for all kinds of contracts, powers of attorney, title transfers and declarations.'] },
+  { ico:'<path d="M12 3.2v17.4M8.4 20.6h7.2M5 7.1h14M12 4.6 5 7.1m7-2.5 7 2.5"/><path d="M5 7.1 2.5 12.6a3 3 0 0 0 5 0Z"/><path d="M19 7.1l-2.5 5.5a3 3 0 0 0 5 0Z"/>',
+    ar:['الترافع','ننوب عن موكّلينا في إقامة الدعوى والترافع أمام المحاكم واللجان القضائيّة وشبه القضائيّة، في المنازعات التجاريّة والمدنيّة والإداريّة، مرافعةً مسنَدةً إلى الدليل والنظام.'],
+    en:['Pleading','We act for our clients in filing suit and pleading before the courts and the judicial and quasi-judicial committees, in commercial, civil and administrative disputes — argument grounded in evidence and in the law.'] },
+
+  { ico:'<path d="M6.5 3h7.2L18 7.3V21H6.5z"/><path d="M13.7 3v4.3H18"/><path d="m10 15.4 2.3-2.3 2.3 2.3M12.3 13.1V18"/>',
+    ar:['لوائح الاستئناف','إذا صدر الحكم ولم يَقنَع به المحكوم عليه، فله أن يستأنف أو يعترض أو يلتمس إعادة النظر؛ ويتولّى المكتب تحرير اللائحة مبنيّةً على أسبابٍ نظاميّةٍ محرَّرة.'],
+    en:['Appellate memoranda','Where judgment has been rendered and the convicted party is not satisfied, the right to appeal, to object or to petition for reconsideration remains. The office drafts the memorandum on precisely stated statutory grounds.'] },
+
+  { ico:'<path d="M21 11.4a7.4 7.4 0 0 1-10.8 6.6L4.2 19.8 5.9 14A7.4 7.4 0 1 1 21 11.4Z"/><path d="M9 10.2h6M9 13.4h3.8"/>',
+    ar:['الاستشارات','نقدّم الاستشارة الشرعيّة والنظاميّة في العقود والمعاملات التجاريّة والمدنيّة، بعد دراسةٍ وافيةٍ للمستندات والوقائع، لتبلغ حقوق الموكّل أوفى حمايةٍ قبل أن يقع النزاع.'],
+    en:['Consultancy','We give Shariah and statutory advice on contracts and on commercial and civil dealings, after a full study of the documents and the facts, so that a client’s rights are at their safest before any dispute arises.'] },
+
+  { ico:'<path d="M6 3.2h7.6L18 7.6v5.1"/><path d="M13.6 3.2v4.4H18"/><path d="M6 3.2v17.6h6.2"/><path d="m20.6 14.6-6 6-2.9.8.8-2.9 6-6a1.5 1.5 0 0 1 2.1 2.1Z"/>',
+    ar:['صياغة العقود','نصوغ العقود التجاريّة والمدنيّة ونراجعها: البيع والإيجار والرهن والعمل، وعقود الشركات والامتياز والوكالات والمقاولات والتشغيل والصيانة والاستثمار — صياغةً تسدّ منافذ الخلاف قبل أن يُفتَح.'],
+    en:['Contract drafting','We draft and review commercial and civil contracts: sale, lease, mortgage and employment, along with corporate, franchise, agency, contracting, operation, maintenance and investment agreements — drafted to close the openings through which disputes enter.'] },
+
+  { ico:'<rect x="2.6" y="6" width="18.8" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/><path d="M6.1 12h.02M17.9 12h.02"/>',
+    ar:['الأوراق التجاريّة وتحصيل الديون','نقيم الدعاوى ونردّ عليها في منازعات الأوراق التجاريّة — السند لأمر والكمبيالة والشيك — ونستوفي الديون من المماطلين بمقتضى نظام التنفيذ.'],
+    en:['Commercial papers & debt collection','We file and answer claims in disputes over commercial papers — promissory notes, bills of exchange and cheques — and recover debts from those who withhold them, under the Enforcement Law.'] },
+
+  { ico:'<circle cx="8.6" cy="8" r="3.1"/><circle cx="16.6" cy="9.6" r="2.4"/><path d="M3.2 20c0-3.1 2.4-5.2 5.4-5.2s5.4 2.1 5.4 5.2"/><path d="M15.2 15.1c2.7-.4 5.8 1.2 5.8 4.9"/>',
+    ar:['الأحوال الشخصيّة','ننوب عن الموكّلين في قضايا الأحوال الشخصيّة: إثبات الوصاية، وإقامة الأولياء، والإذن فيما يستوجب إذن المحكمة، والمنازعات الأسريّة من طلاقٍ وخلعٍ وفسخ.'],
+    en:['Personal status','We represent clients in personal status matters: establishing guardianship, appointing guardians, obtaining leave where the court’s leave is required, and family disputes involving divorce, khul‘ or annulment.'] },
+
+  { ico:'<path d="M6.2 3h8.6L19 7.2V18a2.8 2.8 0 0 1-2.8 2.8H6.2A2.8 2.8 0 0 1 3.4 18V5.8A2.8 2.8 0 0 1 6.2 3Z"/><path d="M14.8 3v4.2H19"/><circle cx="11.2" cy="12.6" r="2.4"/><path d="m9.5 14.6-.8 3.6 2.5-1.4 2.5 1.4-.8-3.6"/>',
+    ar:['التركات والوصايا والأوقاف','نحصر الورثة ونقسم التركات، ونتولّى الحراسة القضائيّة، ونُثبت الوصايا والأوقاف ونصوغ شروطها ونشرف على إنفاذها.'],
+    en:['Estates, wills & endowments','We identify the heirs and divide estates, undertake judicial receivership, establish wills and endowments, draft their conditions and supervise their execution.'] },
+
+  { ico:'<path d="M4 21V7.4L12 3l8 4.4V21"/><path d="M3.2 21h17.6"/><path d="M9.6 21v-5.2h4.8V21"/><path d="M8.6 11h2M13.4 11h2"/>',
+    ar:['إدارة الأملاك','ندير أملاك الموكّلين، ونتابع عقود التشغيل، ونستوفي الأجرة في مواعيدها.'],
+    en:['Property management','We manage our clients’ properties, follow up operating contracts, and collect rents as they fall due.'] },
+
+  { ico:'<path d="M3.6 20.6h9"/><path d="m8.1 16.8 5.5-5.5"/><path d="M11.3 7.7 16.7 2.3l5 5-5.4 5.4z"/>',
+    ar:['التحكيم','نتولّى التحكيم بين الأفراد والشركات والجهات الاعتباريّة في المنازعات التجاريّة والمدنيّة، فصلًا عاجلًا يُغني عن طول التقاضي.'],
+    en:['Arbitration','We arbitrate between individuals, companies and legal entities in commercial and civil disputes — a swift determination that spares the parties the length of litigation.'] },
+
+  { ico:'<path d="M6 20.8h12"/><path d="M8.2 17.8h7.6v-2.2H8.2z"/><path d="M10.2 15.6V13c0-1.1-1.6-2-1.6-4a3.4 3.4 0 0 1 6.8 0c0 2-1.6 2.9-1.6 4v2.6"/>',
+    ar:['التوثيق','نوثّق العقود والوكالات والإفراغات والإقرارات، ونستوفي إجراءاتها النظاميّة لدى الجهات المختصّة.'],
+    en:['Documentation','We document contracts, powers of attorney, title transfers and declarations, and complete their statutory procedures before the competent authorities.'] },
 ];
 
-/* ═══ بناء بطاقات الخدمات ═══ */
-(function buildServices() {
-  var grid = document.getElementById('svc-grid');
-  var arNums = ['١','٢','٣','٤','٥','٦','٧','٨','٩','١٠'];
+/* ═══ حلقة الخدمات: بطاقة ظاهرة وبطاقتان مغبّشتان عند التصفّح ═══ */
+(function carousel() {
+  var AR_NUM = ['١','٢','٣','٤','٥','٦','٧','٨','٩','١٠'];
+  var stage = document.getElementById('cf-stage');
+  var count = document.getElementById('cf-count');
+  var cards = [];
+  var at = 0, frac = 0, browsing = false, hovering = false, browseTimer = null;
+
   SERVICES.forEach(function (s, i) {
     var el = document.createElement('article');
-    el.className = 'svc reveal';
-    var num = document.createElement('div');
-    num.className = 'svc-num';
-    num.setAttribute('data-ar', arNums[i]);
-    num.setAttribute('data-en', String(i + 1));
-    num.textContent = arNums[i];
-    var h = document.createElement('h3');
-    h.setAttribute('data-ar', s.ar[0]); h.setAttribute('data-en', s.en[0]);
-    h.textContent = s.ar[0];
-    var p = document.createElement('p');
-    p.setAttribute('data-ar', s.ar[1]); p.setAttribute('data-en', s.en[1]);
-    p.textContent = s.ar[1];
-    var top = document.createElement('div');
-    top.className = 'svc-top';
-    top.appendChild(num); top.appendChild(h);
-    el.appendChild(top); el.appendChild(p);
-    grid.appendChild(el);
+    el.className = 'svc';
+    el.innerHTML =
+      '<div class="svc-top">' +
+        '<div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + s.ico + '</svg></div>' +
+        '<h3></h3>' +
+      '</div><p></p>';
+    var h = el.querySelector('h3'), p = el.querySelector('p');
+    h.setAttribute('data-ar', s.ar[0]); h.setAttribute('data-en', s.en[0]); h.textContent = s.ar[0];
+    p.setAttribute('data-ar', s.ar[1]); p.setAttribute('data-en', s.en[1]); p.textContent = s.ar[1];
+    el.addEventListener('click', function () { if (!moved) goTo(i); });
+    stage.appendChild(el);
+    cards.push(el);
   });
+
+  var N = cards.length;
+
+  function wrapDelta(d) {
+    while (d > N / 2) d -= N;
+    while (d < -N / 2) d += N;
+    return d;
+  }
+
+  function layout() {
+    var pos = at + frac;
+    cards.forEach(function (el, i) {
+      var d = wrapDelta(i - pos), ad = Math.abs(d);
+      // البطاقات اللاحقة تقف في جهة القراءة التالية: يسارًا في العربية، يمينًا في الإنجليزية
+      var sgn = document.documentElement.dir === 'ltr' ? -1 : 1;
+      el.style.transform =
+        'translate(-50%,-50%)' +
+        ' translateX(' + (-d * 54 * sgn) + '%)' +
+        ' translateZ(' + (-ad * 170) + 'px)' +
+        ' rotateY(' + (d * 26 * sgn) + 'deg)' +
+        ' scale(' + (1 - Math.min(ad, 2) * 0.05) + ')';
+      el.style.opacity  = ad < 0.5 ? 1 - ad * 0.3 : (ad < 1.6 && browsing ? 0.5 : 0);
+      el.style.filter   = ad < 0.4 ? 'none' : 'blur(' + Math.min(ad * 4, 6) + 'px)';
+      el.style.zIndex   = String(40 - Math.round(ad * 10));
+      el.style.pointerEvents = ad < 1.6 ? 'auto' : 'none';
+      el.setAttribute('aria-hidden', ad < 0.5 ? 'false' : 'true');
+    });
+    var ar = document.documentElement.lang === 'ar';
+    count.textContent = (ar ? AR_NUM[at] + ' / ' + AR_NUM[N - 1] : (at + 1) + ' / ' + N);
+  }
+
+  function setBrowsing(on) {
+    browsing = on; layout();
+    clearTimeout(browseTimer);
+    if (on && !hovering) browseTimer = setTimeout(function () { if (!hovering) setBrowsing(false); }, 1900);
+  }
+
+  function goTo(i) {
+    at = ((i % N) + N) % N; frac = 0;
+    setBrowsing(true);
+  }
+  function step(k) { goTo(at + k); }
+
+  stage.addEventListener('pointerenter', function () { hovering = true; setBrowsing(true); });
+  stage.addEventListener('pointerleave', function () { hovering = false; setBrowsing(false); });
+
+  /* السحب بالماوس أو بالإصبع يُدير الحلقة */
+  var down = false, startX = 0, moved = false, STEP = 260;
+  stage.addEventListener('pointerdown', function (e) {
+    down = true; moved = false; startX = e.clientX;
+    stage.classList.add('is-dragging');
+    stage.setPointerCapture(e.pointerId);
+    setBrowsing(true);
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (!down) return;
+    var dx = e.clientX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    frac = -dx / STEP;
+    layout();
+  });
+  function release() {
+    if (!down) return;
+    down = false;
+    stage.classList.remove('is-dragging');
+    at = ((Math.round(at + frac) % N) + N) % N;
+    frac = 0;
+    setBrowsing(true);
+  }
+  stage.addEventListener('pointerup', release);
+  stage.addEventListener('pointercancel', release);
+
+  document.getElementById('cf-prev').addEventListener('click', function () { step(-1); });
+  document.getElementById('cf-next').addEventListener('click', function () { step(1); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    var r = stage.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight) return;
+    step(e.key === 'ArrowLeft' ? 1 : -1);
+  });
+
+  window.cfRelayout = layout;
+  layout();
 })();
 
 /* ═══ روابط واتساب ═══ */
@@ -585,6 +721,7 @@ function applyLang(lang) {
     ? 'مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات القانونية'
     : 'Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem';
   applyTheme(html.getAttribute('data-theme'));
+  if (window.cfRelayout) window.cfRelayout();
   try { localStorage.setItem('zahem-lang', lang); } catch (e) {}
 }
 
