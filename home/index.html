@@ -105,6 +105,73 @@ section[id], div[id="top"] { scroll-margin-top:92px; }
 }
 .icon-btn:hover { border-color:var(--gold); color:var(--gold-deep); transform:translateY(-1px); }
 .icon-btn svg { width:18px; height:18px; }
+.btn-join {
+  background:transparent; color:var(--gold-deep); border:1px solid var(--gold);
+  padding:9px 16px; border-radius:10px; font-size:14px; font-weight:600;
+  font-family:var(--font); cursor:pointer; white-space:nowrap;
+  transition:background .18s, color .18s, transform .18s;
+}
+.btn-join:hover { background:var(--gold); color:#20261F; transform:translateY(-1px); }
+
+/* ═══ نموذج الانضمام ═══ */
+.jf-overlay {
+  position:fixed; inset:0; z-index:200; display:none;
+  background:rgba(20,26,20,.55); backdrop-filter:blur(3px);
+  padding:22px; overflow-y:auto;
+}
+.jf-overlay.open { display:block; }
+.jf-card {
+  max-width:760px; margin:0 auto; background:var(--bg-2);
+  border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow-lift);
+  padding:28px 28px 30px;
+}
+.jf-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:6px; }
+.jf-head h3 { font-family:'Alharf', var(--font); font-size:25px; color:var(--text); }
+html[dir="ltr"] .jf-head h3 { font-family:var(--font); font-weight:700; }
+.jf-close {
+  width:36px; height:36px; flex:none; border-radius:50%; cursor:pointer;
+  border:1px solid var(--line); background:var(--bg); color:var(--text-2);
+  font-size:20px; line-height:1; font-family:var(--font);
+}
+.jf-close:hover { border-color:var(--gold); color:var(--gold-deep); }
+.jf-lead { font-size:14.5px; color:var(--text-2); margin-bottom:20px; }
+.jf-sec { font-size:13px; font-weight:600; color:var(--gold-deep); margin:22px 0 10px; display:flex; align-items:center; gap:10px; }
+.jf-sec::after { content:''; flex:1; height:1px; background:var(--line); }
+.jf-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+@media (max-width:600px) { .jf-grid { grid-template-columns:1fr; } .jf-card { padding:22px 18px 24px; } }
+.jf-f { display:flex; flex-direction:column; gap:6px; }
+.jf-f.wide { grid-column:1 / -1; }
+.jf-f label { font-size:13px; color:var(--text-2); font-weight:500; }
+.jf-f label span { color:var(--red, #A8412F); }
+.jf-f input, .jf-f select, .jf-f textarea {
+  font-family:var(--font); font-size:14.5px; color:var(--text);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px;
+  padding:10px 12px; width:100%; transition:border-color .18s;
+}
+.jf-f input:focus, .jf-f select:focus, .jf-f textarea:focus { outline:none; border-color:var(--gold); }
+.jf-f textarea { resize:vertical; min-height:88px; line-height:1.9; }
+.jf-f .hint { font-size:12px; color:var(--text-3); }
+.jf-hp { position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
+.jf-actions { display:flex; gap:12px; align-items:center; margin-top:24px; flex-wrap:wrap; }
+.jf-submit {
+  background:var(--ink); color:#F3F1EA; border:1px solid var(--ink);
+  padding:12px 28px; border-radius:11px; font-size:15px; font-weight:600;
+  font-family:var(--font); cursor:pointer; transition:background .18s, transform .18s;
+}
+.jf-submit:hover:not(:disabled) { background:#364436; transform:translateY(-1px); }
+.jf-submit:disabled { opacity:.6; cursor:default; }
+:root[data-theme="dark"] .jf-submit { background:var(--gold); border-color:var(--gold); color:#1A201A; }
+.jf-msg { font-size:14px; }
+.jf-msg.err { color:#A8412F; }
+.jf-done { text-align:center; padding:34px 10px; }
+.jf-done .tick {
+  width:66px; height:66px; margin:0 auto 18px; border-radius:50%; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--gold) 16%, transparent); color:var(--gold-deep);
+}
+.jf-done .tick svg { width:32px; height:32px; }
+.jf-done h4 { font-size:21px; margin-bottom:10px; color:var(--text); }
+.jf-done p { font-size:15px; color:var(--text-2); line-height:2; }
+
 .btn-portal {
   background:var(--ink); color:#F3F1EA; border:1px solid var(--ink);
   padding:9px 18px; border-radius:10px; font-size:14px; font-weight:600;
@@ -347,7 +414,7 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
   .topbar-in { gap:9px; padding:10px 15px; }
   .brand img { width:104px; }
   .icon-btn { width:34px; height:34px; }
-  .btn-portal { padding:8px 12px; font-size:13px; }
+  .btn-portal, .btn-join { padding:8px 11px; font-size:12.5px; }
 }
 </style>
 </head>
@@ -374,6 +441,7 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
           <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>
         </svg>
       </button>
+      <button class="btn-join" type="button" onclick="openJoin()" data-ar="انضم إلينا" data-en="Join us">انضم إلينا</button>
       <a class="btn-portal" href="../" data-ar="بوابة الموكلين" data-en="Client Portal">بوابة الموكلين</a>
     </div>
   </div>
@@ -505,6 +573,159 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
     <div class="fmeta"><span data-ar="ترخيص رقم" data-en="Licence">ترخيص رقم</span> <span class="num">38321</span> · <span data-ar="سجل المنشأة" data-en="CR">سجل المنشأة</span> <span class="num">7019939342</span> · <span data-ar="المدينة المنورة" data-en="Madinah">المدينة المنورة</span></div>
   </div>
 </footer>
+
+<!-- ═══════════ نموذج الانضمام ═══════════ -->
+<div class="jf-overlay" id="jf-overlay" onclick="if(event.target===this) closeJoin()">
+  <div class="jf-card">
+    <div id="jf-form-wrap">
+      <div class="jf-head">
+        <h3 data-ar="انضم إلى فريق المكتب" data-en="Join our team">انضم إلى فريق المكتب</h3>
+        <button class="jf-close" type="button" onclick="closeJoin()" aria-label="إغلاق">×</button>
+      </div>
+      <p class="jf-lead" data-ar="عبِّئ البيانات التالية وسيصل طلبك إلى إدارة المكتب مباشرة. الحقول المعلَّمة بنجمة مطلوبة." data-en="Fill in the details below and your application will reach the office directly. Fields marked with an asterisk are required.">عبِّئ البيانات التالية وسيصل طلبك إلى إدارة المكتب مباشرة. الحقول المعلَّمة بنجمة مطلوبة.</p>
+
+      <div class="jf-sec" data-ar="البيانات الشخصية" data-en="Personal details">البيانات الشخصية</div>
+      <div class="jf-grid">
+        <div class="jf-f">
+          <label data-ar="الاسم الثلاثي *" data-en="Full name *">الاسم الثلاثي *</label>
+          <input type="text" id="jf-name" autocomplete="name">
+        </div>
+        <div class="jf-f">
+          <label data-ar="رقم الجوال *" data-en="Mobile number *">رقم الجوال *</label>
+          <input type="tel" id="jf-phone" dir="ltr" inputmode="tel" autocomplete="tel" placeholder="05XXXXXXXX">
+        </div>
+        <div class="jf-f">
+          <label data-ar="البريد الإلكتروني" data-en="Email">البريد الإلكتروني</label>
+          <input type="email" id="jf-email" dir="ltr" autocomplete="email">
+        </div>
+        <div class="jf-f">
+          <label data-ar="مدينة الإقامة" data-en="City of residence">مدينة الإقامة</label>
+          <input type="text" id="jf-city">
+        </div>
+        <div class="jf-f">
+          <label data-ar="الجنسية" data-en="Nationality">الجنسية</label>
+          <input type="text" id="jf-nationality">
+        </div>
+        <div class="jf-f">
+          <label data-ar="سنة الميلاد" data-en="Year of birth">سنة الميلاد</label>
+          <input type="text" id="jf-birth" dir="ltr" inputmode="numeric" maxlength="4" placeholder="1995">
+        </div>
+      </div>
+
+      <div class="jf-sec" data-ar="الوظيفة والمؤهل" data-en="Position &amp; qualification">الوظيفة والمؤهل</div>
+      <div class="jf-grid">
+        <div class="jf-f">
+          <label data-ar="الوظيفة المتقدَّم لها *" data-en="Position applied for *">الوظيفة المتقدَّم لها *</label>
+          <select id="jf-position">
+            <option value="" data-ar="اختر الوظيفة" data-en="Select a position">اختر الوظيفة</option>
+            <option value="محامٍ" data-ar="محامٍ" data-en="Lawyer">محامٍ</option>
+            <option value="مستشار قانوني" data-ar="مستشار قانوني" data-en="Legal consultant">مستشار قانوني</option>
+            <option value="باحث قانوني" data-ar="باحث قانوني" data-en="Legal researcher">باحث قانوني</option>
+            <option value="متدرّب/متدرّبة" data-ar="متدرّب/متدرّبة" data-en="Trainee">متدرّب/متدرّبة</option>
+            <option value="سكرتير تنفيذي" data-ar="سكرتير تنفيذي" data-en="Executive secretary">سكرتير تنفيذي</option>
+            <option value="محاسب" data-ar="محاسب" data-en="Accountant">محاسب</option>
+            <option value="موظف إداري" data-ar="موظف إداري" data-en="Administrative staff">موظف إداري</option>
+            <option value="أخرى" data-ar="أخرى" data-en="Other">أخرى</option>
+          </select>
+        </div>
+        <div class="jf-f">
+          <label data-ar="سنوات الخبرة" data-en="Years of experience">سنوات الخبرة</label>
+          <select id="jf-exp">
+            <option value="" data-ar="اختر" data-en="Select">اختر</option>
+            <option value="بدون خبرة" data-ar="بدون خبرة" data-en="No experience">بدون خبرة</option>
+            <option value="أقل من سنة" data-ar="أقل من سنة" data-en="Less than a year">أقل من سنة</option>
+            <option value="١ – ٣ سنوات" data-ar="١ – ٣ سنوات" data-en="1 – 3 years">١ – ٣ سنوات</option>
+            <option value="٣ – ٥ سنوات" data-ar="٣ – ٥ سنوات" data-en="3 – 5 years">٣ – ٥ سنوات</option>
+            <option value="٥ – ١٠ سنوات" data-ar="٥ – ١٠ سنوات" data-en="5 – 10 years">٥ – ١٠ سنوات</option>
+            <option value="أكثر من ١٠ سنوات" data-ar="أكثر من ١٠ سنوات" data-en="More than 10 years">أكثر من ١٠ سنوات</option>
+          </select>
+        </div>
+        <div class="jf-f">
+          <label data-ar="المؤهل العلمي" data-en="Qualification">المؤهل العلمي</label>
+          <select id="jf-qual">
+            <option value="" data-ar="اختر" data-en="Select">اختر</option>
+            <option value="ثانوية عامة" data-ar="ثانوية عامة" data-en="High school">ثانوية عامة</option>
+            <option value="دبلوم" data-ar="دبلوم" data-en="Diploma">دبلوم</option>
+            <option value="بكالوريوس" data-ar="بكالوريوس" data-en="Bachelor">بكالوريوس</option>
+            <option value="ماجستير" data-ar="ماجستير" data-en="Master">ماجستير</option>
+            <option value="دكتوراه" data-ar="دكتوراه" data-en="Doctorate">دكتوراه</option>
+          </select>
+        </div>
+        <div class="jf-f">
+          <label data-ar="التخصص" data-en="Major">التخصص</label>
+          <input type="text" id="jf-major">
+        </div>
+        <div class="jf-f">
+          <label data-ar="الجامعة" data-en="University">الجامعة</label>
+          <input type="text" id="jf-university">
+        </div>
+        <div class="jf-f">
+          <label data-ar="سنة التخرج" data-en="Graduation year">سنة التخرج</label>
+          <input type="text" id="jf-grad" dir="ltr" inputmode="numeric" maxlength="4">
+        </div>
+        <div class="jf-f">
+          <label data-ar="رقم ترخيص المحاماة" data-en="Law practice licence no.">رقم ترخيص المحاماة</label>
+          <input type="text" id="jf-license" dir="ltr">
+          <span class="hint" data-ar="إن وُجد" data-en="If any">إن وُجد</span>
+        </div>
+        <div class="jf-f">
+          <label data-ar="جهة العمل الحالية" data-en="Current employer">جهة العمل الحالية</label>
+          <input type="text" id="jf-employer">
+        </div>
+      </div>
+
+      <div class="jf-sec" data-ar="بيانات إضافية" data-en="Further details">بيانات إضافية</div>
+      <div class="jf-grid">
+        <div class="jf-f">
+          <label data-ar="اللغات" data-en="Languages">اللغات</label>
+          <input type="text" id="jf-languages">
+        </div>
+        <div class="jf-f">
+          <label data-ar="الاستعداد للمباشرة" data-en="Availability to start">الاستعداد للمباشرة</label>
+          <select id="jf-avail">
+            <option value="" data-ar="اختر" data-en="Select">اختر</option>
+            <option value="فوراً" data-ar="فوراً" data-en="Immediately">فوراً</option>
+            <option value="خلال شهر" data-ar="خلال شهر" data-en="Within a month">خلال شهر</option>
+            <option value="خلال ثلاثة أشهر" data-ar="خلال ثلاثة أشهر" data-en="Within three months">خلال ثلاثة أشهر</option>
+          </select>
+        </div>
+        <div class="jf-f">
+          <label data-ar="المهارات" data-en="Skills">المهارات</label>
+          <input type="text" id="jf-skills">
+        </div>
+        <div class="jf-f">
+          <label data-ar="الراتب المتوقع" data-en="Expected salary">الراتب المتوقع</label>
+          <input type="text" id="jf-salary">
+        </div>
+        <div class="jf-f wide">
+          <label data-ar="نبذة مختصرة عنك" data-en="A brief about you">نبذة مختصرة عنك</label>
+          <textarea id="jf-about" maxlength="1200"></textarea>
+        </div>
+        <div class="jf-f wide">
+          <label data-ar="السيرة الذاتية" data-en="Curriculum vitae">السيرة الذاتية</label>
+          <input type="file" id="jf-cv" accept=".pdf,.doc,.docx">
+          <span class="hint" data-ar="PDF أو Word، بحد أقصى ٥ ميجابايت" data-en="PDF or Word, up to 5 MB">PDF أو Word، بحد أقصى ٥ ميجابايت</span>
+        </div>
+      </div>
+
+      <input type="text" id="jf-site" class="jf-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <div class="jf-actions">
+        <button class="jf-submit" type="button" id="jf-send" onclick="submitJoin()" data-ar="إرسال الطلب" data-en="Send application">إرسال الطلب</button>
+        <span class="jf-msg" id="jf-msg"></span>
+      </div>
+    </div>
+
+    <div id="jf-done" style="display:none">
+      <div class="jf-done">
+        <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h4 data-ar="وصل طلبك" data-en="Your application has been received">وصل طلبك</h4>
+        <p data-ar="شكراً لاهتمامك بالانضمام إلى المكتب. سيطّلع فريقنا على طلبك، وسنتواصل معك إن كان ملفك مناسباً لإحدى الفرص المتاحة." data-en="Thank you for your interest in joining the office. Our team will review your application and will contact you if your profile matches one of the available opportunities.">شكراً لاهتمامك بالانضمام إلى المكتب. سيطّلع فريقنا على طلبك، وسنتواصل معك إن كان ملفك مناسباً لإحدى الفرص المتاحة.</p>
+        <button class="jf-submit" type="button" style="margin-top:22px" onclick="closeJoin()" data-ar="إغلاق" data-en="Close">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════ زر واتساب العائم ═══════════ -->
 <a class="wa" id="wa-fab" href="#" target="_blank" rel="noopener" aria-label="واتساب">
@@ -754,6 +975,112 @@ function applyLang(lang) {
     applyLang(document.documentElement.lang === 'ar' ? 'en' : 'ar');
   });
 })();
+
+/* ═══ نموذج الانضمام ═══ */
+var SB_URL = 'https://javmazwxrdkylewhjahu.supabase.co';
+/* المفتاح أدناه عام بطبيعته: الحماية مفروضة في قاعدة البيانات عبر سياسات RLS،
+   والطلبات تُكتب ولا تُقرأ — فلا يرى المتقدّم طلبه ولا طلب غيره */
+var SB_KEY = 'sb_publishable_-CohC6ascOspnmDlToGCoQ_xYGFJxJ2';
+var sbClient = null;
+
+function loadSb() {
+  if (sbClient) return Promise.resolve(sbClient);
+  return new Promise(function (resolve, reject) {
+    var el = document.createElement('script');
+    el.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    el.onload = function () {
+      try { sbClient = window.supabase.createClient(SB_URL, SB_KEY); resolve(sbClient); }
+      catch (e) { reject(e); }
+    };
+    el.onerror = function () { reject(new Error('cdn')); };
+    document.head.appendChild(el);
+  });
+}
+
+function jfT(ar, en) { return document.documentElement.lang === 'ar' ? ar : en; }
+
+function openJoin() {
+  document.getElementById('jf-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  loadSb().catch(function () {});
+  var n = document.getElementById('jf-name');
+  if (n) setTimeout(function () { n.focus(); }, 60);
+}
+function closeJoin() {
+  document.getElementById('jf-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && document.getElementById('jf-overlay').classList.contains('open')) closeJoin();
+});
+
+function jfVal(id) { return (document.getElementById(id).value || '').trim(); }
+function jfNull(id) { var v = jfVal(id); return v === '' ? null : v; }
+
+async function submitJoin() {
+  var msg = document.getElementById('jf-msg');
+  var btn = document.getElementById('jf-send');
+  msg.className = 'jf-msg';
+  msg.textContent = '';
+
+  /* حقل خفيّ لا يراه إنسان: إن مُلئ فالمرسِل آليّ، فيُنهى بصمت */
+  if (jfVal('jf-site') !== '') { closeJoin(); return; }
+
+  var name = jfVal('jf-name');
+  var phone = jfVal('jf-phone');
+  var position = jfVal('jf-position');
+  if (!name) { jfFail(jfT('يرجى كتابة الاسم الثلاثي', 'Please enter your full name'), 'jf-name'); return; }
+  if (phone.replace(/\D/g, '').length < 9) { jfFail(jfT('يرجى كتابة رقم جوال صحيح', 'Please enter a valid mobile number'), 'jf-phone'); return; }
+  if (!position) { jfFail(jfT('يرجى اختيار الوظيفة المتقدَّم لها', 'Please select the position applied for'), 'jf-position'); return; }
+
+  var file = document.getElementById('jf-cv').files[0] || null;
+  if (file && file.size > 5 * 1024 * 1024) {
+    jfFail(jfT('حجم السيرة الذاتية يتجاوز ٥ ميجابايت', 'The CV exceeds 5 MB'), 'jf-cv'); return;
+  }
+
+  btn.disabled = true;
+  msg.textContent = jfT('جارٍ الإرسال…', 'Sending…');
+  try {
+    var sb = await loadSb();
+    var cvPath = null;
+    if (file) {
+      var ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '');
+      var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+             : String(Date.now()) + Math.random().toString(36).slice(2);
+      cvPath = id + '.' + ext;
+      var up = await sb.storage.from('cv-files').upload(cvPath, file, { contentType: file.type || undefined });
+      if (up.error) throw up.error;
+    }
+    var res = await sb.from('job_applications').insert({
+      name: name, phone: phone, email: jfNull('jf-email'),
+      nationality: jfNull('jf-nationality'), birth_year: jfNull('jf-birth'), city: jfNull('jf-city'),
+      position: position, qualification: jfNull('jf-qual'), major: jfNull('jf-major'),
+      university: jfNull('jf-university'), grad_year: jfNull('jf-grad'), license_no: jfNull('jf-license'),
+      experience: jfNull('jf-exp'), employer: jfNull('jf-employer'), languages: jfNull('jf-languages'),
+      skills: jfNull('jf-skills'), salary_expect: jfNull('jf-salary'), availability: jfNull('jf-avail'),
+      about: jfNull('jf-about'), cv_path: cvPath,
+    });
+    if (res.error) throw res.error;
+    document.getElementById('jf-form-wrap').style.display = 'none';
+    document.getElementById('jf-done').style.display = 'block';
+    document.querySelector('.jf-overlay').scrollTop = 0;
+  } catch (e) {
+    msg.className = 'jf-msg err';
+    msg.textContent = jfT('تعذّر إرسال الطلب، تحقّق من الاتصال وحاول مرة أخرى.',
+                          'The application could not be sent. Check your connection and try again.');
+    console.error('[join]', e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function jfFail(text, focusId) {
+  var msg = document.getElementById('jf-msg');
+  msg.className = 'jf-msg err';
+  msg.textContent = text;
+  var el = document.getElementById(focusId);
+  if (el) el.focus();
+}
 
 /* ═══ الظهور التدريجي ═══ */
 (function reveal() {
