@@ -4733,6 +4733,15 @@ async function saveUser() {
     if (u.perms.users && !perms.users && DB.users.filter(x=>x.perms.users).length === 1) {
       alert('لا يمكن سحب صلاحية إدارة المستخدمين من آخر مدير في النظام'); return;
     }
+    // بريد الدخول مخزَّن في جدول المستخدمين وفي نظام المصادقة معاً.
+    // تغييره هنا وحده يجعل الموقع يحاول الدخول ببريد لا وجود له، فيتعطّل الحساب
+    const before = DB.users.find(x => x.id === id) || {};
+    const emailChanged = (before.email || '') !== (email || '');
+    if (emailChanged && !confirm(
+        `تنبيه: تغيير البريد هنا لا يغيّره في نظام المصادقة.\n\n`
+        + `لو حفظت الآن فلن يتمكن «${name}» من الدخول حتى يُغيَّر بريده أيضاً من:\n`
+        + `Supabase ← Authentication ← Users\n\n`
+        + `هل تريد المتابعة؟`)) return;
     // كلمة المرور محفوظة مُعمّاة في نظام الحسابات ولا تُعدَّل من هنا —
     // يغيّرها صاحبها عبر «نسيت كلمة المرور»
     ok = await dbWrite('المستخدم', () => sb.from('staff')
