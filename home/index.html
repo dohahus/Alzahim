@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات القانونية</title>
+<meta name="description" content="مكتب أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق — المدينة المنورة.">
+<meta name="theme-color" content="#263026">
+<link rel="icon" href="../assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family: 'Alharf';
+  src: url('../assets/alharf-bold.ttf') format('truetype');
+  font-weight: bold;
+  font-display: swap;
+}
+
+:root {
+  /* ألوان الهوية الرسمية */
+  --gold: #A38850;
+  --gold-light: #D7B46B;
+  --gold-deep: #928052;
+  --ink: #263026;
+
+  --bg: #FBFAF7;
+  --bg-2: #FFFFFF;
+  --bg-3: #F4F2EC;
+  --text: #263026;
+  --text-2: #5C6359;
+  --text-3: #8C9189;
+  --line: #E7E3D9;
+  --hero-bg: #263026;
+  --hero-text: #F3F1EA;
+  --hero-text-2: #C9C9BC;
+  --shadow: 0 1px 2px rgba(60,48,16,.05), 0 8px 28px rgba(60,48,16,.05);
+  --shadow-lift: 0 10px 34px rgba(38,48,38,.12);
+  --font: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+}
+
+:root[data-theme="dark"] {
+  --bg: #1A201A;
+  --bg-2: #222A22;
+  --bg-3: #2A332A;
+  --text: #ECEFEA;
+  --text-2: #B3BBB0;
+  --text-3: #8A9388;
+  --line: #364036;
+  --hero-bg: #141A14;
+  --hero-text: #F3F1EA;
+  --hero-text-2: #BFC4B8;
+  --gold: #C4A669;
+  --gold-deep: #B59A5F;
+  --shadow: 0 1px 2px rgba(0,0,0,.25), 0 8px 28px rgba(0,0,0,.22);
+  --shadow-lift: 0 10px 34px rgba(0,0,0,.35);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:var(--font);
+  background:var(--bg); color:var(--text);
+  line-height:1.9; font-size:16px;
+  -webkit-font-smoothing:antialiased;
+  transition:background .3s ease, color .3s ease;
+  overflow-x:hidden;
+}
+html[dir="ltr"] body { line-height:1.75; }
+img { max-width:100%; display:block; }
+a { color:inherit; text-decoration:none; }
+
+.wrap { max-width:1120px; margin:0 auto; padding:0 22px; }
+
+/* ═══ الشريط العلوي ═══ */
+.topbar {
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-in { max-width:1120px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:16px; }
+.brand { display:flex; align-items:center; gap:11px; margin-inline-end:auto; }
+.brand img { width:40px; height:auto; }
+.brand-txt { font-family:'Alharf', var(--font); font-size:17px; color:var(--gold-deep); line-height:1.3; white-space:nowrap; }
+html[dir="ltr"] .brand-txt { font-family:var(--font); font-size:15.5px; font-weight:700; }
+.brand-sub { font-size:10.5px; color:var(--text-3); letter-spacing:0; }
+
+.navlinks { display:flex; gap:4px; }
+.navlinks a {
+  font-size:14.5px; color:var(--text-2); padding:7px 12px; border-radius:9px;
+  transition:background .18s, color .18s;
+}
+.navlinks a:hover { background:var(--bg-3); color:var(--text); }
+
+.tools { display:flex; align-items:center; gap:8px; }
+.icon-btn {
+  width:38px; height:38px; display:grid; place-items:center;
+  border:1px solid var(--line); background:var(--bg-2); color:var(--text-2);
+  border-radius:10px; cursor:pointer; font-family:var(--font);
+  font-size:13px; font-weight:600;
+  transition:border-color .18s, color .18s, transform .18s, background .18s;
+}
+.icon-btn:hover { border-color:var(--gold); color:var(--gold-deep); transform:translateY(-1px); }
+.icon-btn svg { width:18px; height:18px; }
+.btn-portal {
+  background:var(--ink); color:#F3F1EA; border:1px solid var(--ink);
+  padding:9px 18px; border-radius:10px; font-size:14px; font-weight:600;
+  font-family:var(--font); cursor:pointer; white-space:nowrap;
+  transition:background .18s, transform .18s, box-shadow .18s;
+}
+.btn-portal:hover { background:#364436; transform:translateY(-1px); box-shadow:var(--shadow-lift); }
+:root[data-theme="dark"] .btn-portal { background:var(--gold); border-color:var(--gold); color:#1A201A; }
+:root[data-theme="dark"] .btn-portal:hover { background:var(--gold-light); }
+
+/* ═══ الواجهة ═══ */
+.hero {
+  position:relative; background:var(--hero-bg); color:var(--hero-text);
+  padding:92px 0 104px; overflow:hidden; isolation:isolate;
+}
+.hero::before, .hero::after {
+  content:''; position:absolute; inset-block:-30%; width:52%; z-index:-1;
+}
+.hero::before {
+  inset-inline-start:-14%; background:linear-gradient(180deg, rgba(163,136,80,.16), rgba(163,136,80,0));
+  transform:skewX(-14deg);
+}
+.hero::after {
+  inset-inline-start:-6%; width:2px; background:linear-gradient(180deg, transparent, var(--gold), transparent);
+  transform:skewX(-14deg); opacity:.55;
+}
+.hero-in { position:relative; text-align:center; }
+.hero-logo { width:118px; margin:0 auto 26px; opacity:0; animation:riseIn .8s .05s ease-out forwards; }
+.hero h1 {
+  font-family:'Alharf', var(--font); font-weight:700;
+  font-size:clamp(27px, 5vw, 46px); line-height:1.55; color:var(--gold-light);
+  margin-bottom:16px; opacity:0; animation:riseIn .8s .14s ease-out forwards;
+}
+html[dir="ltr"] .hero h1 { font-family:var(--font); font-size:clamp(24px,4.4vw,40px); line-height:1.3; }
+.hero p.tag {
+  font-size:clamp(15px, 2vw, 18.5px); color:var(--hero-text); max-width:760px; margin:0 auto 10px;
+  opacity:0; animation:riseIn .8s .22s ease-out forwards;
+}
+.hero p.loc {
+  font-size:14px; color:var(--hero-text-2); margin-bottom:34px;
+  opacity:0; animation:riseIn .8s .3s ease-out forwards;
+}
+.hero-cta { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; opacity:0; animation:riseIn .8s .38s ease-out forwards; }
+.cta {
+  padding:12px 26px; border-radius:11px; font-size:15px; font-weight:600;
+  font-family:var(--font); cursor:pointer; border:1px solid transparent;
+  display:inline-flex; align-items:center; gap:9px;
+  transition:transform .18s, box-shadow .18s, background .18s, border-color .18s;
+}
+.cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,.28); }
+.cta-gold { background:var(--gold); color:#20261F; }
+.cta-gold:hover { background:var(--gold-light); }
+.cta-ghost { background:transparent; color:var(--hero-text); border-color:rgba(243,241,234,.3); }
+.cta-ghost:hover { border-color:var(--gold-light); color:var(--gold-light); }
+.cta svg { width:18px; height:18px; }
+
+@keyframes riseIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+/* ═══ الاقتباس ═══ */
+.quote { background:var(--bg-2); border-bottom:1px solid var(--line); padding:44px 0; }
+.quote-in { max-width:860px; margin:0 auto; text-align:center; }
+.quote-mark { font-family:'Alharf', var(--font); font-size:40px; color:var(--gold); line-height:1; margin-bottom:6px; }
+.quote p { font-size:clamp(15px,2vw,18px); color:var(--text); line-height:2.1; }
+.quote cite { display:block; margin-top:12px; font-size:13.5px; color:var(--text-3); font-style:normal; }
+
+/* ═══ الأقسام ═══ */
+section.block { padding:76px 0; }
+.sec-head { margin-bottom:38px; }
+.sec-kicker {
+  display:inline-block; font-size:12.5px; font-weight:600; color:var(--gold-deep);
+  background:color-mix(in srgb, var(--gold) 12%, transparent);
+  padding:5px 13px; border-radius:999px; margin-bottom:13px;
+}
+.sec-head h2 {
+  font-family:'Alharf', var(--font); font-size:clamp(23px,3.4vw,33px);
+  color:var(--text); line-height:1.5; font-weight:700;
+}
+html[dir="ltr"] .sec-head h2 { font-family:var(--font); }
+.sec-head .rule { width:58px; height:3px; background:var(--gold); border-radius:3px; margin-top:14px; }
+
+.about-card {
+  background:var(--bg-2); border:1px solid var(--line); border-radius:18px;
+  padding:34px 32px; box-shadow:var(--shadow); font-size:17px; line-height:2.15; color:var(--text-2);
+}
+.about-card b { color:var(--text); font-weight:600; }
+.facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:14px; margin-top:22px; }
+.fact { background:var(--bg-3); border-radius:13px; padding:15px 17px; border:1px solid var(--line); }
+.fact .k { font-size:12.5px; color:var(--text-3); margin-bottom:3px; }
+.fact .v { font-size:15.5px; font-weight:600; color:var(--text); }
+
+.vmg { display:grid; grid-template-columns:repeat(auto-fit,minmax(282px,1fr)); gap:18px; }
+.vmg-card {
+  background:var(--bg-2); border:1px solid var(--line); border-radius:18px; padding:28px 26px;
+  box-shadow:var(--shadow); position:relative; overflow:hidden;
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.vmg-card::before {
+  content:''; position:absolute; inset-block-start:0; inset-inline-start:0;
+  width:100%; height:3px; background:linear-gradient(90deg, var(--gold), transparent);
+}
+.vmg-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lift); border-color:color-mix(in srgb, var(--gold) 45%, var(--line)); }
+.vmg-ico { width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--gold) 14%, transparent); color:var(--gold-deep); margin-bottom:15px; }
+.vmg-ico svg { width:22px; height:22px; }
+.vmg-card h3 { font-size:19px; font-weight:700; margin-bottom:10px; color:var(--text); }
+.vmg-card p { font-size:15px; color:var(--text-2); line-height:2.05; }
+
+/* ═══ الخدمات ═══ */
+.svc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(324px,1fr)); gap:16px; }
+.svc {
+  background:var(--bg-2); border:1px solid var(--line); border-radius:16px; padding:24px 24px 26px;
+  box-shadow:var(--shadow); position:relative;
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.svc:hover { transform:translateY(-4px); box-shadow:var(--shadow-lift); border-color:color-mix(in srgb, var(--gold) 45%, var(--line)); }
+.svc-top { display:flex; align-items:flex-start; gap:13px; margin-bottom:11px; }
+.svc-num {
+  flex:none; width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+  background:var(--ink); color:var(--gold-light); font-size:14.5px; font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+:root[data-theme="dark"] .svc-num { background:color-mix(in srgb, var(--gold) 18%, transparent); color:var(--gold-light); }
+.svc h3 { font-size:17.5px; font-weight:700; color:var(--text); padding-top:6px; }
+.svc p { font-size:14.8px; color:var(--text-2); line-height:2.05; }
+
+/* ═══ التواصل ═══ */
+.contact { background:var(--bg-2); border-block:1px solid var(--line); }
+.contact-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(252px,1fr)); gap:16px; }
+.ct {
+  display:flex; gap:14px; align-items:flex-start; padding:21px 22px;
+  background:var(--bg); border:1px solid var(--line); border-radius:15px;
+  transition:transform .2s ease, border-color .2s ease;
+}
+a.ct:hover { transform:translateY(-3px); border-color:var(--gold); }
+.ct-ico { flex:none; width:40px; height:40px; border-radius:11px; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--gold) 13%, transparent); color:var(--gold-deep); }
+.ct-ico svg { width:19px; height:19px; }
+.ct .k { font-size:12.5px; color:var(--text-3); margin-bottom:2px; }
+.ct .v { font-size:15px; font-weight:600; color:var(--text); overflow-wrap:anywhere; }
+/* الأرقام والبريد تُقرأ من اليسار، ويضعها الصندوق المضمّن في جهة النص الصحيحة */
+.num { direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ═══ التذييل ═══ */
+footer { background:var(--hero-bg); color:var(--hero-text-2); padding:40px 0 34px; text-align:center; }
+footer img { width:74px; margin:0 auto 16px; opacity:.92; }
+footer .fname { font-family:'Alharf', var(--font); font-size:17px; color:var(--gold-light); margin-bottom:8px; line-height:1.6; }
+html[dir="ltr"] footer .fname { font-family:var(--font); }
+footer .fmeta { font-size:12.5px; line-height:2; }
+footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:18px auto; }
+
+/* ═══ زر واتساب العائم ═══ */
+.wa {
+  position:fixed; right:20px; bottom:22px; z-index:60;
+  display:flex; align-items:center; gap:10px;
+  background:#25D366; color:#0B2912; border-radius:999px;
+  padding:13px 17px; font-size:14.5px; font-weight:700; font-family:var(--font);
+  box-shadow:0 10px 30px rgba(37,211,102,.38); cursor:pointer;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.wa:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 14px 36px rgba(37,211,102,.5); }
+.wa svg { width:24px; height:24px; flex:none; }
+.wa span { white-space:nowrap; }
+@media (max-width:620px) { .wa span { display:none; } .wa { padding:15px; } }
+
+/* ═══ ظهور تدريجي عند التمرير ═══ */
+.reveal { opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease; }
+.reveal.seen { opacity:1; transform:none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior:auto; }
+  .reveal { opacity:1; transform:none; transition:none; }
+  .hero-logo, .hero h1, .hero p.tag, .hero p.loc, .hero-cta { animation:none; opacity:1; }
+  .svc:hover, .vmg-card:hover, .cta:hover, .wa:hover, a.ct:hover { transform:none; }
+}
+
+@media (max-width:860px) {
+  .navlinks { display:none; }
+  .hero { padding:62px 0 74px; }
+  section.block { padding:56px 0; }
+  .about-card { padding:26px 21px; font-size:16px; }
+}
+@media (max-width:460px) {
+  .topbar-in { gap:9px; padding:10px 15px; }
+  .brand img { width:33px; }
+  .brand-txt { font-size:14.5px; }
+  html[dir="ltr"] .brand-txt { font-size:13.5px; }
+  .brand-sub { display:none; }
+  .icon-btn { width:34px; height:34px; }
+  .btn-portal { padding:8px 12px; font-size:13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ الشريط العلوي ═══════════ -->
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top">
+      <img src="../assets/logo-gold-t.png" alt="شعار مكتب الزاحم">
+      <div>
+        <div class="brand-txt" data-ar="مكتب الزاحم" data-en="Al-Zahem Law">مكتب الزاحم</div>
+        <div class="brand-sub" data-ar="للمحاماة والاستشارات القانونية" data-en="Lawyers &amp; Legal Consultants">للمحاماة والاستشارات القانونية</div>
+      </div>
+    </a>
+
+    <nav class="navlinks">
+      <a href="#about" data-ar="التعريف بالمكتب" data-en="About">التعريف بالمكتب</a>
+      <a href="#vision" data-ar="رؤيتنا" data-en="Vision">رؤيتنا</a>
+      <a href="#services" data-ar="خدماتنا" data-en="Services">خدماتنا</a>
+      <a href="#contact" data-ar="تواصل معنا" data-en="Contact">تواصل معنا</a>
+    </nav>
+
+    <div class="tools">
+      <button class="icon-btn" id="lang-btn" type="button" title="English" aria-label="تغيير اللغة">EN</button>
+      <button class="icon-btn" id="theme-btn" type="button" title="تعتيم الصفحة" aria-label="تعتيم الصفحة">
+        <svg id="theme-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>
+        </svg>
+      </button>
+      <a class="btn-portal" href="../" data-ar="بوابة الموكلين" data-en="Client Portal">بوابة الموكلين</a>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════ الواجهة ═══════════ -->
+<div id="top"></div>
+<section class="hero">
+  <div class="wrap hero-in">
+    <img class="hero-logo" src="../assets/logo-gold-t.png" alt="شعار مكتب الزاحم">
+    <h1 data-ar="مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم" data-en="Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem">مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم</h1>
+    <p class="tag" data-ar="للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق" data-en="Lawyering, Shariah &amp; legal consultancy, arbitration and documentation">للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق</p>
+    <p class="loc" data-ar="المدينة المنورة — طريق الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود" data-en="Madinah — King Abdullah Road (2nd Ring Road), opposite Bin Dawood markets">المدينة المنورة — طريق الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود</p>
+    <div class="hero-cta">
+      <a class="cta cta-gold" id="hero-wa" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.41a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.41-.56-.42h-.47c-.17 0-.43.06-.66.31-.22.25-.87.85-.87 2.07s.89 2.4 1.02 2.57c.12.16 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.15-1.18-.06-.11-.23-.17-.48-.29Z"/></svg>
+        <span data-ar="تواصل عبر واتساب" data-en="Chat on WhatsApp">تواصل عبر واتساب</span>
+      </a>
+      <a class="cta cta-ghost" href="#services" data-ar="تصفّح خدماتنا" data-en="Browse our services">تصفّح خدماتنا</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ الاقتباس ═══════════ -->
+<section class="quote">
+  <div class="wrap quote-in reveal">
+    <div class="quote-mark">❞</div>
+    <p data-ar="كنتُ أتمنى أن أكون محامياً؛ لأن المحاماة أجمل مهنة في العالم؛ فالمحامي يلجأ إليه الأغنياء والفقراء على السواء، ومن عملائه الأمراء والعظماء، يضحّي بوقته وصحّته وحتى بحياته في الدفاع عن متهم بريء، أو ضعيف مهضوم الحق." data-en="I wanted to be a lawyer, because lawyering is the most beautiful profession in the world; the lawyer is sought by the rich and the poor alike, and among his clients are princes and the great — sacrificing his time, his health, and even his life in defence of an innocent accused, or a weak soul whose right has been denied.">كنتُ أتمنى أن أكون محامياً؛ لأن المحاماة أجمل مهنة في العالم؛ فالمحامي يلجأ إليه الأغنياء والفقراء على السواء، ومن عملائه الأمراء والعظماء، يضحّي بوقته وصحّته وحتى بحياته في الدفاع عن متهم بريء، أو ضعيف مهضوم الحق.</p>
+    <cite data-ar="— قال أحد المفكرين" data-en="— One lawyer said">— قال أحد المفكرين</cite>
+  </div>
+</section>
+
+<!-- ═══════════ التعريف بالمكتب ═══════════ -->
+<section class="block" id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-kicker" data-ar="من نحن" data-en="Who we are">من نحن</span>
+      <h2 data-ar="التعريف بالمكتب" data-en="Introduction to the Office">التعريف بالمكتب</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="about-card reveal">
+      <p data-ar="مكتب أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق، بالمدينة المنورة، شارع الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود. يتولّى المكتب الوكالة عن عملائه في الترافع أمام المحاكم واللجان القضائيّة وشبه القضائيّة، ويقدّم الاستشارات وصياغة العقود والتحكيم وأعمال التوثيق، بكل سريّة وخصوصيّة واحترافيّة." data-en="The Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem for lawyering, Shariah and legal consultancy, arbitration and documentation — Madinah, King Abdullah Road (2nd Ring Road), opposite Bin Dawood markets. The office acts as agent for its clients before courts and judicial and quasi-judicial committees, and provides consultancy, contract drafting, arbitration and documentation — with full confidentiality, privacy and professionalism.">مكتب أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق، بالمدينة المنورة، شارع الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود. يتولّى المكتب الوكالة عن عملائه في الترافع أمام المحاكم واللجان القضائيّة وشبه القضائيّة، ويقدّم الاستشارات وصياغة العقود والتحكيم وأعمال التوثيق، بكل سريّة وخصوصيّة واحترافيّة.</p>
+      <div class="facts">
+        <div class="fact"><div class="k" data-ar="رقم الترخيص" data-en="Licence No.">رقم الترخيص</div><div class="v num">38321</div></div>
+        <div class="fact"><div class="k" data-ar="سجل المنشأة" data-en="CR No.">سجل المنشأة</div><div class="v num">7019939342</div></div>
+        <div class="fact"><div class="k" data-ar="الرقم المميز" data-en="Unique No.">الرقم المميز</div><div class="v num">3105777119</div></div>
+        <div class="fact"><div class="k" data-ar="العنوان الوطني المختصر" data-en="Short national address">العنوان الوطني المختصر</div><div class="v num">DMPA6717</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ الرؤية والرسالة والأهداف ═══════════ -->
+<section class="block" id="vision" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-kicker" data-ar="مبادئنا" data-en="Our principles">مبادئنا</span>
+      <h2 data-ar="رؤيتنا ورسالتنا وأهدافنا" data-en="Vision, Mission &amp; Goals">رؤيتنا ورسالتنا وأهدافنا</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="vmg">
+      <article class="vmg-card reveal">
+        <div class="vmg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3 data-ar="رؤيتنا" data-en="Our Vision">رؤيتنا</h3>
+        <p data-ar="الاحترافية في إقامة الدعاوى والترافع أمام المحاكم المختلفة واللجان القضائية، والريادة في تقديم الاستشارات الشرعيّة والقانونيّة في كافّة المجالات بكل سريّة وخصوصيّة، وسرعة الإنجاز مع الدقّة في تحكيم المنازعات، وتوفير جميع الخدمات المتعلّقة بمكاتب المحاماة." data-en="Professionalism in filing cases and pleading before the various courts and judicial committees; leadership in providing Shariah and legal consultancy across all fields with complete confidentiality and privacy; speed of completion with accuracy in arbitrating disputes; and the provision of every service related to law firms.">الاحترافية في إقامة الدعاوى والترافع أمام المحاكم المختلفة واللجان القضائية، والريادة في تقديم الاستشارات الشرعيّة والقانونيّة في كافّة المجالات بكل سريّة وخصوصيّة، وسرعة الإنجاز مع الدقّة في تحكيم المنازعات، وتوفير جميع الخدمات المتعلّقة بمكاتب المحاماة.</p>
+      </article>
+      <article class="vmg-card reveal">
+        <div class="vmg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3 data-ar="رسالتنا" data-en="Our Mission">رسالتنا</h3>
+        <p data-ar="التوكّل عن العملاء في إقامة الدعاوى والترافع أمام المحاكم المختلفة واللجان القضائيّة بكل سريّة واحترافيّة، وتقديم خدمات متميّزة في مختلف الاستشارات الشرعيّة والقانونيّة، وصياغة العقود التجاريّة والمدنيّة، والتحكيم في كافّة المنازعات، وتقسيم التركات، وإدارة الممتلكات، وتوثيق العقود والوكالات، وإنجاز جميع الأعمال الموكلة إلينا بكل عناية واهتمام." data-en="To act for our clients in filing and pleading before the various courts and judicial committees with full confidentiality and professionalism; to deliver distinguished services across Shariah and legal consultancy, commercial and civil contract drafting, arbitration of all disputes, division of estates, property management and the documentation of contracts and agencies — carrying out every matter entrusted to us with care and attention.">التوكّل عن العملاء في إقامة الدعاوى والترافع أمام المحاكم المختلفة واللجان القضائيّة بكل سريّة واحترافيّة، وتقديم خدمات متميّزة في مختلف الاستشارات الشرعيّة والقانونيّة، وصياغة العقود التجاريّة والمدنيّة، والتحكيم في كافّة المنازعات، وتقسيم التركات، وإدارة الممتلكات، وتوثيق العقود والوكالات، وإنجاز جميع الأعمال الموكلة إلينا بكل عناية واهتمام.</p>
+      </article>
+      <article class="vmg-card reveal">
+        <div class="vmg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
+        <h3 data-ar="أهدافنا" data-en="Our Goals">أهدافنا</h3>
+        <p data-ar="المساعدة في ترسيخ العدالة بإيصال الحقوق إلى أصحابها، وردّ المظالم، والانتصار للمظلومين، وتوفير الاستشارات الشرعية والقانونية بما يكفل حماية الحقوق والمصالح المشروعة لعملائنا، ونشر الثقافة القانونية بمعرفة الحقوق والواجبات بين أفراد المجتمع بطريقة واضحة سهلة." data-en="To help entrench justice by delivering rights to their owners, redressing grievances and vindicating the wronged; to provide Shariah and legal consultancy that safeguards our clients' legitimate rights and interests; and to spread legal awareness of rights and duties among members of society in a clear, accessible way.">المساعدة في ترسيخ العدالة بإيصال الحقوق إلى أصحابها، وردّ المظالم، والانتصار للمظلومين، وتوفير الاستشارات الشرعية والقانونية بما يكفل حماية الحقوق والمصالح المشروعة لعملائنا، ونشر الثقافة القانونية بمعرفة الحقوق والواجبات بين أفراد المجتمع بطريقة واضحة سهلة.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ خدماتنا ═══════════ -->
+<section class="block" id="services" style="background:var(--bg-3); border-block:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-kicker" data-ar="ماذا نقدّم" data-en="What we offer">ماذا نقدّم</span>
+      <h2 data-ar="خدماتنا" data-en="Our Services">خدماتنا</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="svc-grid" id="svc-grid"></div>
+  </div>
+</section>
+
+<!-- ═══════════ التواصل ═══════════ -->
+<section class="block contact" id="contact">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-kicker" data-ar="نسعد بخدمتكم" data-en="At your service">نسعد بخدمتكم</span>
+      <h2 data-ar="تواصل معنا" data-en="Contact Us">تواصل معنا</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="contact-grid">
+      <a class="ct reveal" id="ct-wa" href="#" target="_blank" rel="noopener">
+        <div class="ct-ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm4.52 12.15c-.25.58-1.25 1.11-1.72 1.18-.43.06-.97.09-1.56-.1-.36-.11-.82-.26-1.41-.52-2.48-1.07-4.11-3.58-4.23-3.74-.13-.17-1.02-1.35-1.02-2.57s.65-1.82.87-2.07c.23-.25.49-.31.66-.31h.47c.16.01.36-.6.56.42.2.5.7 1.72.76 1.84.06.12.1.26.02.43-.8.16-.12.26-.25.41-.12.14-.26.32-.37.43-.12.12-.25.25-.11.5.15.25.64 1.06 1.38 1.72.94.84 1.74 1.11 1.99 1.23.25.12.4.1.54-.6.15-.17.63-.73.79-.97.17-.25.33-.21.56-.13.22.09 1.44.69 1.69.81.25.12.42.18.48.29.06.1.06.6-.15 1.18Z"/></svg></div>
+        <div><div class="k" data-ar="واتساب" data-en="WhatsApp">واتساب</div><div class="v num" id="v-wa">+966 55 977 7374</div></div>
+      </a>
+      <a class="ct reveal" href="tel:+966506475000">
+        <div class="ct-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg></div>
+        <div><div class="k" data-ar="هاتف المكتب" data-en="Office phone">هاتف المكتب</div><div class="v num">+966 50 647 5000</div></div>
+      </a>
+      <a class="ct reveal" href="mailto:abdullah@alzahimlaw.com">
+        <div class="ct-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2.5"/><path d="m2.5 6.5 9.5 7 9.5-7"/></svg></div>
+        <div><div class="k" data-ar="البريد الإلكتروني" data-en="Email">البريد الإلكتروني</div><div class="v num">abdullah@alzahimlaw.com</div></div>
+      </a>
+      <div class="ct reveal">
+        <div class="ct-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10.5c0 5.5-8 11.5-8 11.5s-8-6-8-11.5a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10.3" r="2.8"/></svg></div>
+        <div><div class="k" data-ar="العنوان" data-en="Address">العنوان</div><div class="v" data-ar="المدينة المنورة — طريق الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود" data-en="Madinah — King Abdullah Road (2nd Ring Road), opposite Bin Dawood markets">المدينة المنورة — طريق الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ التذييل ═══════════ -->
+<footer>
+  <div class="wrap">
+    <img src="../assets/logo-gold-t.png" alt="شعار مكتب الزاحم">
+    <div class="fname" data-ar="مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات القانونية" data-en="Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem">مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات القانونية</div>
+    <div class="fsep"></div>
+    <div class="fmeta"><span data-ar="ترخيص رقم" data-en="Licence">ترخيص رقم</span> <span class="num">38321</span> · <span data-ar="سجل المنشأة" data-en="CR">سجل المنشأة</span> <span class="num">7019939342</span> · <span data-ar="المدينة المنورة" data-en="Madinah">المدينة المنورة</span></div>
+  </div>
+</footer>
+
+<!-- ═══════════ زر واتساب العائم ═══════════ -->
+<a class="wa" id="wa-fab" href="#" target="_blank" rel="noopener" aria-label="واتساب">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.41a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.41-.56-.42h-.47c-.17 0-.43.06-.66.31-.22.25-.87.85-.87 2.07s.89 2.4 1.02 2.57c.12.16 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.15-1.18-.06-.11-.23-.17-.48-.29Z"/></svg>
+  <span data-ar="تواصل معنا" data-en="Chat with us">تواصل معنا</span>
+</a>
+
+<script>
+'use strict';
+
+/* ═══ بيانات المكتب — تُعدَّل من هنا فقط ═══ */
+var OFFICE = { whatsapp: '966559777374' };
+
+/* ═══ الخدمات العشر ═══ */
+var SERVICES = [
+  { ar:['الترافع','يتولّى مكتبنا وكالة عن العملاء في إقامة الدعاوى والترافع في كافّة القضايا والمنازعات لدى المحاكم واللجان القضائيّة وشبه القضائيّة، في القضايا التجاريّة والمدنيّة والإداريّة.'],
+    en:['Pleading','Our office acts as agent for clients in filing claims and pleading in all cases and disputes before the courts and the judicial and quasi-judicial committees — commercial, civil and administrative.'] },
+  { ar:['إعداد لوائح الاستئناف','إذا أصدرت المحكمة الابتدائيّة أو محكمة الاستئناف حكمها في القضية، فإنّ للمحكوم عليه إن لم يقنع بالحكم الحقَّ في طلب الاستئناف، أو الاعتراض على الحكم، أو التماس إعادة النظر. ومكتبنا يقوم بصياغة تلك اللوائح بمهنيّة واحترافيّة.'],
+    en:['Appellate memoranda','Where the Court of First Instance or the Court of Appeal has rendered judgment, a convicted party unsatisfied with it has the right to appeal, object, or petition for reconsideration. Our office drafts these memoranda with full professionalism.'] },
+  { ar:['الاستشارات','يقوم مكتبنا بتقديم كافّة أنواع الاستشارات الشرعيّة والقانونيّة التي يحتاجها العملاء لتعاقداتهم وتعاملاتهم التجاريّة والمدنيّة، بعد دراسة وافية للمستندات والوقائع؛ لتحقيق أقصى درجات الحماية لحقوقهم.'],
+    en:['Consultancy','Our office provides every kind of Shariah and legal advice clients need for their contracts and their commercial and civil dealings, after a thorough study of the documents and facts, to achieve the fullest protection of their rights.'] },
+  { ar:['صياغة العقود','يقوم مكتبنا بصياغة جميع أنواع العقود التجاريّة والمدنيّة ومراجعتها وتدقيقها: كعقود البيع، والإيجار، والرهن، والعمل، وعقود الشركات، والامتياز التجاري، والوكالات، والمقاولات، والتشغيل والصيانة، والاستثمار.'],
+    en:['Contract drafting','Our office drafts, reviews and audits every kind of commercial and civil contract: sale, lease, mortgage and employment, as well as corporate contracts, commercial franchises, agencies, contracting, operation and maintenance, and investment.'] },
+  { ar:['قضايا الأوراق التجاريّة وتحصيل الدّيون','مع صدور نظام التنفيذ، يقوم مكتبنا بإقامة الدعاوى والردّ عليها في القضايا والمنازعات المتعلّقة بالأوراق التجاريّة (السند لأمر، الكمبيالة، الشيك)، وتحصيل الديون المستحقّة من المماطلين.'],
+    en:['Commercial papers & debt collection','Under the Enforcement Law, our office files and responds to cases and disputes concerning commercial papers (promissory notes, bills of exchange, cheques), and collects debts due from defaulting parties.'] },
+  { ar:['قضايا الأحوال الشخصيّة','يقوم مكتبنا وكالةً عن العملاء بكافّة قضايا الأحوال الشخصيّة، ومنها: إثبات تعيين الأوصياء، وإقامة الأولياء، والإذن لهم في التصرّفات التي تستوجب إذن المحكمة، والمنازعات الأسريّة التي تتطلّب الطلاق أو الخلع أو الفسخ.'],
+    en:['Personal status','Our office represents clients in all personal status matters: establishing the appointment of executors and guardians, authorising them in acts requiring the court’s leave, and family disputes involving divorce, khul‘ or annulment.'] },
+  { ar:['التركات والوصايا والأوقاف','يقوم مكتبنا بحصر الورثة، وقسمة التركات، والحراسة القضائيّة، وإثبات الوصايا والأوقاف، وصياغة شروطها، والإشراف عليها.'],
+    en:['Estates, wills & endowments','Our office identifies heirs, divides estates, handles judicial receivership, establishes wills and endowments, drafts their conditions and supervises them.'] },
+  { ar:['إدارة الأملاك','يقوم مكتبنا بإدارة الأملاك، ومتابعة عقود التشغيل، وتحصيل الإيجارات.'],
+    en:['Property management','Our office manages properties, follows up operating contracts, and collects rents.'] },
+  { ar:['التحكيم','يقوم مكتبنا بأعمال التحكيم بين الأفراد أو الشركات أو الجهات الاعتباريّة في مختلف المنازعات التجاريّة والمدنيّة.'],
+    en:['Arbitration','Our office conducts arbitration between individuals, companies and legal entities across commercial and civil disputes.'] },
+  { ar:['التوثيق','يقدّم مكتبنا أعمال التوثيق لجميع أنواع العقود والوكالات والإفراغات والإقرارات.'],
+    en:['Documentation','Our office provides documentation for all kinds of contracts, powers of attorney, title transfers and declarations.'] },
+];
+
+/* ═══ بناء بطاقات الخدمات ═══ */
+(function buildServices() {
+  var grid = document.getElementById('svc-grid');
+  var arNums = ['١','٢','٣','٤','٥','٦','٧','٨','٩','١٠'];
+  SERVICES.forEach(function (s, i) {
+    var el = document.createElement('article');
+    el.className = 'svc reveal';
+    var num = document.createElement('div');
+    num.className = 'svc-num';
+    num.setAttribute('data-ar', arNums[i]);
+    num.setAttribute('data-en', String(i + 1));
+    num.textContent = arNums[i];
+    var h = document.createElement('h3');
+    h.setAttribute('data-ar', s.ar[0]); h.setAttribute('data-en', s.en[0]);
+    h.textContent = s.ar[0];
+    var p = document.createElement('p');
+    p.setAttribute('data-ar', s.ar[1]); p.setAttribute('data-en', s.en[1]);
+    p.textContent = s.ar[1];
+    var top = document.createElement('div');
+    top.className = 'svc-top';
+    top.appendChild(num); top.appendChild(h);
+    el.appendChild(top); el.appendChild(p);
+    grid.appendChild(el);
+  });
+})();
+
+/* ═══ روابط واتساب ═══ */
+(function waLinks() {
+  var msg = encodeURIComponent('السلام عليكم، أود الاستفسار عن خدمات المكتب.');
+  var href = 'https://wa.me/' + OFFICE.whatsapp + '?text=' + msg;
+  ['wa-fab', 'hero-wa', 'ct-wa'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.href = href;
+  });
+})();
+
+/* ═══ تعتيم الصفحة ═══ */
+var SUN = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/>';
+var MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>';
+
+function applyTheme(mode) {
+  document.documentElement.setAttribute('data-theme', mode);
+  var ico = document.getElementById('theme-ico');
+  if (ico) ico.innerHTML = (mode === 'dark') ? SUN : MOON;
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', mode === 'dark' ? '#141A14' : '#263026');
+  var btn = document.getElementById('theme-btn');
+  if (btn) {
+    var isAr = document.documentElement.lang === 'ar';
+    btn.title = mode === 'dark'
+      ? (isAr ? 'إضاءة الصفحة' : 'Light mode')
+      : (isAr ? 'تعتيم الصفحة' : 'Dark mode');
+  }
+  try { localStorage.setItem('zahem-theme', mode); } catch (e) {}
+}
+
+(function initTheme() {
+  var saved = null;
+  try { saved = localStorage.getItem('zahem-theme'); } catch (e) {}
+  if (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) saved = 'dark';
+  applyTheme(saved === 'dark' ? 'dark' : 'light');
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* ═══ الترجمة ═══ */
+function applyLang(lang) {
+  var isAr = (lang === 'ar');
+  var html = document.documentElement;
+  html.lang = isAr ? 'ar' : 'en';
+  html.dir = isAr ? 'rtl' : 'ltr';
+  var nodes = document.querySelectorAll('[data-ar]');
+  for (var i = 0; i < nodes.length; i++) {
+    var n = nodes[i];
+    var txt = isAr ? n.getAttribute('data-ar') : n.getAttribute('data-en');
+    if (txt !== null) n.textContent = txt;
+  }
+  var btn = document.getElementById('lang-btn');
+  btn.textContent = isAr ? 'EN' : 'ع';
+  btn.title = isAr ? 'English' : 'العربية';
+  btn.setAttribute('aria-label', isAr ? 'Switch to English' : 'التحويل إلى العربية');
+  document.title = isAr
+    ? 'مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم للمحاماة والاستشارات القانونية'
+    : 'Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem';
+  applyTheme(html.getAttribute('data-theme'));
+  try { localStorage.setItem('zahem-lang', lang); } catch (e) {}
+}
+
+(function initLang() {
+  var saved = null;
+  try { saved = localStorage.getItem('zahem-lang'); } catch (e) {}
+  if (saved === 'en') applyLang('en');
+  document.getElementById('lang-btn').addEventListener('click', function () {
+    applyLang(document.documentElement.lang === 'ar' ? 'en' : 'ar');
+  });
+})();
+
+/* ═══ الظهور التدريجي ═══ */
+(function reveal() {
+  var items = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) {
+    for (var i = 0; i < items.length; i++) items[i].classList.add('seen');
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('seen'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+  for (var j = 0; j < items.length; j++) io.observe(items[j]);
+})();
+</script>
+</body>
+</html>
