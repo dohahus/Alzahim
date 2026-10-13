@@ -4542,7 +4542,7 @@ const OFFICE_FIELDS = [
   ['uniqueNo','الرقم المميز'], ['city','المدينة'],
   ['phone','هاتف المكتب'], ['mobile','الجوال'],
   ['email','البريد الإلكتروني'], ['shortAddress','العنوان الوطني المختصر'],
-  ['address','العنوان'], ['pobox','صندوق البريد'],
+  ['address','العنوان'],
   ['bank','البنك'], ['bankAccount','رقم الحساب'], ['iban','الآيبان'],
 ];
 function officeRowsHTML() {
@@ -4568,7 +4568,7 @@ async function saveOffice() {
   const row = {
     id: 1, name: vals.name, lawyer: vals.lawyer, license: vals.license, cr: vals.cr,
     unique_no: vals.uniqueNo, address: vals.address, short_address: vals.shortAddress,
-    pobox: vals.pobox, phone: vals.phone, mobile: vals.mobile, email: vals.email,
+    phone: vals.phone, mobile: vals.mobile, email: vals.email,
     city: vals.city, bank: vals.bank, bank_account: vals.bankAccount, iban: vals.iban,
     updated_at: new Date().toISOString(),
   };
