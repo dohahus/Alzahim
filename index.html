@@ -1828,15 +1828,26 @@ function addTaskToCalendar(taskId) {
 // ═══════════════════════════════════
 const PERM_DEFS = [
   ['cases','القضايا'], ['hearings','الجلسات'], ['tasks','المهام'], ['clients','الموكلون'],
-  ['invoices','الفواتير والعقود'], ['reports','التقارير'], ['settings','إعدادات المكتب'], ['users','إدارة المستخدمين'],
+  ['fee_contracts','عقود الأتعاب'], ['consulting_contracts','عقود الاستشارات'],
+  ['quotes','عروض الأسعار'], ['invoices','الفواتير'],
+  ['expenses','المصروفات'], ['reports','التقارير'], ['settings','إعدادات المكتب'], ['users','إدارة المستخدمين'],
 ];
+// كل نوع مستند له صلاحيته، فيُمكن تمكين موظف من إصدار عروض الأسعار
+// والفواتير دون أن يرى عقود الأتعاب ومبالغها
+const DOC_PERM = { fee:'fee_contracts', consulting:'consulting_contracts',
+                   quote:'quotes', invoice:'invoices', receipt:'invoices' };
+function canDoc(kind) { return hasPerm(DOC_PERM[kind || 'fee'] || 'invoices'); }
+function allowedDocKinds() { return ['fee','consulting','quote','invoice'].filter(canDoc); }
+// الوصول لصفحة المستندات المالية: من يملك أيّ نوع منها
+function canAnyDoc() { return allowedDocKinds().length > 0; }
+
 const ROLE_PRESETS = {
-  'مدير المكتب': { cases:true, hearings:true, tasks:true, clients:true, invoices:true, reports:true, settings:true, users:true },
-  'محامي':       { cases:true, hearings:true, tasks:true, clients:true, invoices:false, reports:false, settings:false, users:false },
-  'مستشار قانوني': { cases:true, hearings:true, tasks:true, clients:false, invoices:false, reports:false, settings:false, users:false },
-  'محامي متدرب': { cases:true, hearings:true, tasks:true, clients:false, invoices:false, reports:false, settings:false, users:false },
-  'محاسب':       { cases:false, hearings:false, tasks:true, clients:false, invoices:true, reports:true, settings:false, users:false },
-  'سكرتير':      { cases:false, hearings:true, tasks:true, clients:true, invoices:false, reports:false, settings:false, users:false },
+  'مدير المكتب': { cases:true, hearings:true, tasks:true, clients:true, fee_contracts:true, consulting_contracts:true, quotes:true, invoices:true, expenses:true, reports:true, settings:true, users:true },
+  'محامي':       { cases:true, hearings:true, tasks:true, clients:true, fee_contracts:false, consulting_contracts:false, quotes:false, invoices:false, expenses:false, reports:false, settings:false, users:false },
+  'مستشار قانوني': { cases:true, hearings:true, tasks:true, clients:false, fee_contracts:false, consulting_contracts:true, quotes:true, invoices:false, expenses:false, reports:false, settings:false, users:false },
+  'محامي متدرب': { cases:true, hearings:true, tasks:true, clients:false, fee_contracts:false, consulting_contracts:false, quotes:false, invoices:false, expenses:false, reports:false, settings:false, users:false },
+  'محاسب':       { cases:false, hearings:false, tasks:true, clients:false, fee_contracts:true, consulting_contracts:true, quotes:true, invoices:true, expenses:true, reports:true, settings:false, users:false },
+  'سكرتير':      { cases:false, hearings:true, tasks:true, clients:true, fee_contracts:false, consulting_contracts:false, quotes:true, invoices:true, expenses:false, reports:false, settings:false, users:false },
 };
 // الحسابات كلها في قاعدة البيانات وكلمات مرورها مُعمّاة هناك — لا حسابات
 // مكتوبة في الصفحة، فملف الموقع مكشوف لأي زائر.
@@ -2405,7 +2416,10 @@ function startApp() {
 // ═══════════════════════════════════
 function hasPerm(k) {
   const u = DB.currentUser;
-  return !!(u && u.type === 'admin' && u.perms && u.perms[k]);
+  if (!u || u.type !== 'admin' || !u.perms) return false;
+  // صلاحية مركّبة: الوصول للمستندات المالية لمن يملك أيّ نوع منها
+  if (k === 'anyDoc') return ['fee_contracts','consulting_contracts','quotes','invoices'].some(x => u.perms[x]);
+  return !!u.perms[k];
 }
 // نطاق البيانات: صاحب المكتب (صلاحية إدارة المستخدمين) يرى كل شيء،
 // وبقية الحسابات (محامٍ/مستشار/محاسب/سكرتير) تقتصر على ما يخصها فقط
@@ -2443,8 +2457,8 @@ const ADMIN_NAV = [
   { id:'clients', icon:ic('users',18), label:'الموكلون', perm:'clients' },
   { id:'client-tickets', icon:ic('message-circle',18), label:'رسائل الموكلين', perm:'clients', badge: () => myScopedTickets().filter(t=>t.status==='open').length },
   { section: 'المالية' },
-  { id:'invoices', icon:ic('wallet',18), label:'الفواتير', perm:'invoices' },
-  { id:'expenses', icon:ic('trending',18), label:'المصروفات', perm:'invoices' },
+  { id:'invoices', icon:ic('wallet',18), label:'الفواتير والعقود', perm:'anyDoc' },
+  { id:'expenses', icon:ic('trending',18), label:'المصروفات', perm:'expenses' },
   { section: 'التقارير' },
   { id:'reports', icon:ic('chart',18), label:'التقارير والإحصاءات', perm:'reports' },
   { id:'settings', icon:ic('settings',18), label:'الإعدادات', perm:'settings' },
@@ -2479,7 +2493,7 @@ function buildSidebar() {
   });
 }
 let currentPage = '';
-const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', 'client-tickets':'clients', invoices:'invoices', expenses:'invoices', reports:'reports', settings:'settings' };
+const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', 'client-tickets':'clients', invoices:'anyDoc', expenses:'expenses', reports:'reports', settings:'settings' };
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-backdrop').classList.toggle('open');
@@ -2549,7 +2563,7 @@ function renderDashboard() {
   const unpaidInv = fin.due;
   const todayH = hearings.filter(h => h.date === new Date().toISOString().split('T')[0]);
   const pendingTasks = tasks.filter(t=>!t.done);
-  const canSeeFinance = hasPerm('invoices');
+  const canSeeFinance = hasPerm('fee_contracts');
 
   return `
   <div class="stats-grid">
@@ -2771,7 +2785,7 @@ function renderCdmBody() {
   const c = DB.cases.find(x=>x.id===cdmState.caseId);
   if (!c) return;
   const cl = DB.clients.find(x=>x.id===c.clientId);
-  const canSeeFinance = hasPerm('invoices');
+  const canSeeFinance = hasPerm('fee_contracts');
   const tabs = [
     ['updates','المستجدات','scroll'],
     ...(canSeeFinance ? [['contract','العقد','file']] : []),
@@ -2818,7 +2832,7 @@ function renderCdmBody() {
   document.getElementById('cdm-body').innerHTML = iconify(body);
 }
 function renderCdmTab(c, cl, tab) {
-  if ((tab === 'contract' || tab === 'payments') && !hasPerm('invoices')) return renderCdmUpdates(c);
+  if ((tab === 'contract' || tab === 'payments') && !hasPerm('fee_contracts')) return renderCdmUpdates(c);
   if (tab === 'updates') return renderCdmUpdates(c);
   if (tab === 'contract') return renderCdmContract(c, cl);
   if (tab === 'agency') return renderCdmDocs(c, 'agency', 'الوكالة', 'صك الوكالة الشرعية');
@@ -2864,7 +2878,7 @@ function renderCdmUpdates(c) {
 }
 function renderCdmContract(c, cl) {
   const invs = billableInvoices().filter(inv => (inv.caseIds||[]).includes(c.id));
-  const addBtn = hasPerm('invoices') ? `<button class="btn btn-secondary" onclick="closeModal('case-detail-modal',{});openInvoiceModalForCase('${c.id}')">➕ عقد أتعاب لهذه القضية</button>` : '';
+  const addBtn = hasPerm('fee_contracts') ? `<button class="btn btn-secondary" onclick="closeModal('case-detail-modal',{});openInvoiceModalForCase('${c.id}')">➕ عقد أتعاب لهذه القضية</button>` : '';
   if (!invs.length) {
     return `<div class="card" style="text-align:center;padding:36px 20px">
       <div style="color:var(--gray-light);font-size:14.9px;margin-bottom:16px">لا يوجد عقد أتعاب مرتبط بهذه القضية بعد</div>
@@ -3742,8 +3756,9 @@ async function deleteClient(id) {
 //  INVOICES
 // ═══════════════════════════════════
 function renderInvoices() {
-  const total = billableInvoices().reduce((s,i)=>s+invTotal(i),0);
-  const paid = billableInvoices().reduce((s,i)=>s+invPaidAmount(i),0);
+  const mine = billableInvoices().filter(i => canDoc(i.kind || 'fee'));
+  const total = mine.reduce((s,i)=>s+invTotal(i),0);
+  const paid = mine.reduce((s,i)=>s+invPaidAmount(i),0);
   const unpaid = total - paid;
   const stLabel = { paid:'مسدَّدة', partial:'سداد جزئي', unpaid:'مستحقة' };
   const stBadge = { paid:'badge-active', partial:'badge-partial', unpaid:'badge-urgent' };
@@ -3761,8 +3776,8 @@ function renderInvoices() {
     <table>
       <thead><tr><th>النوع</th><th>الرقم</th><th>القضايا</th><th>العميل</th><th>الإجمالي (ر.س)</th><th>المُحصَّل</th><th>الدفعات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
       <tbody>
-        ${DB.invoices.length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد مستندات بعد — اضغط «مستند جديد» لإصدار عقد أو عرض سعر أو فاتورة</td></tr>' : ''}
-        ${DB.invoices.map(inv => {
+        ${DB.invoices.filter(inv => canDoc(inv.kind || 'fee')).length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد مستندات بعد — اضغط «مستند جديد» لإصدار عقد أو عرض سعر أو فاتورة</td></tr>' : ''}
+        ${DB.invoices.filter(inv => canDoc(inv.kind || 'fee')).map(inv => {
           const cl = docClient(inv);
           const nums = (inv.caseIds||[]).map(id=>{const c=DB.cases.find(x=>x.id===id);return c?c.num:'';}).filter(Boolean).join('، ') || '—';
           const st = invStatus(inv);
@@ -5252,6 +5267,7 @@ const DOC_KINDS = {
 };
 let invKind = 'fee';
 function setInvKind(kind) {
+  if (!canDoc(kind)) kind = allowedDocKinds()[0] || 'invoice';
   invKind = kind;
   const k = DOC_KINDS[kind];
   document.querySelectorAll('#inv-kind-grid .doc-kind').forEach(b =>
@@ -5332,7 +5348,11 @@ function populateInvoiceModal(kind) {
     grid.querySelectorAll('.dk-icon').forEach(el => { el.innerHTML = iconify(el.textContent.trim(), 20); });
     grid.dataset.iconified = '1';
   }
-  setInvKind(kind || 'fee');
+  // تُخفى أزرار الأنواع التي لا يملكها المستخدم
+  document.querySelectorAll('#inv-kind-grid .doc-kind').forEach(b => {
+    b.style.display = canDoc(b.dataset.kind) ? '' : 'none';
+  });
+  setInvKind(kind && canDoc(kind) ? kind : (allowedDocKinds()[0] || 'fee'));
   updateInvDatePreview();
 }
 function updateInvDatePreview() {
