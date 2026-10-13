@@ -700,6 +700,9 @@ tbody td { padding:13px 16px; font-size:14.9px; }
   color:var(--white); font-family:inherit; font-size:14.9px; outline:none;
 }
 .task-filter-bar select:focus { border-color:var(--gold); }
+.pending-row { background:rgba(179,91,0,.04); }
+.pending-row td { color:var(--gray-light); }
+
 .task-icon-btn {
   background:none; border:1px solid var(--border); color:var(--gray-light);
   border-radius:7px; width:30px; height:30px; cursor:pointer; font-family:inherit;
@@ -1845,6 +1848,7 @@ let DB = {
   clients: [],
   cases: [],
   expenses: [],
+  pending: [],
   hearings: [],
   tasks: [],
   invoices: [],
@@ -1919,6 +1923,15 @@ async function loadFromDatabase() {
     // المصروفات لا يراها إلا صاحب صلاحية الفواتير، وسياسة الحماية تُرجع فارغاً لغيره
     sb.from('expenses').select('*').order('date', { ascending: false }),
   ]);
+  // الحسابات التي أُنشئت ولم يدخل أصحابها بعد — تُقرأ بدالة لأن جدولها محجوب
+  DB.pending = [];
+  if (DB.currentUser && DB.currentUser.perms && DB.currentUser.perms.users) {
+    const pend = await sb.rpc('list_pending_accounts');
+    if (!pend.error) DB.pending = (pend.data || []).map(r => ({
+      user: r.username, name: r.name, role: r.role || '—',
+      kind: r.kind, email: r.email || '', createdAt: r.created_at,
+    }));
+  }
   const anyErr = [['staff',staff],['clients',clients],['cases',cases],['case_updates',updates],
     ['case_documents',docs],['hearings',hearings],['tasks',tasks],['task_comments',comments],
     ['task_assignees',assignees],['invoices',invoices],['invoice_cases',invCases],['installments',insts],
@@ -4536,6 +4549,20 @@ function renderSettings() {
       <table>
         <thead><tr><th>الاسم</th><th>اسم الدخول</th><th>الدور</th><th>الصلاحيات</th><th>إجراءات</th></tr></thead>
         <tbody>
+          ${(DB.pending || []).filter(p => p.kind === 'staff').map(p => `<tr class="pending-row">
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="user-avatar" style="width:32px;height:32px;font-size:14.9px;opacity:.5">${escHtml(p.name).charAt(0)}</div>
+                <span>${escHtml(p.name)}</span>
+              </div>
+            </td>
+            <td class="ref-code">${escHtml(p.user)}</td>
+            <td>${escHtml(p.role)}</td>
+            <td><span class="badge badge-partial">بانتظار أول دخول</span></td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="cancelPendingAccount('${escHtml(p.user)}','${escHtml(p.name)}')">🗑️ إلغاء الدعوة</button>
+            </td>
+          </tr>`).join('')}
           ${DB.users.map(u => `<tr>
             <td>
               <div style="display:flex;align-items:center;gap:10px">
@@ -4625,6 +4652,12 @@ async function revokeClientAccount(clientId) {
     .update({ username: null, auth_user_id: null }).eq('id', clientId));
   if (ok) navTo('settings');
 }
+async function cancelPendingAccount(username, name) {
+  if (!confirm(`إلغاء دعوة «${name}»؟\n\nلن يتمكن من الدخول باسم «${username}»، ويمكنك إنشاؤها من جديد متى شئت.`)) return;
+  const ok = await dbWrite('إلغاء الدعوة', () => sb.rpc('cancel_pending_account', { p_username: username }));
+  if (ok) navTo('settings');
+}
+
 function renderPermChecks(perms) {
   document.getElementById('um-perms').innerHTML = PERM_DEFS.map(([k,l]) => `
     <label class="perm-item"><input type="checkbox" class="um-perm" value="${k}" ${perms && perms[k] ? 'checked' : ''} /> ${l}</label>`).join('');
@@ -4709,7 +4742,9 @@ async function saveUser() {
       p_username: user, p_password: pass, p_kind: 'staff',
       p_name: name, p_role: role, p_perms: perms, p_client_id: null, p_email: email,
     }));
-    if (ok) alert(`أُنشئ حساب «${name}».\nيدخل باسم المستخدم «${user}»${email ? ' أو ببريده' : ''} والرمز الذي وضعته.`);
+    if (ok) alert(`أُنشئ حساب «${name}».\n\n`
+      + `يدخل باسم المستخدم «${user}»${email ? ' أو ببريده' : ''} والرمز الذي وضعته.\n\n`
+      + `سيظهر في القائمة بعلامة «بانتظار أول دخول»، وينتقل لقائمة المستخدمين فور دخوله أول مرة.`);
   }
   if (!ok) return;
   closeModal('user-modal',{});
