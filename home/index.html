@@ -84,10 +84,7 @@ a { color:inherit; text-decoration:none; }
 }
 .topbar-in { max-width:1120px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:16px; }
 .brand { display:flex; align-items:center; gap:11px; margin-inline-end:auto; }
-.brand img { width:40px; height:auto; }
-.brand-txt { font-family:'Alharf', var(--font); font-size:17px; color:var(--gold-deep); line-height:1.3; white-space:nowrap; }
-html[dir="ltr"] .brand-txt { font-family:var(--font); font-size:15.5px; font-weight:700; }
-.brand-sub { font-size:10.5px; color:var(--text-3); letter-spacing:0; }
+.brand img { width:52px; height:auto; }
 
 .navlinks { display:flex; gap:4px; }
 .navlinks a {
@@ -141,35 +138,15 @@ html[dir="ltr"] .brand-txt { font-family:var(--font); font-size:15.5px; font-wei
 }
 html[dir="ltr"] .hero h1 { font-family:var(--font); font-size:clamp(24px,4.4vw,40px); line-height:1.3; }
 .hero p.tag {
-  font-size:clamp(15px, 2vw, 18.5px); color:var(--hero-text); max-width:760px; margin:0 auto 10px;
+  font-size:clamp(15px, 2vw, 18.5px); color:var(--hero-text); max-width:760px; margin:0 auto;
   opacity:0; animation:riseIn .8s .22s ease-out forwards;
 }
 .hero p.loc {
   font-size:14px; color:var(--hero-text-2); margin-bottom:34px;
   opacity:0; animation:riseIn .8s .3s ease-out forwards;
 }
-.hero-cta { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; opacity:0; animation:riseIn .8s .38s ease-out forwards; }
-.cta {
-  padding:12px 26px; border-radius:11px; font-size:15px; font-weight:600;
-  font-family:var(--font); cursor:pointer; border:1px solid transparent;
-  display:inline-flex; align-items:center; gap:9px;
-  transition:transform .18s, box-shadow .18s, background .18s, border-color .18s;
-}
-.cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,.28); }
-.cta-gold { background:var(--gold); color:#20261F; }
-.cta-gold:hover { background:var(--gold-light); }
-.cta-ghost { background:transparent; color:var(--hero-text); border-color:rgba(243,241,234,.3); }
-.cta-ghost:hover { border-color:var(--gold-light); color:var(--gold-light); }
-.cta svg { width:18px; height:18px; }
 
 @keyframes riseIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-
-/* ═══ الاقتباس ═══ */
-.quote { background:var(--bg-2); border-bottom:1px solid var(--line); padding:44px 0; }
-.quote-in { max-width:860px; margin:0 auto; text-align:center; }
-.quote-mark { font-family:'Alharf', var(--font); font-size:40px; color:var(--gold); line-height:1; margin-bottom:6px; }
-.quote p { font-size:clamp(15px,2vw,18px); color:var(--text); line-height:2.1; }
-.quote cite { display:block; margin-top:12px; font-size:13.5px; color:var(--text-3); font-style:normal; }
 
 /* ═══ الأقسام ═══ */
 section.block { padding:76px 0; }
@@ -258,17 +235,23 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
 
 /* ═══ زر واتساب العائم ═══ */
 .wa {
-  position:fixed; right:20px; bottom:22px; z-index:60;
-  display:flex; align-items:center; gap:10px;
-  background:#25D366; color:#0B2912; border-radius:999px;
-  padding:13px 17px; font-size:14.5px; font-weight:700; font-family:var(--font);
+  position:fixed; right:22px; bottom:24px; z-index:60;
+  width:58px; height:58px; display:grid; place-items:center;
+  background:#25D366; color:#0B2912; border-radius:50%;
   box-shadow:0 10px 30px rgba(37,211,102,.38); cursor:pointer;
   transition:transform .2s ease, box-shadow .2s ease;
 }
-.wa:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 14px 36px rgba(37,211,102,.5); }
-.wa svg { width:24px; height:24px; flex:none; }
-.wa span { white-space:nowrap; }
-@media (max-width:620px) { .wa span { display:none; } .wa { padding:15px; } }
+.wa:hover { transform:scale(1.07); box-shadow:0 14px 36px rgba(37,211,102,.5); }
+.wa svg { width:28px; height:28px; }
+/* إطار ذهبي دوّار يلفت النظر إلى الزر */
+.wa::before {
+  content:''; position:absolute; inset:-8px; border-radius:50%;
+  border:2px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-top-color:var(--gold); border-inline-end-color:var(--gold);
+  animation:waSpin 2.6s linear infinite;
+}
+@keyframes waSpin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .wa::before { animation:none; } }
 
 /* ═══ ظهور تدريجي عند التمرير ═══ */
 .reveal { opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease; }
@@ -277,8 +260,8 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior:auto; }
   .reveal { opacity:1; transform:none; transition:none; }
-  .hero-logo, .hero h1, .hero p.tag, .hero p.loc, .hero-cta { animation:none; opacity:1; }
-  .svc:hover, .vmg-card:hover, .cta:hover, .wa:hover, a.ct:hover { transform:none; }
+  .hero-logo, .hero h1, .hero p.tag { animation:none; opacity:1; }
+  .svc:hover, .vmg-card:hover, .wa:hover, a.ct:hover { transform:none; }
 }
 
 @media (max-width:860px) {
@@ -289,10 +272,7 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
 }
 @media (max-width:460px) {
   .topbar-in { gap:9px; padding:10px 15px; }
-  .brand img { width:33px; }
-  .brand-txt { font-size:14.5px; }
-  html[dir="ltr"] .brand-txt { font-size:13.5px; }
-  .brand-sub { display:none; }
+  .brand img { width:44px; }
   .icon-btn { width:34px; height:34px; }
   .btn-portal { padding:8px 12px; font-size:13px; }
 }
@@ -305,10 +285,6 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
   <div class="topbar-in">
     <a class="brand" href="#top">
       <img src="../assets/logo-gold-t.png" alt="شعار مكتب الزاحم">
-      <div>
-        <div class="brand-txt" data-ar="مكتب الزاحم" data-en="Al-Zahem Law">مكتب الزاحم</div>
-        <div class="brand-sub" data-ar="للمحاماة والاستشارات القانونية" data-en="Lawyers &amp; Legal Consultants">للمحاماة والاستشارات القانونية</div>
-      </div>
     </a>
 
     <nav class="navlinks">
@@ -337,23 +313,6 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
     <img class="hero-logo" src="../assets/logo-gold-t.png" alt="شعار مكتب الزاحم">
     <h1 data-ar="مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم" data-en="Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem">مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم</h1>
     <p class="tag" data-ar="للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق" data-en="Lawyering, Shariah &amp; legal consultancy, arbitration and documentation">للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق</p>
-    <p class="loc" data-ar="المدينة المنورة — طريق الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود" data-en="Madinah — King Abdullah Road (2nd Ring Road), opposite Bin Dawood markets">المدينة المنورة — طريق الملك عبدالله (الدائري الثاني) مقابل أسواق بن داود</p>
-    <div class="hero-cta">
-      <a class="cta cta-gold" id="hero-wa" href="#" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.41a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.41-.56-.42h-.47c-.17 0-.43.06-.66.31-.22.25-.87.85-.87 2.07s.89 2.4 1.02 2.57c.12.16 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.15-1.18-.06-.11-.23-.17-.48-.29Z"/></svg>
-        <span data-ar="تواصل عبر واتساب" data-en="Chat on WhatsApp">تواصل عبر واتساب</span>
-      </a>
-      <a class="cta cta-ghost" href="#services" data-ar="تصفّح خدماتنا" data-en="Browse our services">تصفّح خدماتنا</a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════ الاقتباس ═══════════ -->
-<section class="quote">
-  <div class="wrap quote-in reveal">
-    <div class="quote-mark">❞</div>
-    <p data-ar="كنتُ أتمنى أن أكون محامياً؛ لأن المحاماة أجمل مهنة في العالم؛ فالمحامي يلجأ إليه الأغنياء والفقراء على السواء، ومن عملائه الأمراء والعظماء، يضحّي بوقته وصحّته وحتى بحياته في الدفاع عن متهم بريء، أو ضعيف مهضوم الحق." data-en="I wanted to be a lawyer, because lawyering is the most beautiful profession in the world; the lawyer is sought by the rich and the poor alike, and among his clients are princes and the great — sacrificing his time, his health, and even his life in defence of an innocent accused, or a weak soul whose right has been denied.">كنتُ أتمنى أن أكون محامياً؛ لأن المحاماة أجمل مهنة في العالم؛ فالمحامي يلجأ إليه الأغنياء والفقراء على السواء، ومن عملائه الأمراء والعظماء، يضحّي بوقته وصحّته وحتى بحياته في الدفاع عن متهم بريء، أو ضعيف مهضوم الحق.</p>
-    <cite data-ar="— قال أحد المفكرين" data-en="— One lawyer said">— قال أحد المفكرين</cite>
   </div>
 </section>
 
@@ -459,7 +418,6 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
 <!-- ═══════════ زر واتساب العائم ═══════════ -->
 <a class="wa" id="wa-fab" href="#" target="_blank" rel="noopener" aria-label="واتساب">
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.41a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.41-.56-.42h-.47c-.17 0-.43.06-.66.31-.22.25-.87.85-.87 2.07s.89 2.4 1.02 2.57c.12.16 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.15-1.18-.06-.11-.23-.17-.48-.29Z"/></svg>
-  <span data-ar="تواصل معنا" data-en="Chat with us">تواصل معنا</span>
 </a>
 
 <script>
@@ -522,7 +480,7 @@ var SERVICES = [
 (function waLinks() {
   var msg = encodeURIComponent('السلام عليكم، أود الاستفسار عن خدمات المكتب.');
   var href = 'https://wa.me/' + OFFICE.whatsapp + '?text=' + msg;
-  ['wa-fab', 'hero-wa', 'ct-wa'].forEach(function (id) {
+  ['wa-fab', 'ct-wa'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.href = href;
   });
