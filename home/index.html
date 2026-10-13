@@ -152,9 +152,26 @@ html[dir="ltr"] .hero h1 { font-family:var(--font); font-size:clamp(24px,4.4vw,4
 section.block { padding:76px 0; }
 .sec-head { margin-bottom:38px; }
 .sec-kicker {
+  position:relative; overflow:hidden;
   display:inline-block; font-size:12.5px; font-weight:600; color:var(--gold-deep);
   background:color-mix(in srgb, var(--gold) 12%, transparent);
   padding:5px 13px; border-radius:999px; margin-bottom:13px;
+}
+.sec-kicker::after {
+  content:''; position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:linear-gradient(105deg,
+    transparent 25%,
+    color-mix(in srgb, var(--gold-light) 85%, transparent) 47%,
+    color-mix(in srgb, #FFFFFF 70%, transparent) 52%,
+    transparent 75%);
+  transform:translateX(-130%);
+}
+.reveal.seen .sec-kicker::after { animation:kickerShine 1.5s cubic-bezier(.35,0,.25,1) .25s; }
+@keyframes kickerShine {
+  0%   { transform:translateX(-130%); opacity:0; }
+  12%  { opacity:1; }
+  88%  { opacity:1; }
+  100% { transform:translateX(130%); opacity:0; }
 }
 .sec-head h2 {
   font-family:'Alharf', var(--font); font-size:clamp(23px,3.4vw,33px);
@@ -163,13 +180,30 @@ section.block { padding:76px 0; }
 html[dir="ltr"] .sec-head h2 { font-family:var(--font); }
 .sec-head .rule { width:58px; height:3px; background:var(--gold); border-radius:3px; margin-top:14px; }
 
+/* النبذة في فقاعة حوار رسمية، ذيلها جهة بداية السطر */
 .about-card {
-  background:var(--bg-2); border:1px solid var(--line); border-radius:18px;
-  padding:34px 32px; box-shadow:var(--shadow); font-size:17px; line-height:2.15; color:var(--text-2);
+  position:relative; background:var(--bg-2); border:1px solid var(--line);
+  border-radius:20px; border-start-start-radius:6px;
+  padding:34px 32px; box-shadow:var(--shadow);
+  font-size:17px; line-height:2.15; color:var(--text-2);
+}
+.about-card::after {
+  content:''; position:absolute; top:-9px; inset-inline-start:30px;
+  width:17px; height:17px; background:var(--bg-2);
+  border-top:1px solid var(--line); border-inline-start:1px solid var(--line);
+  transform:rotate(45deg); border-start-start-radius:4px;
 }
 .about-card b { color:var(--text); font-weight:600; }
-.facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:14px; margin-top:22px; }
-.fact { background:var(--bg-3); border-radius:13px; padding:15px 17px; border:1px solid var(--line); }
+
+/* التراخيص في بطاقة مستقلة عن النبذة */
+.licences { margin-top:26px; }
+.lic-label {
+  font-size:13px; font-weight:600; color:var(--text-3);
+  margin-bottom:12px; display:flex; align-items:center; gap:10px;
+}
+.lic-label::after { content:''; flex:1; height:1px; background:var(--line); }
+.facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:14px; }
+.fact { background:var(--bg-2); border-radius:14px; padding:16px 18px; border:1px solid var(--line); box-shadow:var(--shadow); }
 .fact .k { font-size:12.5px; color:var(--text-3); margin-bottom:3px; }
 .fact .v { font-size:15.5px; font-weight:600; color:var(--text); }
 
@@ -260,6 +294,7 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior:auto; }
   .reveal { opacity:1; transform:none; transition:none; }
+  .reveal.seen .sec-kicker::after { animation:none; }
   .hero-logo, .hero h1, .hero p.tag { animation:none; opacity:1; }
   .svc:hover, .vmg-card:hover, .wa:hover, a.ct:hover { transform:none; }
 }
@@ -326,6 +361,9 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
     </div>
     <div class="about-card reveal">
       <p data-ar="مكتب أ.د. عبد الله بن إبراهيم الزاحم للمحاماة يضمّ نخبةً من المحامين والمستشارين وذوي الخبرة في ممارسة نشاط المحاماة والاستشارات الشرعية والنظامية وما يتفرّع عنها من أنشطة، ولديه من الإمكانات والخبرات ما يكفي لتقديم هذه الخدمات لعملائه في كافة المجالات الشرعية والنظامية وما يتعلّق بمهنة المحاماة." data-en="The Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem brings together a select group of lawyers and consultants experienced in the practice of law and in Shariah and statutory consultancy and the activities branching from them. It holds the resources and expertise sufficient to deliver these services to its clients across every Shariah and statutory field connected with the legal profession.">مكتب أ.د. عبد الله بن إبراهيم الزاحم للمحاماة يضمّ نخبةً من المحامين والمستشارين وذوي الخبرة في ممارسة نشاط المحاماة والاستشارات الشرعية والنظامية وما يتفرّع عنها من أنشطة، ولديه من الإمكانات والخبرات ما يكفي لتقديم هذه الخدمات لعملائه في كافة المجالات الشرعية والنظامية وما يتعلّق بمهنة المحاماة.</p>
+    </div>
+    <div class="licences reveal">
+      <div class="lic-label" data-ar="التراخيص والسجلات" data-en="Licences &amp; registrations">التراخيص والسجلات</div>
       <div class="facts">
         <div class="fact"><div class="k" data-ar="رقم الترخيص" data-en="Licence No.">رقم الترخيص</div><div class="v num">38321</div></div>
         <div class="fact"><div class="k" data-ar="سجل المنشأة" data-en="CR No.">سجل المنشأة</div><div class="v num">7019939342</div></div>
