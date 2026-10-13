@@ -1072,6 +1072,20 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 </div>
 
 <!-- ═══════════════ MODAL: ADD CASE ═══════════════ -->
+<div class="modal-overlay" id="applicant-modal" style="display:none" onclick="closeModal('applicant-modal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="applicant-modal-title">طلب توظيف</span>
+      <button class="modal-close" onclick="closeModal('applicant-modal',event)">×</button>
+    </div>
+    <div class="modal-body" id="applicant-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('applicant-modal',event)">إغلاق</button>
+      <button class="btn btn-primary" onclick="saveApplicantNote()">💾 حفظ الملاحظة</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="add-case-modal" style="display:none" onclick="closeModal('add-case-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -2582,6 +2596,206 @@ function renderPage(page) {
     case 'client-contact': c.innerHTML = iconify(renderClientContact()); break;
     default: c.innerHTML = '<p style="color:var(--gray)">الصفحة قيد التطوير</p>';
   }
+}
+
+// ═══════════════════════════════════
+//  التوظيف — طلبات تصل من الصفحة التعريفية
+//  بيانات المتقدّمين تأتي من زائر مجهول، فتُرشَّح عند العرض بلا استثناء
+// ═══════════════════════════════════
+const JOB_POSITIONS = ['محامٍ','مستشار قانوني','باحث قانوني','متدرّب/متدرّبة','سكرتير تنفيذي','محاسب','موظف إداري','أخرى'];
+const JOB_QUALS = ['ثانوية عامة','دبلوم','بكالوريوس','ماجستير','دكتوراه'];
+const JOB_EXPS = ['بدون خبرة','أقل من سنة','١ – ٣ سنوات','٣ – ٥ سنوات','٥ – ١٠ سنوات','أكثر من ١٠ سنوات'];
+const JOB_AVAILS = ['فوراً','خلال شهر','خلال ثلاثة أشهر'];
+const JOB_STATUSES = ['جديد','قيد المراجعة','مقابلة','مقبول','مرفوض'];
+
+let hireFilter = { q:'', position:'', exp:'', qual:'', city:'', status:'' };
+
+function hireMatches(a) {
+  const f = hireFilter;
+  if (f.position && a.position !== f.position) return false;
+  if (f.exp && a.experience !== f.exp) return false;
+  if (f.qual && a.qualification !== f.qual) return false;
+  if (f.city && a.city !== f.city) return false;
+  if (f.status && a.status !== f.status) return false;
+  if (f.q) {
+    if (!fuzzyMatch(f.q, a.name, a.phone, a.email, a.major, a.university, a.skills, a.employer)) return false;
+  }
+  return true;
+}
+function setHireFilter(k, v) {
+  hireFilter[k] = v;
+  const box = document.getElementById('hire-list');
+  if (box) box.innerHTML = iconify(renderHireList());
+}
+function clearHireFilter() {
+  hireFilter = { q:'', position:'', exp:'', qual:'', city:'', status:'' };
+  renderPage('hiring');
+}
+function hireOptions(list, cur) {
+  return list.map(v => `<option value="${escHtml(v)}"${v === cur ? ' selected' : ''}>${escHtml(v)}</option>`).join('');
+}
+
+function renderHiring() {
+  const all = DB.applicants;
+  const byStatus = k => all.filter(a => a.status === k).length;
+  const cities = [...new Set(all.map(a => a.city).filter(Boolean))].sort();
+  const positions = [...new Set(JOB_POSITIONS.concat(all.map(a => a.position).filter(Boolean)))];
+  return `
+  <div class="section-header">
+    <div class="section-title">👨‍💼 طلبات التوظيف</div>
+    <span class="color-gray text-sm">تصل الطلبات من زر «انضم إلينا» في الصفحة التعريفية</span>
+  </div>
+  <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:18px">
+    <div class="stat-card gold"><div class="stat-icon">📋</div><div class="stat-value">${all.length}</div><div class="stat-label">إجمالي الطلبات</div></div>
+    <div class="stat-card blue"><div class="stat-icon">🔔</div><div class="stat-value">${byStatus('جديد')}</div><div class="stat-label">جديدة</div></div>
+    <div class="stat-card orange"><div class="stat-icon">🔍</div><div class="stat-value">${byStatus('قيد المراجعة')}</div><div class="stat-label">قيد المراجعة</div></div>
+    <div class="stat-card blue"><div class="stat-icon">📅</div><div class="stat-value">${byStatus('مقابلة')}</div><div class="stat-label">مقابلات</div></div>
+    <div class="stat-card green"><div class="stat-icon">🟢</div><div class="stat-value">${byStatus('مقبول')}</div><div class="stat-label">مقبولون</div></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="form-row">
+      <div class="form-group-v">
+        <label>بحث</label>
+        <input type="text" id="hire-q" value="${escHtml(hireFilter.q)}" placeholder="الاسم، الجوال، البريد، التخصص، الجامعة…"
+               oninput="setHireFilter('q', this.value)" />
+      </div>
+      <div class="form-group-v">
+        <label>الوظيفة</label>
+        <select onchange="setHireFilter('position', this.value)">
+          <option value="">الكل</option>${hireOptions(positions, hireFilter.position)}
+        </select>
+      </div>
+      <div class="form-group-v">
+        <label>سنوات الخبرة</label>
+        <select onchange="setHireFilter('exp', this.value)">
+          <option value="">الكل</option>${hireOptions(JOB_EXPS, hireFilter.exp)}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group-v">
+        <label>المؤهل</label>
+        <select onchange="setHireFilter('qual', this.value)">
+          <option value="">الكل</option>${hireOptions(JOB_QUALS, hireFilter.qual)}
+        </select>
+      </div>
+      <div class="form-group-v">
+        <label>المدينة</label>
+        <select onchange="setHireFilter('city', this.value)">
+          <option value="">الكل</option>${hireOptions(cities, hireFilter.city)}
+        </select>
+      </div>
+      <div class="form-group-v">
+        <label>الحالة</label>
+        <select onchange="setHireFilter('status', this.value)">
+          <option value="">الكل</option>${hireOptions(JOB_STATUSES, hireFilter.status)}
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="clearHireFilter()">مسح عوامل التصفية</button>
+  </div>
+  <div id="hire-list">${renderHireList()}</div>`;
+}
+
+function renderHireList() {
+  const rows = DB.applicants.filter(hireMatches);
+  return `
+  <div class="color-gray text-sm" style="margin-bottom:8px">${arCount(rows.length, 'طلب واحد', 'طلبان', 'طلبات', 'طلباً')}</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>التاريخ</th><th>الاسم</th><th>الوظيفة</th><th>الخبرة</th><th>المؤهل</th><th>المدينة</th><th>الجوال</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+    <tbody>
+      ${rows.length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد طلبات مطابقة</td></tr>' : ''}
+      ${rows.map(a => `
+        <tr>
+          <td class="text-sm">${formatDateShortHijri(a.createdAt)}</td>
+          <td><b>${escHtml(a.name)}</b></td>
+          <td class="text-sm">${escHtml(a.position)}</td>
+          <td class="text-sm">${escHtml(a.experience || '—')}</td>
+          <td class="text-sm">${escHtml(a.qualification || '—')}</td>
+          <td class="text-sm">${escHtml(a.city || '—')}</td>
+          <td class="text-sm"><span style="unicode-bidi:isolate;direction:ltr">${escHtml(a.phone)}</span></td>
+          <td>
+            <select class="hire-status" onchange="setApplicantStatus('${a.id}', this.value)">
+              ${hireOptions(JOB_STATUSES, a.status)}
+            </select>
+          </td>
+          <td class="row-actions">
+            <button class="task-icon-btn" title="عرض الطلب" onclick="openApplicant('${a.id}')">🔍</button>
+            ${a.cvPath ? `<button class="task-icon-btn" title="السيرة الذاتية" onclick="openCV('${a.id}')">📄</button>` : ''}
+            <button class="task-icon-btn" title="حذف الطلب" onclick="deleteApplicant('${a.id}')">🗑️</button>
+          </td>
+        </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+async function setApplicantStatus(id, status) {
+  const ok = await dbWrite('حالة الطلب', () => sb.from('job_applications').update({ status }).eq('id', id));
+  if (ok) refreshUI();
+}
+
+let applicantOpenId = null;
+function openApplicant(id) {
+  const a = DB.applicants.find(x => x.id === id);
+  if (!a) return;
+  applicantOpenId = id;
+  const row = (label, val) => val ? `<div><span>${label}</span><b>${escHtml(val)}</b></div>` : '';
+  document.getElementById('applicant-modal-title').textContent = a.name;
+  document.getElementById('applicant-modal-body').innerHTML = iconify(`
+    <div class="acct-rows">
+      ${row('الوظيفة المتقدَّم لها', a.position)}
+      ${row('الجوال', a.phone)}
+      ${row('البريد الإلكتروني', a.email)}
+      ${row('المدينة', a.city)}
+      ${row('الجنسية', a.nationality)}
+      ${row('سنة الميلاد', a.birthYear)}
+      ${row('المؤهل العلمي', a.qualification)}
+      ${row('التخصص', a.major)}
+      ${row('الجامعة', a.university)}
+      ${row('سنة التخرج', a.gradYear)}
+      ${row('رقم ترخيص المحاماة', a.licenseNo)}
+      ${row('سنوات الخبرة', a.experience)}
+      ${row('جهة العمل الحالية', a.employer)}
+      ${row('اللغات', a.languages)}
+      ${row('المهارات', a.skills)}
+      ${row('الراتب المتوقع', a.salaryExpect)}
+      ${row('الاستعداد للمباشرة', a.availability)}
+      ${row('تاريخ التقديم', formatDate(a.createdAt))}
+    </div>
+    ${a.about ? `<div class="form-group-v" style="margin-top:14px"><label>نبذة من المتقدّم</label>
+      <div class="card" style="white-space:pre-wrap;font-size:14px">${escHtml(a.about)}</div></div>` : ''}
+    ${a.cvPath ? `<button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="openCV('${a.id}')">📄 فتح السيرة الذاتية</button>` : ''}
+    <div class="form-group-v" style="margin-top:14px">
+      <label>ملاحظة المكتب <span class="color-gray text-sm">(لا يراها المتقدّم)</span></label>
+      <textarea id="applicant-note" rows="3">${escHtml(a.staffNote)}</textarea>
+    </div>`);
+  openModal('applicant-modal');
+}
+
+async function saveApplicantNote() {
+  if (!applicantOpenId) return;
+  const note = nullIfBlank(document.getElementById('applicant-note').value);
+  const ok = await dbWrite('ملاحظة الطلب', () => sb.from('job_applications')
+    .update({ staff_note: note }).eq('id', applicantOpenId));
+  if (ok) { closeModal('applicant-modal'); refreshUI(); }
+}
+
+// السيرة الذاتية في مساحة غير منشورة، فتُفتح برابط مؤقّت لا يصلح بعد دقيقة
+async function openCV(id) {
+  const a = DB.applicants.find(x => x.id === id);
+  if (!a || !a.cvPath) return;
+  const res = await sb.storage.from('cv-files').createSignedUrl(a.cvPath, 60);
+  if (res.error || !res.data) { alert('تعذّر فتح السيرة الذاتية\n' + (res.error && res.error.message || '')); return; }
+  window.open(res.data.signedUrl, '_blank');
+}
+
+async function deleteApplicant(id) {
+  const a = DB.applicants.find(x => x.id === id);
+  if (!a) return;
+  if (!confirm(`حذف طلب «${a.name}» نهائياً؟`)) return;
+  if (a.cvPath) await sb.storage.from('cv-files').remove([a.cvPath]);
+  const ok = await dbWrite('حذف الطلب', () => sb.from('job_applications').delete().eq('id', id));
+  if (ok) refreshUI();
 }
 
 // ═══════════════════════════════════
