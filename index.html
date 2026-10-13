@@ -1833,7 +1833,8 @@ const PERM_DEFS = [
   ['cases','القضايا'], ['hearings','الجلسات'], ['tasks','المهام'], ['clients','الموكلون'],
   ['fee_contracts','عقود الأتعاب'], ['consulting_contracts','عقود الاستشارات'],
   ['quotes','عروض الأسعار'], ['invoices','الفواتير'],
-  ['expenses','المصروفات'], ['reports','التقارير'], ['settings','إعدادات المكتب'], ['users','إدارة المستخدمين'],
+  ['expenses','المصروفات'], ['hiring','التوظيف'], ['reports','التقارير'],
+  ['settings','إعدادات المكتب'], ['users','إدارة المستخدمين'],
 ];
 // كل نوع مستند له صلاحيته، فيُمكن تمكين موظف من إصدار عروض الأسعار
 // والفواتير دون أن يرى عقود الأتعاب ومبالغها
@@ -1862,6 +1863,7 @@ let DB = {
   clients: [],
   cases: [],
   expenses: [],
+  applicants: [],
   pending: [],
   hearings: [],
   tasks: [],
@@ -1947,6 +1949,21 @@ async function loadFromDatabase() {
       mobile:'mobile', email:'email', city:'city', bank:'bank', bankAccount:'bank_account', iban:'iban' };
     Object.entries(map).forEach(([k, col]) => { if (r[col]) OFFICE[k] = r[col]; });
     recomputeOffice();
+  }
+
+  // طلبات التوظيف لا يقرؤها إلا صاحب صلاحية التوظيف، وسياسة الحماية تُرجع فارغاً لغيره
+  DB.applicants = [];
+  if (DB.currentUser && DB.currentUser.perms && (DB.currentUser.perms.hiring || isOfficeOwner())) {
+    const ja = await sb.from('job_applications').select('*').order('created_at', { ascending: false });
+    if (!ja.error) DB.applicants = (ja.data || []).map(r => ({
+      id: r.id, createdAt: r.created_at, name: r.name, phone: r.phone, email: r.email || '',
+      nationality: r.nationality || '', birthYear: r.birth_year || '', city: r.city || '',
+      position: r.position, qualification: r.qualification || '', major: r.major || '',
+      university: r.university || '', gradYear: r.grad_year || '', licenseNo: r.license_no || '',
+      experience: r.experience || '', employer: r.employer || '', languages: r.languages || '',
+      skills: r.skills || '', salaryExpect: r.salary_expect || '', availability: r.availability || '',
+      about: r.about || '', cvPath: r.cv_path || '', status: r.status || 'جديد', staffNote: r.staff_note || '',
+    }));
   }
 
   // الحسابات التي أُنشئت ولم يدخل أصحابها بعد — تُقرأ بدالة لأن جدولها محجوب
@@ -2474,6 +2491,8 @@ const ADMIN_NAV = [
   { section: 'المالية' },
   { id:'invoices', icon:ic('wallet',18), label:'الفواتير والعقود', perm:'anyDoc' },
   { id:'expenses', icon:ic('trending',18), label:'المصروفات', perm:'expenses' },
+  { section: 'التوظيف' },
+  { id:'hiring', icon:ic('briefcase',18), label:'طلبات التوظيف', perm:'hiring', badge: () => DB.applicants.filter(a => a.status === 'جديد').length },
   { section: 'التقارير' },
   { id:'reports', icon:ic('chart',18), label:'التقارير والإحصاءات', perm:'reports' },
   { id:'settings', icon:ic('settings',18), label:'الإعدادات', perm:'settings' },
@@ -2527,7 +2546,7 @@ function navTo(page) {
   const active = document.getElementById('nav-' + page);
   if (active) active.classList.add('active');
   const titles = {
-    dashboard:'النظرة العامة', 'client-account':'حسابي', expenses:'المصروفات', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
+    dashboard:'النظرة العامة', 'client-account':'حسابي', expenses:'المصروفات', hiring:'طلبات التوظيف', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
     clients:'الموكلون', 'client-tickets':'رسائل الموكلين', invoices:'الفواتير', reports:'التقارير', settings:'الإعدادات',
     'client-portal':'قضاياي', 'client-hearings':'جلساتي', 'client-invoices':'فواتيري وعقودي',
     'client-docs':'مستنداتي', 'client-contact':'التواصل مع المكتب',
@@ -2553,6 +2572,7 @@ function renderPage(page) {
     case 'client-account': c.innerHTML = iconify(renderClientAccount()); break;
     case 'invoices': c.innerHTML = iconify(renderInvoices()); break;
     case 'expenses': c.innerHTML = iconify(renderExpenses()); break;
+    case 'hiring': c.innerHTML = iconify(renderHiring()); break;
     case 'reports': c.innerHTML = iconify(renderReports()); break;
     case 'settings': c.innerHTML = iconify(renderSettings()); break;
     case 'client-portal': c.innerHTML = iconify(renderClientPortal()); break;
