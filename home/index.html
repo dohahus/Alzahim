@@ -278,7 +278,8 @@ html[dir="ltr"] .cf-nav svg { transform:scaleX(-1); }
 
 /* ═══ التواصل ═══ */
 .contact { background:var(--bg-2); border-block:1px solid var(--line); }
-.contact-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(252px,1fr)); gap:16px; }
+.contact-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+@media (max-width:700px) { .contact-grid { grid-template-columns:1fr; } }
 .ct {
   display:flex; gap:14px; align-items:flex-start; padding:21px 22px;
   background:var(--bg); border:1px solid var(--line); border-radius:15px;
@@ -289,8 +290,7 @@ a.ct:hover { transform:translateY(-3px); border-color:var(--gold); }
   background:color-mix(in srgb, var(--gold) 13%, transparent); color:var(--gold-deep); }
 .ct-ico svg { width:19px; height:19px; }
 .ct .k { font-size:12.5px; color:var(--text-3); margin-bottom:2px; }
-.ct .v { font-size:15px; font-weight:600; color:var(--text); overflow-wrap:anywhere; }
-.ct-sub { font-size:12.5px; color:var(--gold-deep); margin-top:3px; }
+.ct .v { font-size:15px; font-weight:600; color:var(--text); }
 /* الأرقام والبريد تُقرأ من اليسار، ويضعها الصندوق المضمّن في جهة النص الصحيحة */
 .num { direction:ltr; unicode-bidi:isolate; display:inline-block; }
 
@@ -474,11 +474,11 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
     <div class="contact-grid">
       <a class="ct reveal" id="ct-wa" href="#" target="_blank" rel="noopener">
         <div class="ct-ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm4.52 12.15c-.25.58-1.25 1.11-1.72 1.18-.43.06-.97.09-1.56-.1-.36-.11-.82-.26-1.41-.52-2.48-1.07-4.11-3.58-4.23-3.74-.13-.17-1.02-1.35-1.02-2.57s.65-1.82.87-2.07c.23-.25.49-.31.66-.31h.47c.16.01.36-.6.56.42.2.5.7 1.72.76 1.84.06.12.1.26.02.43-.8.16-.12.26-.25.41-.12.14-.26.32-.37.43-.12.12-.25.25-.11.5.15.25.64 1.06 1.38 1.72.94.84 1.74 1.11 1.99 1.23.25.12.4.1.54-.6.15-.17.63-.73.79-.97.17-.25.33-.21.56-.13.22.09 1.44.69 1.69.81.25.12.42.18.48.29.06.1.06.6-.15 1.18Z"/></svg></div>
-        <div><div class="k" data-ar="واتساب" data-en="WhatsApp">واتساب</div><div class="v num" id="v-wa">+966 55 977 7374</div></div>
+        <div><div class="k" data-ar="واتساب" data-en="WhatsApp">واتساب</div><div class="v num" id="v-wa">+966 50 647 5000</div></div>
       </a>
-      <a class="ct reveal" href="tel:+966506475000">
+      <a class="ct reveal" href="tel:+966559777374">
         <div class="ct-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg></div>
-        <div><div class="k" data-ar="هاتف المكتب" data-en="Office phone">هاتف المكتب</div><div class="v num">+966 50 647 5000</div></div>
+        <div><div class="k" data-ar="هاتف المكتب" data-en="Office phone">هاتف المكتب</div><div class="v num">+966 55 977 7374</div></div>
       </a>
       <a class="ct reveal" href="mailto:abdullah@alzahimlaw.com">
         <div class="ct-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2.5"/><path d="m2.5 6.5 9.5 7 9.5-7"/></svg></div>
@@ -489,7 +489,6 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
         <div>
           <div class="k" data-ar="العنوان" data-en="Address">العنوان</div>
           <div class="v" data-ar="المدينة المنورة" data-en="Madinah">المدينة المنورة</div>
-          <div class="ct-sub" data-ar="اضغط لفتح الموقع على الخريطة" data-en="Tap to open the location on the map">اضغط لفتح الموقع على الخريطة</div>
         </div>
       </a>
     </div>
@@ -515,7 +514,7 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
 'use strict';
 
 /* ═══ بيانات المكتب — تُعدَّل من هنا فقط ═══ */
-var OFFICE = { whatsapp: '966559777374' };
+var OFFICE = { whatsapp: '966506475000' };
 
 /* ═══ الخدمات العشر ═══ */
 var SERVICES = [
