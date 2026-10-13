@@ -1036,7 +1036,7 @@ tbody td { padding:13px 16px; font-size:14.9px; }
       </div>
       <header class="topbar">
         <button class="menu-toggle" onclick="toggleSidebar()" title="القائمة" aria-label="القائمة">☰</button>
-        <div class="topbar-title" id="page-title">لوحة التحكم</div>
+        <div class="topbar-title" id="page-title">النظرة العامة</div>
         <div class="topbar-search" id="topbar-search">
           <span style="color:var(--gray)">🔍</span>
           <input type="text" placeholder="بحث… يتجاوز اختلاف الإملاء" id="search-input" autocomplete="off"
@@ -1934,6 +1934,17 @@ async function loadFromDatabase() {
     // المصروفات لا يراها إلا صاحب صلاحية الفواتير، وسياسة الحماية تُرجع فارغاً لغيره
     sb.from('expenses').select('*').order('date', { ascending: false }),
   ]);
+  // بيانات المكتب تُقرأ من القاعدة فتظهر في المستندات محدَّثةً لكل من يفتحها
+  const off = await sb.from('office_settings').select('*').eq('id', 1).maybeSingle();
+  if (!off.error && off.data) {
+    const r = off.data;
+    const map = { name:'name', lawyer:'lawyer', license:'license', cr:'cr', uniqueNo:'unique_no',
+      address:'address', shortAddress:'short_address', pobox:'pobox', phone:'phone',
+      mobile:'mobile', email:'email', city:'city', bank:'bank', bankAccount:'bank_account', iban:'iban' };
+    Object.entries(map).forEach(([k, col]) => { if (r[col]) OFFICE[k] = r[col]; });
+    recomputeOffice();
+  }
+
   // الحسابات التي أُنشئت ولم يدخل أصحابها بعد — تُقرأ بدالة لأن جدولها محجوب
   DB.pending = [];
   if (DB.currentUser && DB.currentUser.perms && DB.currentUser.perms.users) {
@@ -2448,7 +2459,7 @@ function myScopedTickets() {
 }
 const ADMIN_NAV = [
   { section: 'الرئيسية' },
-  { id:'dashboard', icon:ic('home',18), label:'لوحة التحكم' },
+  { id:'dashboard', icon:ic('home',18), label:'النظرة العامة' },
   { section: 'القضايا' },
   { id:'cases', icon:ic('scale',18), label:'القضايا', perm:'cases', badge: () => DB.cases.filter(c=>c.status==='active').length },
   { id:'hearings', icon:ic('calendar',18), label:'الجلسات', perm:'hearings' },
@@ -2512,7 +2523,7 @@ function navTo(page) {
   const active = document.getElementById('nav-' + page);
   if (active) active.classList.add('active');
   const titles = {
-    dashboard:'لوحة التحكم', 'client-account':'حسابي', expenses:'المصروفات', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
+    dashboard:'النظرة العامة', 'client-account':'حسابي', expenses:'المصروفات', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
     clients:'الموكلون', 'client-tickets':'رسائل الموكلين', invoices:'الفواتير', reports:'التقارير', settings:'الإعدادات',
     'client-portal':'قضاياي', 'client-hearings':'جلساتي', 'client-invoices':'فواتيري وعقودي',
     'client-docs':'مستنداتي', 'client-contact':'التواصل مع المكتب',
@@ -4519,6 +4530,49 @@ function renderReports() {
 // ═══════════════════════════════════
 //  SETTINGS
 // ═══════════════════════════════════
+const OFFICE_FIELDS = [
+  ['name','اسم المكتب'], ['lawyer','اسم المحامي'],
+  ['license','رقم الترخيص'], ['cr','سجل المنشأة'],
+  ['uniqueNo','الرقم المميز'], ['city','المدينة'],
+  ['phone','هاتف المكتب'], ['mobile','الجوال'],
+  ['email','البريد الإلكتروني'], ['shortAddress','العنوان الوطني المختصر'],
+  ['address','العنوان'], ['pobox','صندوق البريد'],
+  ['bank','البنك'], ['bankAccount','رقم الحساب'], ['iban','الآيبان'],
+];
+function officeRowsHTML() {
+  return '<div class="acct-rows">' + OFFICE_FIELDS
+    .map(([k,l]) => `<div><span>${l}</span><b>${escHtml(OFFICE[k] || '—')}</b></div>`).join('')
+    + '</div>';
+}
+function toggleOfficeEdit() {
+  const v = document.getElementById('office-view'), f = document.getElementById('office-form');
+  const editing = f.style.display !== 'none';
+  f.style.display = editing ? 'none' : 'block';
+  v.style.display = editing ? 'block' : 'none';
+  // الإلغاء يعيد الحقول لما هو محفوظ فعلاً
+  if (editing) OFFICE_FIELDS.forEach(([k]) => { document.getElementById('of-' + k).value = OFFICE[k] || ''; });
+}
+async function saveOffice() {
+  const vals = {};
+  for (const [k,l] of OFFICE_FIELDS) {
+    const v = document.getElementById('of-' + k).value.trim();
+    if (!v) { alert(`«${l}» لا يصح أن يكون فارغاً — يظهر في المستندات الرسمية`); return; }
+    vals[k] = v;
+  }
+  const row = {
+    id: 1, name: vals.name, lawyer: vals.lawyer, license: vals.license, cr: vals.cr,
+    unique_no: vals.uniqueNo, address: vals.address, short_address: vals.shortAddress,
+    pobox: vals.pobox, phone: vals.phone, mobile: vals.mobile, email: vals.email,
+    city: vals.city, bank: vals.bank, bank_account: vals.bankAccount, iban: vals.iban,
+    updated_at: new Date().toISOString(),
+  };
+  const ok = await dbWrite('بيانات المكتب', () => sb.from('office_settings').upsert(row, { onConflict: 'id' }));
+  if (!ok) return;
+  Object.assign(OFFICE, vals);
+  recomputeOffice();
+  navTo('settings');
+}
+
 function renderSettings() {
   const me = DB.currentUser;
   return `
@@ -4539,22 +4593,23 @@ function renderSettings() {
     </div>
   </div>
   <div class="card" style="margin-bottom:20px">
-    <div class="card-title" style="margin-bottom:16px">🏢 بيانات المكتب</div>
-    <div class="acct-rows">
-      ${[
-        ['اسم المكتب', OFFICE.name],
-        ['رقم الترخيص', OFFICE.license],
-        ['سجل المنشأة', OFFICE.cr],
-        ['الرقم المميز', OFFICE.uniqueNo],
-        ['هاتف المكتب', OFFICE.phone],
-        ['الجوال', OFFICE.mobile],
-        ['البريد الإلكتروني', OFFICE.email],
-        ['العنوان الوطني المختصر', OFFICE.shortAddress],
-        ['العنوان', OFFICE.address],
-      ].map(([l,v]) => `<div><span>${l}</span><b>${escHtml(v)}</b></div>`).join('')}
+    <div class="section-header" style="margin-bottom:16px">
+      <div class="card-title">🏢 بيانات المكتب</div>
+      ${hasPerm('settings') ? `<button class="task-icon-btn" id="office-edit-btn" title="تعديل بيانات المكتب" onclick="toggleOfficeEdit()">✏️</button>` : ''}
+    </div>
+    <div id="office-view">${officeRowsHTML()}</div>
+    <div id="office-form" style="display:none">
+      <div class="two-col" style="gap:16px">
+        ${OFFICE_FIELDS.map(([k,l],i) => `<div class="form-group-v" style="${i%2?'':''}">
+          <label>${l}</label><input type="text" id="of-${k}" value="${escHtml(OFFICE[k] || '')}" /></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-primary" onclick="saveOffice()">💾 حفظ</button>
+        <button class="btn btn-secondary" onclick="toggleOfficeEdit()">إلغاء</button>
+      </div>
     </div>
     <p class="color-gray text-sm" style="margin-top:14px">
-      هذه البيانات تظهر في العقود والفواتير وعروض الأسعار. لتعديلها راجع من يدير الموقع.</p>
+      تظهر هذه البيانات في العقود والفواتير وعروض الأسعار وتقارير الجلسات.</p>
   </div>
   ${hasPerm('users') ? `
   <div class="card">
@@ -6203,12 +6258,16 @@ const OFFICE = {
   bankAccount: '012695004378001',
   iban: 'SA84 6010 0012 6950 0437 8001',
 };
-// بيانات السداد الافتراضية في عروض الأسعار والفواتير — تُعدَّل لكل مستند عند الحاجة
-OFFICE.bankInfo = `المستفيد: ${OFFICE.name}\n${OFFICE.bank}\n`
-  + `رقم الحساب: ${OFFICE.bankAccount}\nالآيبان: ${OFFICE.iban}`;
-OFFICE.party1 = `${OFFICE.name} ترخيص رقم (${arNum(OFFICE.license)})، سجل المنشأة (${arNum(OFFICE.cr)})، `
-  + `وعنوانه ${OFFICE.address}؛ العنوان الوطني المختصر: ${OFFICE.shortAddress}، `
-  + `هاتف: ${arNum(OFFICE.phone)}، بريد إلكتروني: ${OFFICE.email}.`;
+
+// تُشتقّ من الحقول أعلاه، فتُعاد بناؤها بعد كل تعديل عليها
+function recomputeOffice() {
+  OFFICE.party1 = `${OFFICE.name} ترخيص رقم (${arNum(OFFICE.license)})، سجل المنشأة (${arNum(OFFICE.cr)})، `
+    + `وعنوانه ${OFFICE.address}؛ العنوان الوطني المختصر: ${OFFICE.shortAddress}، `
+    + `هاتف: ${arNum(OFFICE.phone)}، بريد إلكتروني: ${OFFICE.email}.`;
+  OFFICE.bankInfo = `المستفيد: ${OFFICE.name}\n${OFFICE.bank}\n`
+    + `رقم الحساب: ${OFFICE.bankAccount}\nالآيبان: ${OFFICE.iban}`;
+}
+recomputeOffice();
 
 function tafqit(n) {
   n = Math.floor(Math.abs(+n||0));
