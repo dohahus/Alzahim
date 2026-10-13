@@ -130,7 +130,17 @@ a { color:inherit; text-decoration:none; }
   transform:skewX(-14deg); opacity:.55;
 }
 .hero-in { position:relative; text-align:center; }
-.hero-logo { width:118px; margin:0 auto 26px; opacity:0; animation:riseIn .8s .05s ease-out forwards; }
+/* العلامة الخطّية في خلفية البانر — تُرسَم من اليمين إلى اليسار */
+.hero-mark {
+  position:absolute; z-index:-1; pointer-events:none;
+  top:50%; right:-3%; transform:translateY(-50%);
+  width:min(64%, 640px); height:auto; opacity:.075;
+  animation:markDraw 2.4s cubic-bezier(.22,.75,.3,1) .35s both;
+}
+@keyframes markDraw {
+  from { clip-path:inset(0 0 0 100%); }
+  to   { clip-path:inset(0 0 0 0); }
+}
 .hero h1 {
   font-family:'Alharf', var(--font); font-weight:700;
   font-size:clamp(27px, 5vw, 46px); line-height:1.55; color:var(--gold-light);
@@ -295,7 +305,8 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
   html { scroll-behavior:auto; }
   .reveal { opacity:1; transform:none; transition:none; }
   .reveal.seen .sec-kicker::after { animation:none; }
-  .hero-logo, .hero h1, .hero p.tag { animation:none; opacity:1; }
+  .hero h1, .hero p.tag { animation:none; opacity:1; }
+  .hero-mark { animation:none; clip-path:none; }
   .svc:hover, .vmg-card:hover, .wa:hover, a.ct:hover { transform:none; }
 }
 
@@ -344,8 +355,8 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
 <!-- ═══════════ الواجهة ═══════════ -->
 <div id="top"></div>
 <section class="hero">
+  <img class="hero-mark" src="../assets/logo-mark-gold.png" alt="" aria-hidden="true">
   <div class="wrap hero-in">
-    <img class="hero-logo" src="../assets/logo-gold-t.png" alt="شعار مكتب الزاحم">
     <h1 data-ar="مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم" data-en="Law Office of Prof. Dr. Abdullah Bin Ibrahim Al-Zahem">مكتب المحامي أ.د عبدالله بن إبراهيم الزاحم</h1>
     <p class="tag" data-ar="للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق" data-en="Lawyering, Shariah &amp; legal consultancy, arbitration and documentation">للمحاماة والاستشارات الشرعيّة والقانونيّة والتحكيم والتوثيق</p>
   </div>
