@@ -1976,7 +1976,8 @@ async function loadFromDatabase() {
       university: r.university || '', gradYear: r.grad_year || '', licenseNo: r.license_no || '',
       experience: r.experience || '', employer: r.employer || '', languages: r.languages || '',
       skills: r.skills || '', salaryExpect: r.salary_expect || '', availability: r.availability || '',
-      about: r.about || '', cvPath: r.cv_path || '', status: r.status || 'جديد', staffNote: r.staff_note || '',
+      about: r.about || '', cvPath: r.cv_path || '', attachments: r.attachments || [],
+      status: r.status || 'جديد', staffNote: r.staff_note || '',
     }));
   }
 
@@ -2721,7 +2722,7 @@ function renderHireList() {
           </td>
           <td class="row-actions">
             <button class="task-icon-btn" title="عرض الطلب" onclick="openApplicant('${a.id}')">🔍</button>
-            ${a.cvPath ? `<button class="task-icon-btn" title="السيرة الذاتية" onclick="openCV('${a.id}')">📄</button>` : ''}
+            ${applicantFiles(a).length ? `<button class="task-icon-btn" title="السيرة الذاتية" onclick="openCV('${a.id}',0)">📄</button>` : ''}
             <button class="task-icon-btn" title="حذف الطلب" onclick="deleteApplicant('${a.id}')">🗑️</button>
           </td>
         </tr>`).join('')}
@@ -2755,7 +2756,7 @@ function openApplicant(id) {
       ${row('سنة التخرج', a.gradYear)}
       ${row('رقم ترخيص المحاماة', a.licenseNo)}
       ${row('سنوات الخبرة', a.experience)}
-      ${row('جهة العمل الحالية', a.employer)}
+      ${row('الحالة الوظيفية', a.employer)}
       ${row('اللغات', a.languages)}
       ${row('المهارات', a.skills)}
       ${row('الراتب المتوقع', a.salaryExpect)}
@@ -2764,7 +2765,9 @@ function openApplicant(id) {
     </div>
     ${a.about ? `<div class="form-group-v" style="margin-top:14px"><label>نبذة من المتقدّم</label>
       <div class="card" style="white-space:pre-wrap;font-size:14px">${escHtml(a.about)}</div></div>` : ''}
-    ${a.cvPath ? `<button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="openCV('${a.id}')">📄 فتح السيرة الذاتية</button>` : ''}
+    ${applicantFiles(a).length ? `<div class="form-group-v" style="margin-top:14px"><label>المرفقات</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${applicantFiles(a).map((f,i) =>
+        `<button class="btn btn-secondary btn-sm" onclick="openCV('${a.id}',${i})">📄 ${i === 0 ? 'السيرة الذاتية' : 'مرفق ' + (i+1)}</button>`).join('')}</div></div>` : ''}
     <div class="form-group-v" style="margin-top:14px">
       <label>ملاحظة المكتب <span class="color-gray text-sm">(لا يراها المتقدّم)</span></label>
       <textarea id="applicant-note" rows="3">${escHtml(a.staffNote)}</textarea>
@@ -2780,11 +2783,16 @@ async function saveApplicantNote() {
   if (ok) { closeModal('applicant-modal'); refreshUI(); }
 }
 
-// السيرة الذاتية في مساحة غير منشورة، فتُفتح برابط مؤقّت لا يصلح بعد دقيقة
-async function openCV(id) {
+// المرفقات في مساحة غير منشورة، فتُفتح برابط مؤقّت لا يصلح بعد دقيقة
+function applicantFiles(a) {
+  const list = (a.attachments && a.attachments.length) ? a.attachments : (a.cvPath ? [a.cvPath] : []);
+  return list.filter(Boolean);
+}
+async function openCV(id, idx) {
   const a = DB.applicants.find(x => x.id === id);
-  if (!a || !a.cvPath) return;
-  const res = await sb.storage.from('cv-files').createSignedUrl(a.cvPath, 60);
+  const path = a && applicantFiles(a)[idx || 0];
+  if (!path) return;
+  const res = await sb.storage.from('cv-files').createSignedUrl(path, 60);
   if (res.error || !res.data) { alert('تعذّر فتح السيرة الذاتية\n' + (res.error && res.error.message || '')); return; }
   window.open(res.data.signedUrl, '_blank');
 }
@@ -2793,7 +2801,8 @@ async function deleteApplicant(id) {
   const a = DB.applicants.find(x => x.id === id);
   if (!a) return;
   if (!confirm(`حذف طلب «${a.name}» نهائياً؟`)) return;
-  if (a.cvPath) await sb.storage.from('cv-files').remove([a.cvPath]);
+  const files = applicantFiles(a);
+  if (files.length) await sb.storage.from('cv-files').remove(files);
   const ok = await dbWrite('حذف الطلب', () => sb.from('job_applications').delete().eq('id', id));
   if (ok) refreshUI();
 }

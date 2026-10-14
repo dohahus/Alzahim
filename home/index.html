@@ -600,11 +600,23 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
         </div>
         <div class="jf-f">
           <label data-ar="مدينة الإقامة" data-en="City of residence">مدينة الإقامة</label>
-          <input type="text" id="jf-city">
+          <select id="jf-city" onchange="jfToggleOther('city')">
+            <option value="" data-ar="اختر" data-en="Select">اختر</option>
+            <option value="المدينة المنورة" data-ar="المدينة المنورة" data-en="Madinah">المدينة المنورة</option>
+            <option value="أخرى" data-ar="أخرى" data-en="Other">أخرى</option>
+          </select>
+          <input type="text" id="jf-city-other" style="display:none;margin-top:6px"
+                 placeholder="اكتب اسم المدينة" aria-label="اسم المدينة">
         </div>
         <div class="jf-f">
           <label data-ar="الجنسية" data-en="Nationality">الجنسية</label>
-          <input type="text" id="jf-nationality">
+          <select id="jf-nationality" onchange="jfToggleOther('nationality')">
+            <option value="" data-ar="اختر" data-en="Select">اختر</option>
+            <option value="سعودي" data-ar="سعودي" data-en="Saudi">سعودي</option>
+            <option value="أخرى" data-ar="أخرى" data-en="Other">أخرى</option>
+          </select>
+          <input type="text" id="jf-nationality-other" style="display:none;margin-top:6px"
+                 placeholder="اكتب الجنسية" aria-label="الجنسية">
         </div>
         <div class="jf-f">
           <label data-ar="سنة الميلاد" data-en="Year of birth">سنة الميلاد</label>
@@ -669,42 +681,21 @@ footer .fsep { width:50px; height:1px; background:rgba(243,241,234,.18); margin:
           <span class="hint" data-ar="إن وُجد" data-en="If any">إن وُجد</span>
         </div>
         <div class="jf-f">
-          <label data-ar="جهة العمل الحالية" data-en="Current employer">جهة العمل الحالية</label>
-          <input type="text" id="jf-employer">
+          <label data-ar="الحالة الوظيفية" data-en="Employment status">الحالة الوظيفية</label>
+          <select id="jf-employer">
+            <option value="" data-ar="اختر" data-en="Select">اختر</option>
+            <option value="متفرّغ للعمل" data-ar="متفرّغ للعمل" data-en="Available to start">متفرّغ للعمل</option>
+            <option value="قائم على رأس عمل" data-ar="قائم على رأس عمل" data-en="Currently employed">قائم على رأس عمل</option>
+          </select>
         </div>
       </div>
 
-      <div class="jf-sec" data-ar="بيانات إضافية" data-en="Further details">بيانات إضافية</div>
+      <div class="jf-sec" data-ar="المرفقات" data-en="Attachments">المرفقات</div>
       <div class="jf-grid">
-        <div class="jf-f">
-          <label data-ar="اللغات" data-en="Languages">اللغات</label>
-          <input type="text" id="jf-languages">
-        </div>
-        <div class="jf-f">
-          <label data-ar="الاستعداد للمباشرة" data-en="Availability to start">الاستعداد للمباشرة</label>
-          <select id="jf-avail">
-            <option value="" data-ar="اختر" data-en="Select">اختر</option>
-            <option value="فوراً" data-ar="فوراً" data-en="Immediately">فوراً</option>
-            <option value="خلال شهر" data-ar="خلال شهر" data-en="Within a month">خلال شهر</option>
-            <option value="خلال ثلاثة أشهر" data-ar="خلال ثلاثة أشهر" data-en="Within three months">خلال ثلاثة أشهر</option>
-          </select>
-        </div>
-        <div class="jf-f">
-          <label data-ar="المهارات" data-en="Skills">المهارات</label>
-          <input type="text" id="jf-skills">
-        </div>
-        <div class="jf-f">
-          <label data-ar="الراتب المتوقع" data-en="Expected salary">الراتب المتوقع</label>
-          <input type="text" id="jf-salary">
-        </div>
         <div class="jf-f wide">
-          <label data-ar="نبذة مختصرة عنك" data-en="A brief about you">نبذة مختصرة عنك</label>
-          <textarea id="jf-about" maxlength="1200"></textarea>
-        </div>
-        <div class="jf-f wide">
-          <label data-ar="السيرة الذاتية" data-en="Curriculum vitae">السيرة الذاتية</label>
-          <input type="file" id="jf-cv" accept=".pdf,.doc,.docx">
-          <span class="hint" data-ar="PDF أو Word، بحد أقصى ٥ ميجابايت" data-en="PDF or Word, up to 5 MB">PDF أو Word، بحد أقصى ٥ ميجابايت</span>
+          <label data-ar="السيرة الذاتية وشهادات الخبرة" data-en="CV and experience certificates">السيرة الذاتية وشهادات الخبرة</label>
+          <input type="file" id="jf-cv" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+          <span class="hint" data-ar="PDF أو Word أو صورة — يمكن اختيار أكثر من ملف، وحدّ كل ملف ٥ ميجابايت" data-en="PDF, Word or image — several files may be selected, each up to 5 MB">PDF أو Word أو صورة — يمكن اختيار أكثر من ملف، وحدّ كل ملف ٥ ميجابايت</span>
         </div>
       </div>
 
@@ -1014,6 +1005,21 @@ document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape' && document.getElementById('jf-overlay').classList.contains('open')) closeJoin();
 });
 
+/* «أخرى» تفتح خانة كتابة حرة، وقيمتها هي المحفوظة */
+function jfToggleOther(k) {
+  var sel = document.getElementById('jf-' + k);
+  var box = document.getElementById('jf-' + k + '-other');
+  var on = sel.value === 'أخرى';
+  box.style.display = on ? 'block' : 'none';
+  if (on) box.focus(); else box.value = '';
+}
+function jfChoice(k) {
+  var v = jfVal('jf-' + k);
+  if (v !== 'أخرى') return v === '' ? null : v;
+  var other = jfVal('jf-' + k + '-other');
+  return other === '' ? null : other;
+}
+
 function jfVal(id) { return (document.getElementById(id).value || '').trim(); }
 function jfNull(id) { var v = jfVal(id); return v === '' ? null : v; }
 
@@ -1033,32 +1039,38 @@ async function submitJoin() {
   if (phone.replace(/\D/g, '').length < 9) { jfFail(jfT('يرجى كتابة رقم جوال صحيح', 'Please enter a valid mobile number'), 'jf-phone'); return; }
   if (!position) { jfFail(jfT('يرجى اختيار الوظيفة المتقدَّم لها', 'Please select the position applied for'), 'jf-position'); return; }
 
-  var file = document.getElementById('jf-cv').files[0] || null;
-  if (file && file.size > 5 * 1024 * 1024) {
-    jfFail(jfT('حجم السيرة الذاتية يتجاوز ٥ ميجابايت', 'The CV exceeds 5 MB'), 'jf-cv'); return;
+  var files = Array.prototype.slice.call(document.getElementById('jf-cv').files || []);
+  if (files.length > 6) { jfFail(jfT('الحد ستة ملفات', 'Up to six files'), 'jf-cv'); return; }
+  for (var i = 0; i < files.length; i++) {
+    if (files[i].size > 5 * 1024 * 1024) {
+      jfFail(jfT('حجم الملف «' + files[i].name + '» يتجاوز ٥ ميجابايت',
+                 'The file “' + files[i].name + '” exceeds 5 MB'), 'jf-cv');
+      return;
+    }
   }
 
   btn.disabled = true;
   msg.textContent = jfT('جارٍ الإرسال…', 'Sending…');
   try {
     var sb = await loadSb();
-    var cvPath = null;
-    if (file) {
+    var paths = [];
+    for (var f = 0; f < files.length; f++) {
+      var file = files[f];
       var ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '');
       var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
-             : String(Date.now()) + Math.random().toString(36).slice(2);
-      cvPath = id + '.' + ext;
-      var up = await sb.storage.from('cv-files').upload(cvPath, file, { contentType: file.type || undefined });
+             : String(Date.now()) + f + Math.random().toString(36).slice(2);
+      var path = id + '.' + ext;
+      var up = await sb.storage.from('cv-files').upload(path, file, { contentType: file.type || undefined });
       if (up.error) throw up.error;
+      paths.push(path);
     }
     var res = await sb.from('job_applications').insert({
       name: name, phone: phone, email: jfNull('jf-email'),
-      nationality: jfNull('jf-nationality'), birth_year: jfNull('jf-birth'), city: jfNull('jf-city'),
+      nationality: jfChoice('nationality'), birth_year: jfNull('jf-birth'), city: jfChoice('city'),
       position: position, qualification: jfNull('jf-qual'), major: jfNull('jf-major'),
       university: jfNull('jf-university'), grad_year: jfNull('jf-grad'), license_no: jfNull('jf-license'),
-      experience: jfNull('jf-exp'), employer: jfNull('jf-employer'), languages: jfNull('jf-languages'),
-      skills: jfNull('jf-skills'), salary_expect: jfNull('jf-salary'), availability: jfNull('jf-avail'),
-      about: jfNull('jf-about'), cv_path: cvPath,
+      experience: jfNull('jf-exp'), employer: jfNull('jf-employer'),
+      cv_path: paths[0] || null, attachments: paths.length ? paths : null,
     });
     if (res.error) throw res.error;
     document.getElementById('jf-form-wrap').style.display = 'none';

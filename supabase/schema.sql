@@ -772,9 +772,13 @@ create table if not exists job_applications (
   availability     text,
   about            text,
   cv_path          text,
+  attachments      text[],
   status           text not null default 'جديد',
   staff_note       text
 );
+
+-- لمن أنشأ الجدول قبل إضافة المرفقات المتعددة
+alter table job_applications add column if not exists attachments text[];
 
 create index if not exists job_applications_created_idx on job_applications (created_at desc);
 
