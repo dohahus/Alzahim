@@ -309,12 +309,15 @@ html[dir="ltr"] .sec-head h2 { font-family:var(--font); }
 #services { overflow:hidden; }
 .cf-stage {
   position:relative; min-height:300px; perspective:1500px;
+  /* البطاقات الجانبية تُقصّ عند حدّ محتوى الصفحة، فلا تتجاوز عرضه */
+  overflow:hidden;
   touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:grab;
 }
 .cf-stage.is-dragging { cursor:grabbing; }
+/* عرض البطاقة = عرض بطاقة الرؤية/الرسالة/الأهداف (ثلث الحاوية) */
 .svc {
-  position:absolute; top:50%; left:50%; width:min(430px, 80%);
-  display:flex; flex-direction:column;
+  position:absolute; top:50%; left:50%; width:min(362px, 82%);
+  display:flex; flex-direction:column; justify-content:center;
   background:var(--bg-2); border:1px solid var(--line); border-radius:20px;
   padding:30px 30px 32px; box-shadow:var(--shadow-lift);
   transform-origin:50% 50%; will-change:transform, opacity;
@@ -809,6 +812,13 @@ var SERVICES = [
     return d;
   }
 
+  /* ثوابت العمق والتصغير — تُستعمل في الرسم وفي حساب أقصى إزاحة معاً */
+  var PERSP = 1500, ZSTEP = 150, SCALE_STEP = 0.10, CURVE = 0.62;
+  var stepX = 90; // تُحسب عند القياس بما يُبقي البطاقات الجانبية كاملة بلا قصّ
+  function effScale(ad) {
+    return (1 - Math.min(ad, 2.2) * SCALE_STEP) * (PERSP / (PERSP + ad * ZSTEP));
+  }
+
   function layout() {
     var pos = at + frac;
     // البطاقات اللاحقة تقف في جهة القراءة التالية: يسارًا في العربية، يمينًا في الإنجليزية
@@ -816,16 +826,16 @@ var SERVICES = [
     cards.forEach(function (el, i) {
       var d = wrapDelta(i - pos), ad = Math.abs(d);
       // تباعد متناقص كي تتقارب البطاقتان البعيدتان خلف القريبتين
-      var x = (d < 0 ? -1 : 1) * Math.pow(ad, 0.62) * 52;
+      var x = (d < 0 ? -1 : 1) * Math.pow(ad, CURVE) * stepX;
       var op = ad <= 1 ? 1 - ad * 0.5
              : ad <= 2 ? 0.5 - (ad - 1) * 0.22
              : Math.max(0, 0.28 - (ad - 2) * 0.7);
       el.style.transform =
         'translate(-50%,-50%)' +
-        ' translateX(' + (-x * sgn) + '%)' +
-        ' translateZ(' + (-ad * 150) + 'px)' +
+        ' translateX(' + (-x * sgn) + 'px)' +
+        ' translateZ(' + (-ad * ZSTEP) + 'px)' +
         ' rotateY(' + (Math.min(ad, 2.2) * (d < 0 ? -1 : 1) * 24 * sgn) + 'deg)' +
-        ' scale(' + (1 - Math.min(ad, 2.2) * 0.055) + ')';
+        ' scale(' + (1 - Math.min(ad, 2.2) * SCALE_STEP) + ')';
       el.style.opacity  = String(op);
       el.style.filter   = ad < 0.35 ? 'none' : 'blur(' + Math.min(ad * 3.2, 7) + 'px)';
       el.style.zIndex   = String(40 - Math.round(ad * 10));
@@ -875,11 +885,24 @@ var SERVICES = [
 
   /* كل البطاقات بقياس أطولها، فلا يتغيّر حجم البطاقة باختلاف طول النص */
   function sizeCards() {
-    cards.forEach(function (el) { el.style.height = 'auto'; });
+    // عرض البطاقة ضعف بطاقة الرؤية/الرسالة/الأهداف، في حدود عرض القسم
+    var ref = document.querySelector('.vmg-card');
+    // لا تتجاوز 70% من عرض المساحة، كي يبقى للبطاقتين الجانبيتين موضع يظهران فيه كاملتين
+    var room = Math.min(stage.parentElement.offsetWidth - 24, stage.offsetWidth * 0.70);
+    var w = (ref && window.innerWidth > 620) ? Math.min(ref.offsetWidth * 2, room) : 0;
+    cards.forEach(function (el) {
+      el.style.width = w ? w + 'px' : '';
+      el.style.height = 'auto';
+    });
     var h = 0;
     cards.forEach(function (el) { if (el.offsetHeight > h) h = el.offsetHeight; });
+    h += 86; // فسحة تجعل البطاقة أطول من نصّها
     cards.forEach(function (el) { el.style.height = h + 'px'; });
     stage.style.height = (h + 44) + 'px';
+    // أقصى إزاحة تُبقي حتى أبعد بطاقة داخل حدّ المحتوى، فلا تُقصّ حافتها
+    var half = stage.offsetWidth / 2;
+    var cw = cards[0].offsetWidth;
+    stepX = Math.max(34, (half - (cw / 2) * effScale(2) - 8) / Math.pow(2, CURVE));
     layout();
   }
 
