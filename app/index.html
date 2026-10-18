@@ -2484,9 +2484,13 @@ function myScopedHearings() {
   const caseIds = new Set(myScopedCases().map(c=>c.id));
   return DB.hearings.filter(h => caseIds.has(h.caseId));
 }
+// المهمة تخصّ من أُسندت إليه ومن كتبها — فمن كتب مهمة لنفسه بلا إشارة لأحد يراها
+function taskBelongsTo(t, uid) {
+  return (t.assigneeIds || []).includes(uid) || t.creatorId === uid;
+}
 function myScopedTasks() {
   if (isOfficeOwner()) return DB.tasks;
-  return DB.tasks.filter(t => (t.assigneeIds || []).includes(DB.currentUser.userId));
+  return DB.tasks.filter(t => taskBelongsTo(t, DB.currentUser.userId));
 }
 function myScopedTickets() {
   if (isOfficeOwner()) return DB.clientMessages;
@@ -3380,10 +3384,10 @@ function renderTasks() {
   if (owner) {
     if (taskFilterMode === 'mine') {
       const me = DB.currentUser.userId;
-      pending = pending.filter(t=>(t.assigneeIds||[]).includes(me)); done = done.filter(t=>(t.assigneeIds||[]).includes(me));
+      pending = pending.filter(t=>taskBelongsTo(t,me)); done = done.filter(t=>taskBelongsTo(t,me));
     } else if (taskFilterMode !== 'all') {
       const uid = taskFilterMode;
-      pending = pending.filter(t=>(t.assigneeIds||[]).includes(uid)); done = done.filter(t=>(t.assigneeIds||[]).includes(uid));
+      pending = pending.filter(t=>taskBelongsTo(t,uid)); done = done.filter(t=>taskBelongsTo(t,uid));
     }
   }
   // الأعجل أولاً داخل كل مجموعة
