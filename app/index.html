@@ -1844,7 +1844,9 @@ function addTaskToCalendar(taskId) {
 //  DATA STORE
 // ═══════════════════════════════════
 const PERM_DEFS = [
-  ['cases','القضايا'], ['hearings','الجلسات'], ['tasks','المهام'], ['clients','الموكلون'],
+  ['cases','القضايا'], ['cases_add','إضافة قضايا'],
+  ['hearings','الجلسات'], ['tasks','المهام'],
+  ['clients','الموكلون'], ['clients_add','إضافة موكلين'],
   ['fee_contracts','عقود الأتعاب'], ['consulting_contracts','عقود الاستشارات'],
   ['quotes','عروض الأسعار'], ['invoices','الفواتير'],
   ['expenses','المصروفات'], ['hiring','التوظيف'], ['reports','التقارير'],
@@ -2013,6 +2015,7 @@ async function loadFromDatabase() {
     id: c.id, name: c.name, idNum: c.id_num || '', phone: c.phone || '', email: c.email || '',
     user: c.username || '', nationality: c.nationality || '', notes: c.notes || '',
     avatar: c.avatar_path || '', authUserId: c.auth_user_id || null,
+    createdBy: c.created_by || null,
   }));
 
   const updatesByCase = groupBy(updates.data || [], u => u.case_id);
@@ -2471,13 +2474,18 @@ function hasPerm(k) {
 // نطاق البيانات: صاحب المكتب (صلاحية إدارة المستخدمين) يرى كل شيء،
 // وبقية الحسابات (محامٍ/مستشار/محاسب/سكرتير) تقتصر على ما يخصها فقط
 function isOfficeOwner() { return hasPerm('users'); }
+// الإضافة صلاحية مستقلة عن العرض؛ ومدير المكتب يملكها دائماً
+function canAddCase()   { return isOfficeOwner() || hasPerm('cases_add'); }
+function canAddClient() { return isOfficeOwner() || hasPerm('clients_add'); }
 function myScopedCases() {
   return isOfficeOwner() ? DB.cases : DB.cases.filter(c => c.lawyer === DB.currentUser.name);
 }
 function myScopedClients() {
   if (isOfficeOwner()) return DB.clients;
   const ids = new Set(myScopedCases().map(c=>c.clientId).filter(Boolean));
-  return DB.clients.filter(cl => ids.has(cl.id));
+  const me = DB.currentUser.userId;
+  // من أضاف موكلاً يراه ولو لم تُقيَّد له قضية بعد
+  return DB.clients.filter(cl => ids.has(cl.id) || cl.createdBy === me);
 }
 function myScopedHearings() {
   if (isOfficeOwner()) return DB.hearings;
@@ -2967,7 +2975,7 @@ function renderCases(filter='') {
         <option value="active">جارية</option><option value="pending">معلقة</option>
         <option value="closed">مغلقة</option>
       </select>
-      <button class="btn btn-primary" onclick="openCaseModal()">➕ قضية جديدة</button>
+      ${canAddCase() ? `<button class="btn btn-primary" onclick="openCaseModal()">➕ قضية جديدة</button>` : ''}
     </div>
   </div>
   <div class="table-wrap">
@@ -2978,7 +2986,7 @@ function renderCases(filter='') {
         <th>الحالة</th><th>إجراءات</th>
       </tr></thead>
       <tbody>
-        ${filtered.length === 0 ? `<tr><td colspan="8" style="text-align:center;padding:28px 12px" class="color-gray text-sm">${scoped.length === 0 ? 'لا توجد قضايا مسجلة بعد — اضغط «قضية جديدة» لإضافة أول قضية' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>` : ''}
+        ${filtered.length === 0 ? `<tr><td colspan="8" style="text-align:center;padding:28px 12px" class="color-gray text-sm">${scoped.length === 0 ? (canAddCase() ? 'لا توجد قضايا مسجلة بعد — اضغط «قضية جديدة» لإضافة أول قضية' : 'لا توجد قضايا مقيَّدة باسمك بعد') : 'لا توجد نتائج مطابقة للبحث'}</td></tr>` : ''}
         ${filtered.map(c => {
           const cl = DB.clients.find(x=>x.id===c.clientId);
           return `<tr>
@@ -3961,13 +3969,13 @@ function renderClients() {
   return `
   <div class="section-header">
     <div class="section-title">👥 ${owner ? 'الموكلون' : 'موكلوني'} <span>(${clientsList.length})</span></div>
-    <button class="btn btn-primary" onclick="openClientModal()">➕ موكل جديد</button>
+    ${canAddClient() ? `<button class="btn btn-primary" onclick="openClientModal()">➕ موكل جديد</button>` : ''}
   </div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>البريد</th><th>عدد القضايا</th><th>اسم المستخدم</th><th>إجراءات</th></tr></thead>
       <tbody>
-        ${clientsList.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا يوجد موكلون مسجلون بعد — اضغط «موكل جديد» لإضافة أول موكل</td></tr>' : ''}
+        ${clientsList.length === 0 ? `<tr><td colspan="7" style="text-align:center;padding:28px 12px" class="color-gray text-sm">${canAddClient() ? 'لا يوجد موكلون مسجلون بعد — اضغط «موكل جديد» لإضافة أول موكل' : 'لا يوجد موكلون مرتبطون بك بعد'}</td></tr>` : ''}
         ${clientsList.map(cl => {
           const caseCount = myScopedCases().filter(c=>c.clientId===cl.id).length;
           return `<tr>
@@ -5468,7 +5476,17 @@ function populateCaseModal() {
   const sel = document.getElementById('new-case-client');
   sel.innerHTML = '<option value="">اختر موكلاً</option>' + DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   const lawyers = DB.users.filter(u => u.perms && u.perms.cases);
-  if (lawyers.length) document.getElementById('new-case-lawyer').innerHTML = lawyers.map(u=>`<option>${u.name}</option>`).join('');
+  const lw = document.getElementById('new-case-lawyer');
+  if (lawyers.length) lw.innerHTML = lawyers.map(u=>`<option>${escHtml(u.name)}</option>`).join('');
+  // من ليس مدير المكتب لا يرى إلا قضاياه، فتُقيَّد القضية باسمه كيلا تختفي عنه فور حفظها
+  if (!isOfficeOwner()) {
+    const me = DB.currentUser.name;
+    if (![...lw.options].some(o => o.value === me)) lw.insertAdjacentHTML('beforeend', `<option>${escHtml(me)}</option>`);
+    lw.value = me;
+    lw.disabled = true;
+  } else {
+    lw.disabled = false;
+  }
 }
 let caseModalEditId = null;
 function openCaseModal(id) {
@@ -5905,7 +5923,8 @@ async function saveNewClient() {
   let newClientId = null;
   const ok = await dbWrite('الموكل', async () => {
     if (editId) return sb.from('clients').update(row).eq('id', editId);
-    const ins = await sb.from('clients').insert(row).select('id').single();
+    const ins = await sb.from('clients')
+      .insert({ ...row, created_by: DB.currentUser.userId }).select('id').single();
     if (!ins.error) newClientId = ins.data.id;
     return ins;
   });

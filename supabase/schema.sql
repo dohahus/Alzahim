@@ -41,8 +41,10 @@ create table if not exists clients (
   username     text unique,
   notes        text,
   avatar_path  text,
+  created_by   uuid references staff(id) on delete set null,
   created_at   timestamptz not null default now()
 );
+alter table clients add column if not exists created_by uuid references staff(id) on delete set null;
 
 -- القضايا. lawyer_id يربط القضية بالمحامي المسؤول (بدل مطابقة الاسم نصياً)
 create table if not exists cases (
@@ -365,10 +367,13 @@ drop policy if exists clients_read on clients;
 create policy clients_read on clients for select using (
   is_owner()
   or id = my_client_id()
+  or created_by = auth.uid()
   or (is_staff() and exists (select 1 from cases c where c.client_id = clients.id and c.lawyer_id = auth.uid()))
 );
 drop policy if exists clients_staff_write on clients;
-create policy clients_staff_write on clients for insert with check (is_staff());
+create policy clients_staff_write on clients for insert with check (
+  is_staff() and (is_owner() or has_perm('clients_add'))
+);
 drop policy if exists clients_staff_update on clients;
 create policy clients_staff_update on clients for update using (is_staff() or id = my_client_id());
 drop policy if exists clients_owner_delete on clients;
@@ -380,7 +385,9 @@ create policy cases_read on cases for select using (
   is_owner() or (is_staff() and lawyer_id = auth.uid()) or client_id = my_client_id()
 );
 drop policy if exists cases_staff_write on cases;
-create policy cases_staff_write on cases for insert with check (is_staff());
+create policy cases_staff_write on cases for insert with check (
+  is_staff() and (is_owner() or has_perm('cases_add'))
+);
 drop policy if exists cases_staff_update on cases;
 create policy cases_staff_update on cases for update using (is_owner() or (is_staff() and lawyer_id = auth.uid()));
 drop policy if exists cases_owner_delete on cases;
