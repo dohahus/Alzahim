@@ -367,6 +367,7 @@ drop policy if exists clients_read on clients;
 create policy clients_read on clients for select using (
   is_owner()
   or has_perm('clients_add')
+  or has_perm('cases_add')
   or id = my_client_id()
   or created_by = auth.uid()
   or (is_staff() and exists (select 1 from cases c where c.client_id = clients.id and c.lawyer_id = auth.uid()))
