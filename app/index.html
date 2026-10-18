@@ -2354,6 +2354,127 @@ async function applyNewPassword() {
 })();
 
 // ═══════════════════════════════════
+//  إشعارات الجوال (Web Push)
+//  الاشتراك يخصّ الجهاز لا الحساب: من دخل من جهازين اشترك من كل منهما
+// ═══════════════════════════════════
+const VAPID_PUBLIC = 'BCZC3SfZKX4cDkIDrIyDROiaAEDIuwJMAXDIXj8QILqNGyw3rP_mfC8_6PEglykU-VoVDJgCJu9NWcksJrEY1aE';
+
+function pushSupported() {
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+}
+// الآيفون لا يسمح بالإشعارات إلا بعد إضافة البوابة إلى الشاشة الرئيسية
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function b64ToUint8(base64) {
+  const pad = '='.repeat((4 - base64.length % 4) % 4);
+  const raw = atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+function deviceLabel() {
+  const ua = navigator.userAgent;
+  const os = /iPhone|iPad|iPod/.test(ua) ? 'iPhone/iPad'
+           : /Android/.test(ua) ? 'Android'
+           : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'جهاز';
+  const br = /CriOS|Chrome/.test(ua) ? 'Chrome' : /Firefox/.test(ua) ? 'Firefox'
+           : /Edg/.test(ua) ? 'Edge' : /Safari/.test(ua) ? 'Safari' : '';
+  return (os + (br ? ' — ' + br : '')).slice(0, 60);
+}
+
+async function swRegistration() {
+  if (!pushSupported()) return null;
+  return navigator.serviceWorker.register('sw.js').then(r => navigator.serviceWorker.ready.then(() => r));
+}
+async function currentPushSub() {
+  if (!pushSupported()) return null;
+  const regs = await navigator.serviceWorker.getRegistrations();
+  for (const r of regs) {
+    const s = await r.pushManager.getSubscription();
+    if (s) return s;
+  }
+  return null;
+}
+
+async function enablePush() {
+  if (!pushSupported()) { alert('هذا المتصفح لا يدعم الإشعارات'); return; }
+  if (isIOS() && !isStandalone()) {
+    alert('على الآيفون: افتح البوابة في Safari، ثم زر المشاركة ⬆︎، ثم «إضافة إلى الشاشة الرئيسية».\n'
+        + 'بعدها افتحها من أيقونتها وفعّل الإشعارات من هنا — فالآيفون لا يسمح بها من المتصفح.');
+    return;
+  }
+  const btn = document.getElementById('push-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'جارٍ التفعيل…'; }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      alert(perm === 'denied'
+        ? 'الإشعارات محظورة لهذا الموقع في إعدادات المتصفح — اسمح بها ثم أعد المحاولة.'
+        : 'لم يُمنح الإذن بالإشعارات.');
+      return;
+    }
+    const reg = await swRegistration();
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64ToUint8(VAPID_PUBLIC),
+      });
+    }
+    const j = sub.toJSON();
+    const ok = await dbWrite('تفعيل الإشعارات', () => sb.from('push_subscriptions').upsert({
+      endpoint: j.endpoint,
+      staff_id: DB.currentUser.userId,
+      p256dh: j.keys.p256dh,
+      auth: j.keys.auth,
+      device: deviceLabel(),
+      last_seen: new Date().toISOString(),
+    }, { onConflict: 'endpoint' }), { reload: false });
+    if (ok) alert('فُعّلت الإشعارات على هذا الجهاز.\nسيصلك تنبيه بجلسات الغد وبالمهام التي تقترب من استحقاقها.');
+  } catch (e) {
+    console.error('[push]', e);
+    alert('تعذّر تفعيل الإشعارات: ' + (e.message || e));
+  } finally {
+    if (currentPage === 'settings') renderPage('settings');
+  }
+}
+
+async function disablePush() {
+  const sub = await currentPushSub();
+  if (!sub) { if (currentPage === 'settings') renderPage('settings'); return; }
+  const endpoint = sub.endpoint;
+  await sub.unsubscribe().catch(()=>{});
+  await dbWrite('إيقاف الإشعارات', () => sb.from('push_subscriptions').delete().eq('endpoint', endpoint), { reload: false });
+  if (currentPage === 'settings') renderPage('settings');
+}
+
+// تُقرأ حالة الاشتراك بعد رسم الصفحة لأن فحصها غير فوري
+async function refreshPushCard() {
+  const box = document.getElementById('push-state');
+  if (!box) return;
+  if (!pushSupported()) {
+    box.innerHTML = '<span class="color-gray text-sm">هذا المتصفح لا يدعم الإشعارات</span>';
+    return;
+  }
+  if (isIOS() && !isStandalone()) {
+    box.innerHTML = '<span class="color-gray text-sm">على الآيفون: أضف البوابة إلى الشاشة الرئيسية من Safari ثم افتحها من أيقونتها لتفعيل الإشعارات</span>';
+    return;
+  }
+  const sub = await currentPushSub();
+  const denied = Notification.permission === 'denied';
+  box.innerHTML = sub
+    ? `<span style="color:var(--green);font-weight:600">● مفعَّلة على هذا الجهاز</span>
+       <button class="btn btn-secondary btn-sm" style="margin-right:10px" onclick="disablePush()">إيقافها</button>`
+    : denied
+      ? '<span style="color:var(--red)">الإشعارات محظورة لهذا الموقع في إعدادات المتصفح</span>'
+      : `<span class="color-gray text-sm">غير مفعَّلة على هذا الجهاز</span>
+         <button class="btn btn-primary btn-sm" id="push-btn" style="margin-right:10px" onclick="enablePush()">🔔 تفعيل الإشعارات</button>`;
+}
+
+// ═══════════════════════════════════
 //  الصورة الشخصية للحساب
 // ═══════════════════════════════════
 // تُحفَظ الصورة على سجل المستخدم/الموكل نفسه لتظهر في أي متصفح يدخل منه
@@ -2606,7 +2727,7 @@ function renderPage(page) {
     case 'expenses': c.innerHTML = iconify(renderExpenses()); break;
     case 'hiring': c.innerHTML = iconify(renderHiring()); break;
     case 'reports': c.innerHTML = iconify(renderReports()); break;
-    case 'settings': c.innerHTML = iconify(renderSettings()); break;
+    case 'settings': c.innerHTML = iconify(renderSettings()); refreshPushCard(); break;
     case 'client-portal': c.innerHTML = iconify(renderClientPortal()); break;
     case 'client-hearings': c.innerHTML = iconify(renderClientHearings()); break;
     case 'client-invoices': c.innerHTML = iconify(renderClientInvoices()); break;
@@ -4857,6 +4978,13 @@ function renderSettings() {
         </div>
       </div>
     </div>
+  </div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title" style="margin-bottom:10px">🔔 إشعارات هذا الجهاز</div>
+    <p class="color-gray text-sm" style="margin-bottom:12px">
+      تنبيه على شاشة جهازك بجلسات الغد وبالمهام التي تقترب من استحقاقها، ولو كانت البوابة مغلقة.
+    </p>
+    <div id="push-state"><span class="color-gray text-sm">جارٍ التحقق…</span></div>
   </div>
   <div class="card" style="margin-bottom:20px">
     <div class="section-header" style="margin-bottom:16px">
