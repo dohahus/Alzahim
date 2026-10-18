@@ -101,9 +101,21 @@ begin
 end;
 $$;
 
-revoke all on function create_pending_account(text, text, text, text, text, jsonb, uuid, text) from public, anon;
-grant execute on function create_pending_account(text, text, text, text, text, jsonb, uuid, text) to authenticated;
-grant execute on function finalize_account(text, text) to authenticated;
+-- الصلاحيات تُمنح بالتوقيع الفعلي كما هو في القاعدة، لا بتوقيع مكتوب يدوياً
+-- (إنشاء الدالة من جديد يُسقط صلاحياتها السابقة، فلا بدّ من إعادة منحها)
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig, p.proname
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in ('create_pending_account','finalize_account')
+  loop
+    execute 'revoke all on function ' || r.sig || ' from public, anon';
+    execute 'grant execute on function ' || r.sig || ' to authenticated';
+  end loop;
+end $$;
 
 -- ٤) التحقّق: يجب أن يظهر بريد لكل سطر، ويطابق بريد المصادقة
 select s.username as "اسم المستخدم", s.email as "بريد الجدول",

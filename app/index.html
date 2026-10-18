@@ -2469,6 +2469,9 @@ function hasPerm(k) {
   if (!u || u.type !== 'admin' || !u.perms) return false;
   // صلاحية مركّبة: الوصول للمستندات المالية لمن يملك أيّ نوع منها
   if (k === 'anyDoc') return ['fee_contracts','consulting_contracts','quotes','invoices'].some(x => u.perms[x]);
+  // صلاحية الإضافة تفتح الصفحة أيضاً، وإلّا مُنح الإذن ولا سبيل إليه
+  if (k === 'casesPage')   return !!(u.perms.cases   || u.perms.cases_add);
+  if (k === 'clientsPage') return !!(u.perms.clients || u.perms.clients_add);
   return !!u.perms[k];
 }
 // نطاق البيانات: صاحب المكتب (صلاحية إدارة المستخدمين) يرى كل شيء،
@@ -2510,11 +2513,11 @@ const ADMIN_NAV = [
   { section: 'الرئيسية' },
   { id:'dashboard', icon:ic('home',18), label:'النظرة العامة' },
   { section: 'القضايا' },
-  { id:'cases', icon:ic('scale',18), label:'القضايا', perm:'cases', badge: () => DB.cases.filter(c=>c.status==='active').length },
+  { id:'cases', icon:ic('scale',18), label:'القضايا', perm:'casesPage', badge: () => DB.cases.filter(c=>c.status==='active').length },
   { id:'hearings', icon:ic('calendar',18), label:'الجلسات', perm:'hearings' },
   { id:'tasks', icon:ic('check-square',18), label:'المهام', perm:'tasks', badge: () => DB.tasks.filter(t=>!t.done).length },
   { section: 'العملاء' },
-  { id:'clients', icon:ic('users',18), label:'الموكلون', perm:'clients' },
+  { id:'clients', icon:ic('users',18), label:'الموكلون', perm:'clientsPage' },
   { id:'client-tickets', icon:ic('message-circle',18), label:'رسائل الموكلين', perm:'clients', badge: () => myScopedTickets().filter(t=>t.status==='open').length },
   { section: 'المالية' },
   { id:'invoices', icon:ic('wallet',18), label:'الفواتير والعقود', perm:'anyDoc' },
@@ -2555,7 +2558,7 @@ function buildSidebar() {
   });
 }
 let currentPage = '';
-const PAGE_PERMS = { cases:'cases', hearings:'hearings', tasks:'tasks', clients:'clients', 'client-tickets':'clients', invoices:'anyDoc', expenses:'expenses', reports:'reports', settings:'settings' };
+const PAGE_PERMS = { cases:'casesPage', hearings:'hearings', tasks:'tasks', clients:'clientsPage', 'client-tickets':'clients', invoices:'anyDoc', expenses:'expenses', reports:'reports', settings:'settings' };
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-backdrop').classList.toggle('open');
