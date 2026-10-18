@@ -2481,7 +2481,8 @@ function myScopedCases() {
   return isOfficeOwner() ? DB.cases : DB.cases.filter(c => c.lawyer === DB.currentUser.name);
 }
 function myScopedClients() {
-  if (isOfficeOwner()) return DB.clients;
+  // صلاحية إضافة الموكلين تقتضي رؤيتهم جميعاً، وإلّا أضاف موكلاً مسجَّلاً مرتين
+  if (isOfficeOwner() || canAddClient()) return DB.clients;
   const ids = new Set(myScopedCases().map(c=>c.clientId).filter(Boolean));
   const me = DB.currentUser.userId;
   // من أضاف موكلاً يراه ولو لم تُقيَّد له قضية بعد
