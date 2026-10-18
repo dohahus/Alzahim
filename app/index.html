@@ -2501,8 +2501,8 @@ function myScopedHearings() {
 function taskBelongsTo(t, uid) {
   return (t.assigneeIds || []).includes(uid) || t.creatorId === uid;
 }
+// المهام خاصة بأصحابها حتى عن مدير المكتب: لا يرى إلا ما كتبه أو أُشير إليه فيه
 function myScopedTasks() {
-  if (isOfficeOwner()) return DB.tasks;
   return DB.tasks.filter(t => taskBelongsTo(t, DB.currentUser.userId));
 }
 function myScopedTickets() {

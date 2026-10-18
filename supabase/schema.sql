@@ -313,8 +313,7 @@ create or replace function can_see_task(t_id uuid) returns boolean
     select 1 from tasks t
     where t.id = t_id
       and (
-        is_owner()
-        or (is_staff() and (
+        (is_staff() and (
              t.assignee_id = auth.uid() or t.creator_id = auth.uid()
              or exists (select 1 from task_assignees ta
                          where ta.task_id = t.id and ta.staff_id = auth.uid())
@@ -425,26 +424,30 @@ create policy hearings_update on hearings for update using (is_staff() and can_s
 drop policy if exists hearings_delete on hearings;
 create policy hearings_delete on hearings for delete using (is_staff() and can_see_case(case_id));
 
--- ───────── المهام: للمكتب فقط، والمحامي يرى ما وُكِّل به ─────────
-drop policy if exists tasks_read on tasks;
-create policy tasks_read on tasks for select using (
-  is_owner() or (is_staff() and (
-    assignee_id = auth.uid() or creator_id = auth.uid()
-    or exists (select 1 from task_assignees ta where ta.task_id = tasks.id and ta.staff_id = auth.uid())
-  ))
-);
+-- ───────── المهام: خاصة بكاتبها ومن أُشير إليه فيها، حتى عن مدير المكتب ─────────
 drop policy if exists tasks_write on tasks;
 create policy tasks_write on tasks for insert with check (is_staff());
+drop policy if exists tasks_read on tasks;
+create policy tasks_read on tasks for select using (
+  is_staff() and (
+    creator_id = auth.uid()
+    or assignee_id = auth.uid()
+    or exists (select 1 from task_assignees ta where ta.task_id = tasks.id and ta.staff_id = auth.uid())
+  )
+);
+
 drop policy if exists tasks_update on tasks;
 create policy tasks_update on tasks for update using (
-  is_owner() or (is_staff() and (
-    assignee_id = auth.uid() or creator_id = auth.uid()
+  is_staff() and (
+    creator_id = auth.uid()
+    or assignee_id = auth.uid()
     or exists (select 1 from task_assignees ta where ta.task_id = tasks.id and ta.staff_id = auth.uid())
-  ))
+  )
 );
+
 drop policy if exists tasks_delete on tasks;
 create policy tasks_delete on tasks for delete using (
-  is_owner() or (is_staff() and creator_id = auth.uid())
+  is_staff() and creator_id = auth.uid()
 );
 
 drop policy if exists task_assignees_read on task_assignees;
