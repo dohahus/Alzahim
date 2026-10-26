@@ -1106,8 +1106,14 @@ tbody td { padding:13px 16px; font-size:14.9px; }
         </div>
         <label class="lt-chk"><input type="checkbox" id="lt-show-date" checked />
           <span>إظهار التاريخ أعلى الخطاب</span></label>
-        <label class="lt-chk"><input type="checkbox" id="lt-sign" checked />
-          <span>إضافة التوقيع في النهاية</span></label>
+        <div class="form-group-v" style="max-width:240px;margin:0">
+          <label>التوقيع في نهاية الخطاب</label>
+          <select id="lt-sign-by">
+            <option value="">بلا توقيع</option>
+            <option value="abdullah">أ.د. عبدالله بن إبراهيم الزاحم</option>
+            <option value="ziyad">زياد بن عبدالله الزاحم</option>
+          </select>
+        </div>
         <label class="lt-chk"><input type="checkbox" id="lt-stamp" />
           <span>ختم المكتب مع التوقيع</span></label>
       </div>
@@ -2059,7 +2065,7 @@ async function loadFromDatabase() {
   DB.letters = (lt.error ? [] : (lt.data || [])).map(r => ({
     id: r.id, kind: r.kind || 'خطاب', title: r.title, recipient: r.recipient || '',
     body: r.body || '', ref: r.ref || '', date: r.date, withStamp: !!r.with_stamp,
-    showDate: r.with_date !== false, showSign: r.with_sign !== false,
+    showDate: r.with_date !== false, signBy: r.sign_by || '',
     authorId: r.author_id, authorName: r.author_name || '', authorRole: r.author_role || '',
     updatedAt: r.updated_at,
   }));
@@ -3046,7 +3052,7 @@ function openLetterModal(id) {
   letterEditId = l ? l.id : null;
   document.getElementById('lt-modal-title').innerHTML = iconify(l ? '✏️ تعديل الخطاب' : '📄 خطاب جديد');
   document.getElementById('lt-show-date').checked = l ? l.showDate : true;
-  document.getElementById('lt-sign').checked = l ? l.showSign : true;
+  document.getElementById('lt-sign-by').value = l ? (l.signBy || '') : 'abdullah';
   const ed = document.getElementById('lt-body');
   const raw = l ? (l.body || '') : '';
   ed.innerHTML = /<[a-z][\s\S]*>/i.test(raw) ? ltSanitize(raw) : ltTextToHTML(raw);
@@ -3072,7 +3078,7 @@ async function saveLetter(print) {
     body, date: document.getElementById('lt-date').value || todayISO(),
     with_stamp: document.getElementById('lt-stamp').checked,
     with_date: document.getElementById('lt-show-date').checked,
-    with_sign: document.getElementById('lt-sign').checked,
+    sign_by: nullIfBlank(document.getElementById('lt-sign-by').value),
     author_id: DB.currentUser.userId,
     author_name: DB.currentUser.name,
     author_role: DB.currentUser.role || '',
@@ -3100,9 +3106,10 @@ async function deleteLetter(id) {
 }
 
 // ───── الإصدار على الورق الرسمي ─────
-// صورة توقيع كل حساب باسم مستخدمه؛ من لا صورة له يظهر توقيعه نصّاً
-const SIGN_IMAGES = {
-  // 'ziyad': 'signature-ziyad.png',
+// الموقِّعون المعتمدون: اسمٌ ومسمّى وصورة توقيع
+const SIGNERS = {
+  abdullah: { name: 'أ.د. عبدالله بن إبراهيم الزاحم', role: 'المحامي', img: 'signature-abdullah.png' },
+  ziyad:    { name: 'زياد بن عبدالله الزاحم',        role: 'المحامي', img: 'signature-ziyad.png' },
 };
 // المقاسات بالنقاط لأن المستند للطباعة: ١٢ للمتن و١٤ غليظ للعنوان
 function buildLetterHTML(l) {
@@ -3117,20 +3124,19 @@ function buildLetterHTML(l) {
     if (!b.style.margin)     b.style.margin = '0 0 7pt';
   });
   const body = box.innerHTML;
-  const author = DB.users.find(u => u.id === l.authorId);
-  const signFile = author && SIGN_IMAGES[author.user];
-  const sig = l.showSign === false ? '' : `
-    <div style="margin-top:20pt; text-align:left; font-size:12pt; line-height:1.8">
-      <div>توقيع:</div>
-      <div>${escHtml(l.authorRole || 'المحامي')}</div>
-      <div style="font-weight:700">${escHtml(l.authorName || '')}</div>
-      ${signFile || l.withStamp ? `<div style="position:relative; height:30mm; margin-top:1mm">
-        ${signFile ? `<img style="position:absolute; top:0; right:0; width:38mm"
-             src="${portalBaseUrl()}../assets/${signFile}?v=${ASSET_V}" alt="التوقيع">` : ''}
-        ${l.withStamp ? `<img style="position:absolute; top:8mm; right:${signFile ? '34mm' : '0'}; width:26mm;
+  const who = SIGNERS[l.signBy];
+  const sig = !who && !l.withStamp ? '' : `
+    <div style="margin-top:20pt; text-align:left; font-size:12pt; line-height:1.75">
+      ${who ? `<div>توقيع</div>
+      <div>${escHtml(who.role)}</div>
+      <div style="font-weight:700">${escHtml(who.name)}</div>` : ''}
+      <div style="position:relative; height:28mm; margin-top:1mm">
+        ${who ? `<img style="position:absolute; top:0; left:6mm; width:36mm"
+             src="${portalBaseUrl()}../assets/${who.img}?v=${ASSET_V}" alt="التوقيع">` : ''}
+        ${l.withStamp ? `<img style="position:absolute; top:7mm; left:${who ? '42mm' : '6mm'}; width:25mm;
              transform:rotate(-7deg); mix-blend-mode:multiply; opacity:.92"
              src="${portalBaseUrl()}../assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب">` : ''}
-      </div>` : ''}
+      </div>
     </div>`;
   return `
     ${l.showDate === false ? '' : `<div style="text-align:right; font-size:11pt; color:#44423A; margin:0 0 12pt">

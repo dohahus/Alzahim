@@ -771,7 +771,7 @@ create table if not exists letters (
   date        date not null default current_date,
   with_stamp  boolean not null default false,
   with_date   boolean not null default true,
-  with_sign   boolean not null default true,
+  sign_by     text,
   author_id   uuid references staff(id) on delete set null,
   author_name text,
   author_role text,
@@ -780,7 +780,7 @@ create table if not exists letters (
 );
 
 alter table letters add column if not exists with_date boolean not null default true;
-alter table letters add column if not exists with_sign boolean not null default true;
+alter table letters add column if not exists sign_by text;
 
 create index if not exists idx_letters_author on letters(author_id);
 create index if not exists idx_letters_date   on letters(date desc);
