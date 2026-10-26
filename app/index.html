@@ -1072,6 +1072,46 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 </div>
 
 <!-- ═══════════════ MODAL: ADD CASE ═══════════════ -->
+<div class="modal-overlay" id="letter-modal" style="display:none" onclick="closeModal('letter-modal',event)">
+  <div class="modal" style="width:720px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="lt-modal-title">📄 خطاب جديد</span>
+      <button class="modal-close" onclick="closeModal('letter-modal',event)">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group-v"><label>النوع</label><select id="lt-kind"></select></div>
+        <div class="form-group-v"><label>التاريخ <span class="color-gray text-sm">(تاريخ اليوم تلقائياً)</span></label>
+          <input type="date" id="lt-date" /></div>
+      </div>
+      <div class="form-group-v">
+        <label>العنوان الرئيسي <span class="color-gray text-sm">(يظهر في الوسط بحجم ١٤ غليظ)</span></label>
+        <input type="text" id="lt-title" placeholder="مثال: إفادة بشأن القضية رقم ..." />
+      </div>
+      <div class="form-group-v">
+        <label>الجهة المرسل إليها <span class="color-gray text-sm">(اختياري)</span></label>
+        <input type="text" id="lt-to" placeholder="مثال: سعادة مدير إدارة التنفيذ المحترم" />
+      </div>
+      <div class="form-group-v">
+        <label>المحتوى <span class="color-gray text-sm">(يظهر بحجم ١٢ — اترك سطراً فارغاً بين الفقرات)</span></label>
+        <textarea id="lt-body" rows="12" style="line-height:1.9" placeholder="اكتب المحتوى بسرعة، ثم اضغط «تدقيق وتنسيق»..."></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+        <button class="btn btn-secondary btn-sm" onclick="runLetterFix()">✅ تدقيق وتنسيق</button>
+        <span class="text-sm" id="lt-fix-note"></span>
+      </div>
+      <label class="inv-case-item" style="display:inline-flex;align-items:center;gap:8px">
+        <input type="checkbox" id="lt-stamp" /> <span>إضافة ختم المكتب أسفل التوقيع</span>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('letter-modal',event)">إلغاء</button>
+      <button class="btn btn-secondary" onclick="saveLetter(false)">💾 حفظ فقط</button>
+      <button class="btn btn-primary" onclick="saveLetter(true)">🖨️ حفظ وإصدار PDF</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="applicant-modal" style="display:none" onclick="closeModal('applicant-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -1849,7 +1889,7 @@ const PERM_DEFS = [
   ['clients','الموكلون'], ['clients_add','إضافة موكلين'],
   ['fee_contracts','عقود الأتعاب'], ['consulting_contracts','عقود الاستشارات'],
   ['quotes','عروض الأسعار'], ['invoices','الفواتير'],
-  ['expenses','المصروفات'], ['hiring','التوظيف'], ['reports','التقارير'],
+  ['expenses','المصروفات'], ['letters','الخطابات والتقارير'], ['hiring','التوظيف'], ['reports','التقارير'],
   ['settings','إعدادات المكتب'], ['users','إدارة المستخدمين'],
 ];
 // كل نوع مستند له صلاحيته، فيُمكن تمكين موظف من إصدار عروض الأسعار
@@ -1862,12 +1902,12 @@ function allowedDocKinds() { return ['fee','consulting','quote','invoice'].filte
 function canAnyDoc() { return allowedDocKinds().length > 0; }
 
 const ROLE_PRESETS = {
-  'مدير المكتب': { cases:true, hearings:true, tasks:true, clients:true, fee_contracts:true, consulting_contracts:true, quotes:true, invoices:true, expenses:true, reports:true, settings:true, users:true },
-  'محامي':       { cases:true, hearings:true, tasks:true, clients:true, fee_contracts:false, consulting_contracts:false, quotes:false, invoices:false, expenses:false, reports:false, settings:false, users:false },
-  'مستشار قانوني': { cases:true, hearings:true, tasks:true, clients:false, fee_contracts:false, consulting_contracts:true, quotes:true, invoices:false, expenses:false, reports:false, settings:false, users:false },
-  'محامي متدرب': { cases:true, hearings:true, tasks:true, clients:false, fee_contracts:false, consulting_contracts:false, quotes:false, invoices:false, expenses:false, reports:false, settings:false, users:false },
-  'محاسب':       { cases:false, hearings:false, tasks:true, clients:false, fee_contracts:true, consulting_contracts:true, quotes:true, invoices:true, expenses:true, reports:true, settings:false, users:false },
-  'سكرتير':      { cases:false, hearings:true, tasks:true, clients:true, fee_contracts:false, consulting_contracts:false, quotes:true, invoices:true, expenses:false, reports:false, settings:false, users:false },
+  'مدير المكتب': { cases:true, hearings:true, tasks:true, clients:true, fee_contracts:true, consulting_contracts:true, quotes:true, invoices:true, expenses:true, reports:true, settings:true, users:true , letters:true },
+  'محامي':       { cases:true, hearings:true, tasks:true, clients:true, fee_contracts:false, consulting_contracts:false, quotes:false, invoices:false, expenses:false, reports:false, settings:false, users:false , letters:true },
+  'مستشار قانوني': { cases:true, hearings:true, tasks:true, clients:false, fee_contracts:false, consulting_contracts:true, quotes:true, invoices:false, expenses:false, reports:false, settings:false, users:false , letters:true },
+  'محامي متدرب': { cases:true, hearings:true, tasks:true, clients:false, fee_contracts:false, consulting_contracts:false, quotes:false, invoices:false, expenses:false, reports:false, settings:false, users:false , letters:false },
+  'محاسب':       { cases:false, hearings:false, tasks:true, clients:false, fee_contracts:true, consulting_contracts:true, quotes:true, invoices:true, expenses:true, reports:true, settings:false, users:false , letters:false },
+  'سكرتير':      { cases:false, hearings:true, tasks:true, clients:true, fee_contracts:false, consulting_contracts:false, quotes:true, invoices:true, expenses:false, reports:false, settings:false, users:false , letters:true },
 };
 // الحسابات كلها في قاعدة البيانات وكلمات مرورها مُعمّاة هناك — لا حسابات
 // مكتوبة في الصفحة، فملف الموقع مكشوف لأي زائر.
@@ -1879,6 +1919,7 @@ let DB = {
   clients: [],
   cases: [],
   expenses: [],
+  letters: [],
   applicants: [],
   pending: [],
   hearings: [],
@@ -1966,6 +2007,15 @@ async function loadFromDatabase() {
     Object.entries(map).forEach(([k, col]) => { if (r[col]) OFFICE[k] = r[col]; });
     recomputeOffice();
   }
+
+  // الخطابات: سياسة الحماية تُرجع ما يخصّ صاحب الحساب فقط
+  const lt = await sb.from('letters').select('*').order('date', { ascending: false });
+  DB.letters = (lt.error ? [] : (lt.data || [])).map(r => ({
+    id: r.id, kind: r.kind || 'خطاب', title: r.title, recipient: r.recipient || '',
+    body: r.body || '', ref: r.ref || '', date: r.date, withStamp: !!r.with_stamp,
+    authorId: r.author_id, authorName: r.author_name || '', authorRole: r.author_role || '',
+    updatedAt: r.updated_at,
+  }));
 
   // طلبات التوظيف لا يقرؤها إلا صاحب صلاحية التوظيف، وسياسة الحماية تُرجع فارغاً لغيره
   DB.applicants = [];
@@ -2649,6 +2699,7 @@ const ADMIN_NAV = [
   { section: 'المالية' },
   { id:'invoices', icon:ic('wallet',18), label:'الفواتير والعقود', perm:'anyDoc' },
   { id:'expenses', icon:ic('trending',18), label:'المصروفات', perm:'expenses' },
+  { id:'letters', icon:ic('file',18), label:'الخطابات والتقارير', perm:'letters' },
   { section: 'التوظيف' },
   { id:'hiring', icon:ic('briefcase',18), label:'طلبات التوظيف', perm:'hiring', badge: () => DB.applicants.filter(a => a.status === 'جديد').length },
   { section: 'التقارير' },
@@ -2685,7 +2736,7 @@ function buildSidebar() {
   });
 }
 let currentPage = '';
-const PAGE_PERMS = { cases:'casesPage', hearings:'hearings', tasks:'tasks', clients:'clientsPage', 'client-tickets':'clients', invoices:'anyDoc', expenses:'expenses', reports:'reports', settings:'settings' };
+const PAGE_PERMS = { letters:'letters', cases:'casesPage', hearings:'hearings', tasks:'tasks', clients:'clientsPage', 'client-tickets':'clients', invoices:'anyDoc', expenses:'expenses', reports:'reports', settings:'settings' };
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-backdrop').classList.toggle('open');
@@ -2704,7 +2755,7 @@ function navTo(page) {
   const active = document.getElementById('nav-' + page);
   if (active) active.classList.add('active');
   const titles = {
-    dashboard:'النظرة العامة', 'client-account':'حسابي', expenses:'المصروفات', hiring:'طلبات التوظيف', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
+    dashboard:'النظرة العامة', 'client-account':'حسابي', expenses:'المصروفات', letters:'الخطابات والتقارير', hiring:'طلبات التوظيف', cases:'القضايا', hearings:'الجلسات', tasks:'المهام',
     clients:'الموكلون', 'client-tickets':'رسائل الموكلين', invoices:'الفواتير', reports:'التقارير', settings:'الإعدادات',
     'client-portal':'قضاياي', 'client-hearings':'جلساتي', 'client-invoices':'فواتيري وعقودي',
     'client-docs':'مستنداتي', 'client-contact':'التواصل مع المكتب',
@@ -2730,6 +2781,7 @@ function renderPage(page) {
     case 'client-account': c.innerHTML = iconify(renderClientAccount()); break;
     case 'invoices': c.innerHTML = iconify(renderInvoices()); break;
     case 'expenses': c.innerHTML = iconify(renderExpenses()); break;
+    case 'letters': c.innerHTML = iconify(renderLetters()); break;
     case 'hiring': c.innerHTML = iconify(renderHiring()); break;
     case 'reports': c.innerHTML = iconify(renderReports()); break;
     case 'settings': c.innerHTML = iconify(renderSettings()); refreshPushCard(); break;
@@ -2740,6 +2792,211 @@ function renderPage(page) {
     case 'client-contact': c.innerHTML = iconify(renderClientContact()); break;
     default: c.innerHTML = '<p style="color:var(--gray)">الصفحة قيد التطوير</p>';
   }
+}
+
+// ═══════════════════════════════════
+//  الخطابات والتقارير على الورق الرسمي
+// ═══════════════════════════════════
+const LETTER_KINDS = ['خطاب', 'تقرير', 'مذكرة', 'إفادة'];
+
+// ───── التدقيق الإملائي والتنسيق ─────
+// تصحيحات قاطعة لا تحتمل وجهين، مرتّبة: أطول عبارة أولاً
+const AR_FIXES = [
+  ['انشاء الله','إن شاء الله'], ['إنشاء الله','إن شاء الله'], ['ان شاء الله','إن شاء الله'],
+  ['بناءا على','بناءً على'], ['بناء على','بناءً على'], ['بناءاً على','بناءً على'],
+  ['وبناءا','وبناءً'], ['عفوا','عفوًا'], ['شكرا','شكرًا'], ['مرحبا','مرحبًا'],
+  ['اهلا','أهلًا'], ['أهلا','أهلًا'], ['سهلا','سهلًا'], ['جدا','جدًا'], ['ايضا','أيضًا'],
+  ['أيضا','أيضًا'], ['دائما','دائمًا'], ['خصوصا','خصوصًا'], ['مثلا','مثلًا'],
+  ['فورا','فورًا'], ['سريعا','سريعًا'], ['لاحقا','لاحقًا'], ['سابقا','سابقًا'],
+  ['مبدئيا','مبدئيًا'], ['نهائيا','نهائيًا'], ['رسميا','رسميًا'], ['قانونيا','قانونيًا'],
+  ['علما','علمًا'], ['بناء عليه','بناءً عليه'], ['وفقا','وفقًا'], ['طبقا','طبقًا'],
+  ['استنادا','استنادًا'], ['إشارة الى','إشارةً إلى'], ['اشارة الى','إشارةً إلى'],
+  ['الى','إلى'], ['اللذي','الذي'], ['هاذا','هذا'], ['هذة','هذه'], ['هاذه','هذه'],
+  ['لاكن','لكن'], ['لكنه','لكنه'], ['لذالك','لذلك'], ['انه','أنه'], ['انها','أنها'],
+  ['انهم','أنهم'], ['اننا','أننا'], ['انني','أنني'], ['ان يكون','أن يكون'],
+  ['مسئول','مسؤول'], ['مسئولية','مسؤولية'], ['شئون','شؤون'], ['مسئولين','مسؤولين'],
+  ['إستلام','استلام'], ['إستئناف','استئناف'], ['إستشارة','استشارة'], ['إستقبال','استقبال'],
+  ['إجتماع','اجتماع'], ['إتفاق','اتفاق'], ['إنتهاء','انتهاء'], ['إرتفاع','ارتفاع'],
+  ['إنعقاد','انعقاد'], ['إلتزام','التزام'], ['إحتساب','احتساب'], ['إعتراض','اعتراض'],
+  ['إستحقاق','استحقاق'], ['إختصاص','اختصاص'], ['إعتماد','اعتماد'], ['إستكمال','استكمال'],
+  ['المحكمه','المحكمة'], ['القضيه','القضية'], ['الجلسه','الجلسة'], ['المذكره','المذكرة'],
+  ['الصحيفه','الصحيفة'], ['اللائحه','اللائحة'], ['الوكاله','الوكالة'], ['الشركه','الشركة'],
+  ['بان','بأن'], ['لان','لأن'], ['كانت انها','كانت أنها'],
+  ['إستلم','استلم'], ['إستلمنا','استلمنا'], ['إستلمت','استلمت'], ['إستأنف','استأنف'],
+  ['إجتمع','اجتمع'], ['إتفق','اتفق'], ['إنتهى','انتهى'], ['إعترض','اعترض'],
+  ['إستكمل','استكمل'], ['إحتسب','احتسب'], ['إلتزم','التزم'], ['إنعقد','انعقد'],
+  ['لائحه','لائحة'], ['مذكره','مذكرة'], ['جلسه','جلسة'], ['محكمه','محكمة'],
+  ['قضيه','قضية'], ['شركه','شركة'], ['وكاله','وكالة'], ['صحيفه','صحيفة'],
+  ['مرافعه','مرافعة'], ['استشاره','استشارة'], ['فاتوره','فاتورة'], ['مطالبه','مطالبة'],
+];
+// كلمات لا يُسمح بسابقة قبلها كيلا تُصحَّح كلمةٌ أخرى بغير وجه
+const AR_NO_PREFIX = new Set(['جدا', 'سهلا', 'علما', 'بان', 'لان']);
+
+// علامات الترقيم اللاتينية تُستبدل بالعربية خارج الأرقام والروابط
+function fixArabicText(t) {
+  if (!t) return '';
+  let out = String(t);
+  out = out.replace(/ـ+/g, '');                       // حذف التطويل
+  out = out.replace(/\r\n?/g, '\n');
+  out = out.replace(/[ \t]+/g, ' ');
+  // الفاصلة والفاصلة المنقوطة وعلامة الاستفهام بالعربية، ما لم تكن بين رقمين
+  out = out.replace(/(?<!\d),(?!\d)/g, '،').replace(/;/g, '؛').replace(/\?/g, '؟');
+  // لا مسافة قبل علامة الترقيم، ومسافة واحدة بعدها
+  out = out.replace(/\s+([،؛؟!.:])/g, '$1');
+  out = out.replace(/([،؛؟!])(?=\S)/g, '$1 ');
+  out = out.replace(/\.(?=[^\s\d.])/g, '. ');
+  // الأقواس وعلامات التنصيص
+  out = out.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')');
+  out = out.replace(/«\s+/g, '«').replace(/\s+»/g, '»');
+  // التصحيحات المعجمية على حدود الكلمات
+  for (const [a, b] of AR_FIXES) {
+    // تُقبل السوابق و/ف/ب/ل فتُصحَّح «وانه» كما تُصحَّح «انه»
+    const pre = AR_NO_PREFIX.has(a) ? '()' : '([وفبل]?)';
+    out = out.replace(
+      new RegExp('(^|[\\s،؛:.!؟(«"\\n])' + pre + a + '(?=$|[\\s،؛:.!؟)»"\\n])', 'g'),
+      (m, p1, p2) => p1 + (p2 || '') + b);
+  }
+  // فقرات مرتّبة: سطر فارغ واحد بين الفقرات، ولا مسافات في الأطراف
+  out = out.split('\n').map(l => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  // كل فقرة تنتهي بنقطة ما لم تنتهِ بعلامة ترقيم
+  out = out.split('\n\n').map(par => {
+    const p = par.trim();
+    if (!p) return p;
+    return /[.،؛:!؟»)]$/.test(p) ? p : p + '.';
+  }).join('\n\n');
+  return out;
+}
+
+function runLetterFix() {
+  const ta = document.getElementById('lt-body');
+  const before = ta.value;
+  const after = fixArabicText(before);
+  ta.value = after;
+  const tEl = document.getElementById('lt-title');
+  tEl.value = fixArabicText(tEl.value).replace(/\.$/, '');
+  const note = document.getElementById('lt-fix-note');
+  const changed = before !== after;
+  note.textContent = changed ? 'طُبّق التدقيق الإملائي والتنسيق — راجع النص قبل الإصدار'
+                             : 'لم يُعثر على ما يُصحَّح';
+  note.style.color = changed ? 'var(--green)' : 'var(--gray-light)';
+}
+
+// ───── الشاشة ─────
+function renderLetters() {
+  const mine = DB.letters;
+  return `
+  <div class="section-header">
+    <div class="section-title">📄 الخطابات والتقارير</div>
+    <button class="btn btn-primary" onclick="openLetterModal()">➕ خطاب جديد</button>
+  </div>
+  <p class="color-gray text-sm" style="margin-bottom:14px">
+    تُكتب هنا ثم تُصدَّر على ورق المكتب الرسمي بتاريخ اليوم وتوقيع كاتبها.
+  </p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>النوع</th><th>العنوان</th><th>إلى</th><th>التاريخ</th><th>الكاتب</th><th>إجراءات</th></tr></thead>
+    <tbody>
+      ${mine.length === 0 ? '<tr><td colspan="6" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد خطابات بعد — اضغط «خطاب جديد»</td></tr>' : ''}
+      ${mine.map(l => `
+        <tr>
+          <td><span class="badge badge-partial" style="white-space:nowrap">${escHtml(l.kind)}</span></td>
+          <td><b>${escHtml(l.title)}</b></td>
+          <td class="text-sm">${escHtml(l.recipient || '—')}</td>
+          <td class="text-sm">${formatDateShortHijri(l.date)}</td>
+          <td class="text-sm">${escHtml(l.authorName || '—')}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-secondary btn-sm" onclick="openLetterModal('${l.id}')">✏️ تعديل</button>
+            <button class="btn btn-primary btn-sm" onclick="openLetterPDF('${l.id}')">🖨️ إصدار PDF</button>
+            <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteLetter('${l.id}')">🗑️ حذف</button>
+          </td>
+        </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+let letterEditId = null;
+function openLetterModal(id) {
+  const l = id ? DB.letters.find(x => x.id === id) : null;
+  letterEditId = l ? l.id : null;
+  document.getElementById('lt-modal-title').innerHTML = iconify(l ? '✏️ تعديل الخطاب' : '📄 خطاب جديد');
+  document.getElementById('lt-kind').innerHTML = LETTER_KINDS
+    .map(k => `<option${l && l.kind === k ? ' selected' : ''}>${k}</option>`).join('');
+  document.getElementById('lt-title').value = l ? l.title : '';
+  document.getElementById('lt-to').value = l ? l.recipient : '';
+  document.getElementById('lt-body').value = l ? l.body : '';
+  document.getElementById('lt-date').value = l ? l.date : todayISO();
+  document.getElementById('lt-stamp').checked = l ? l.withStamp : false;
+  document.getElementById('lt-fix-note').textContent = '';
+  openModal('letter-modal');
+}
+
+async function saveLetter(print) {
+  const title = document.getElementById('lt-title').value.trim();
+  const body = document.getElementById('lt-body').value.trim();
+  if (!title) { alert('يرجى كتابة عنوان الخطاب'); return; }
+  if (!body)  { alert('يرجى كتابة محتوى الخطاب'); return; }
+  const row = {
+    kind: document.getElementById('lt-kind').value,
+    title, recipient: nullIfBlank(document.getElementById('lt-to').value),
+    body, date: document.getElementById('lt-date').value || todayISO(),
+    with_stamp: document.getElementById('lt-stamp').checked,
+    author_id: DB.currentUser.userId,
+    author_name: DB.currentUser.name,
+    author_role: DB.currentUser.role || '',
+    updated_at: new Date().toISOString(),
+  };
+  let savedId = letterEditId;
+  const ok = await dbWrite('الخطاب', async () => {
+    if (letterEditId) return sb.from('letters').update(row).eq('id', letterEditId);
+    const ins = await sb.from('letters').insert(row).select('id').single();
+    if (!ins.error) savedId = ins.data.id;
+    return ins;
+  });
+  if (!ok) return;
+  letterEditId = null;
+  closeModal('letter-modal', {});
+  navTo('letters');
+  if (print && savedId) openLetterPDF(savedId);
+}
+
+async function deleteLetter(id) {
+  const l = DB.letters.find(x => x.id === id); if (!l) return;
+  if (!confirm(`حذف «${l.title}» نهائياً؟`)) return;
+  const ok = await dbWrite('حذف الخطاب', () => sb.from('letters').delete().eq('id', id));
+  if (ok) navTo('letters');
+}
+
+// ───── الإصدار على الورق الرسمي ─────
+// المقاسات بالنقاط لأن المستند للطباعة: ١٢ للمتن و١٤ غليظ للعنوان
+function buildLetterHTML(l) {
+  const P = 'font-size:12pt; line-height:1.95; text-align:justify; margin:0 0 7pt';
+  const pars = (l.body || '').split(/\n{2,}/).map(x => x.trim()).filter(Boolean);
+  const body = pars.map(par =>
+    `<p style="${P}">${escHtml(par).replace(/\n/g, '<br>')}</p>`).join('');
+  const sig = `
+    <div style="margin-top:14pt; text-align:center; font-size:12pt">
+      <div style="font-weight:700">${escHtml(l.authorName || '')}</div>
+      ${l.authorRole ? `<div style="font-size:11pt; color:#6B6757; margin-top:2pt">${escHtml(l.authorRole)}</div>` : ''}
+      ${l.withStamp ? `<div class="sig-mark" style="height:26mm; margin-top:2mm">
+          <img class="sig-stamp" style="position:absolute; top:0; left:50%; transform:translateX(-50%) rotate(-7deg); width:26mm"
+               src="${portalBaseUrl()}../assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب"></div>` : ''}
+    </div>`;
+  return `
+    <div style="text-align:left; font-size:11pt; color:#44423A; margin:0 0 10pt">
+      ${formatDate(l.date)}
+    </div>
+    ${l.recipient ? `<div style="font-size:12pt; font-weight:600; margin:0 0 8pt">${escHtml(l.recipient)}</div>` : ''}
+    <div style="font-size:14pt; font-weight:700; text-align:center; margin:0 0 12pt">${escHtml(l.title)}</div>
+    ${body}
+    ${sig}`;
+}
+
+function openLetterPDF(id) {
+  const l = DB.letters.find(x => x.id === id); if (!l) return;
+  openContractPDF(null, {
+    html: buildLetterHTML(l),
+    title: l.kind + ' — ' + l.title,
+    refText: l.kind + (l.ref ? ' رقم ' + arNum(l.ref) : ''),
+  });
 }
 
 // ═══════════════════════════════════
