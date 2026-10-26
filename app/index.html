@@ -935,6 +935,8 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 }
 
 /* محرّر الخطابات: شريط مختصر ومساحة كتابة تشبه الورقة */
+.lt-opts { display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap; margin-bottom:14px; }
+.lt-chk { display:inline-flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; }
 .lt-bar { display:flex; flex-wrap:wrap; align-items:center; gap:4px; padding:6px;
   border:1px solid var(--border); border-bottom:none; border-radius:9px 9px 0 0; background:var(--dark-3); }
 .lt-bar select { font-family:inherit; font-size:13px; padding:4px 6px; border:1px solid var(--border);
@@ -944,7 +946,7 @@ tbody td { padding:13px 16px; font-size:14.9px; }
 .lt-b:hover { border-color:var(--gold); color:var(--gold); }
 .lt-sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
 .lt-editor { border:1px solid var(--border); border-radius:0 0 9px 9px; background:var(--dark-2);
-  color:var(--white); padding:14px 16px; min-height:260px; max-height:420px; overflow-y:auto;
+  color:var(--white); padding:16px 18px; min-height:380px; overflow-y:auto;
   font-family:'Scheherazade New','IBM Plex Sans Arabic',serif; font-size:16px; line-height:1.95;
   text-align:justify; outline:none; }
 .lt-editor:focus { border-color:var(--gold); }
@@ -1097,18 +1099,17 @@ tbody td { padding:13px 16px; font-size:14.9px; }
       <button class="modal-close" onclick="closeModal('letter-modal',event)">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group-v"><label>النوع</label><select id="lt-kind"></select></div>
-        <div class="form-group-v"><label>التاريخ <span class="color-gray text-sm">(تاريخ اليوم تلقائياً)</span></label>
-          <input type="date" id="lt-date" /></div>
-      </div>
-      <div class="form-group-v">
-        <label>العنوان الرئيسي <span class="color-gray text-sm">(يظهر في الوسط بحجم ١٤ غليظ)</span></label>
-        <input type="text" id="lt-title" placeholder="مثال: إفادة بشأن القضية رقم ..." />
-      </div>
-      <div class="form-group-v">
-        <label>الجهة المرسل إليها <span class="color-gray text-sm">(اختياري)</span></label>
-        <input type="text" id="lt-to" placeholder="مثال: سعادة مدير إدارة التنفيذ المحترم" />
+      <div class="lt-opts">
+        <div class="form-group-v" style="max-width:190px;margin:0">
+          <label>التاريخ</label>
+          <input type="date" id="lt-date" />
+        </div>
+        <label class="lt-chk"><input type="checkbox" id="lt-show-date" checked />
+          <span>إظهار التاريخ أعلى الخطاب</span></label>
+        <label class="lt-chk"><input type="checkbox" id="lt-sign" checked />
+          <span>إضافة التوقيع في النهاية</span></label>
+        <label class="lt-chk"><input type="checkbox" id="lt-stamp" />
+          <span>ختم المكتب مع التوقيع</span></label>
       </div>
       <div class="form-group-v">
         <label>المحتوى</label>
@@ -1148,9 +1149,6 @@ tbody td { padding:13px 16px; font-size:14.9px; }
         <button class="btn btn-secondary btn-sm" onclick="runLetterFix()">✅ تدقيق وتنسيق</button>
         <span class="text-sm" id="lt-fix-note"></span>
       </div>
-      <label class="inv-case-item" style="display:inline-flex;align-items:center;gap:8px">
-        <input type="checkbox" id="lt-stamp" /> <span>إضافة ختم المكتب أسفل التوقيع</span>
-      </label>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('letter-modal',event)">إلغاء</button>
@@ -2061,6 +2059,7 @@ async function loadFromDatabase() {
   DB.letters = (lt.error ? [] : (lt.data || [])).map(r => ({
     id: r.id, kind: r.kind || 'خطاب', title: r.title, recipient: r.recipient || '',
     body: r.body || '', ref: r.ref || '', date: r.date, withStamp: !!r.with_stamp,
+    showDate: r.with_date !== false, showSign: r.with_sign !== false,
     authorId: r.author_id, authorName: r.author_name || '', authorRole: r.author_role || '',
     updatedAt: r.updated_at,
   }));
@@ -2845,7 +2844,6 @@ function renderPage(page) {
 // ═══════════════════════════════════
 //  الخطابات والتقارير على الورق الرسمي
 // ═══════════════════════════════════
-const LETTER_KINDS = ['خطاب', 'تقرير', 'مذكرة', 'إفادة'];
 
 // ───── التدقيق الإملائي والتنسيق ─────
 // تصحيحات قاطعة لا تحتمل وجهين، مرتّبة: أطول عبارة أولاً
@@ -3006,8 +3004,6 @@ function ltFixInPlace(root) {
 
 function runLetterFix() {
   const changed = ltFixInPlace(ltEditor());
-  const tEl = document.getElementById('lt-title');
-  tEl.value = fixArabicText(tEl.value).replace(/\.$/, '');
   const note = document.getElementById('lt-fix-note');
   note.textContent = changed ? 'طُبّق التدقيق الإملائي والتنسيق — راجع النص قبل الإصدار'
                              : 'لم يُعثر على ما يُصحَّح';
@@ -3026,14 +3022,12 @@ function renderLetters() {
     تُكتب هنا ثم تُصدَّر على ورق المكتب الرسمي بتاريخ اليوم وتوقيع كاتبها.
   </p>
   <div class="table-wrap"><table>
-    <thead><tr><th>النوع</th><th>العنوان</th><th>إلى</th><th>التاريخ</th><th>الكاتب</th><th>إجراءات</th></tr></thead>
+    <thead><tr><th>مطلع الخطاب</th><th>التاريخ</th><th>الكاتب</th><th>إجراءات</th></tr></thead>
     <tbody>
-      ${mine.length === 0 ? '<tr><td colspan="6" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد خطابات بعد — اضغط «خطاب جديد»</td></tr>' : ''}
+      ${mine.length === 0 ? '<tr><td colspan="4" style="text-align:center;padding:28px 12px" class="color-gray text-sm">لا توجد خطابات بعد — اضغط «خطاب جديد»</td></tr>' : ''}
       ${mine.map(l => `
         <tr>
-          <td><span class="badge badge-partial" style="white-space:nowrap">${escHtml(l.kind)}</span></td>
           <td><b>${escHtml(l.title)}</b></td>
-          <td class="text-sm">${escHtml(l.recipient || '—')}</td>
           <td class="text-sm">${formatDateShortHijri(l.date)}</td>
           <td class="text-sm">${escHtml(l.authorName || '—')}</td>
           <td style="white-space:nowrap">
@@ -3051,10 +3045,8 @@ function openLetterModal(id) {
   const l = id ? DB.letters.find(x => x.id === id) : null;
   letterEditId = l ? l.id : null;
   document.getElementById('lt-modal-title').innerHTML = iconify(l ? '✏️ تعديل الخطاب' : '📄 خطاب جديد');
-  document.getElementById('lt-kind').innerHTML = LETTER_KINDS
-    .map(k => `<option${l && l.kind === k ? ' selected' : ''}>${k}</option>`).join('');
-  document.getElementById('lt-title').value = l ? l.title : '';
-  document.getElementById('lt-to').value = l ? l.recipient : '';
+  document.getElementById('lt-show-date').checked = l ? l.showDate : true;
+  document.getElementById('lt-sign').checked = l ? l.showSign : true;
   const ed = document.getElementById('lt-body');
   const raw = l ? (l.body || '') : '';
   ed.innerHTML = /<[a-z][\s\S]*>/i.test(raw) ? ltSanitize(raw) : ltTextToHTML(raw);
@@ -3069,16 +3061,18 @@ function openLetterModal(id) {
 }
 
 async function saveLetter(print) {
-  const title = document.getElementById('lt-title').value.trim();
   const ed = ltEditor();
   const body = ltSanitize(ed.innerHTML).trim();
-  if (!title) { alert('يرجى كتابة عنوان الخطاب'); return; }
-  if (!ed.innerText.trim()) { alert('يرجى كتابة محتوى الخطاب'); return; }
+  const text = ed.innerText.trim();
+  if (!text) { alert('يرجى كتابة محتوى الخطاب'); return; }
+  // لا حقل للعنوان: يؤخذ أول سطر ذي معنى عنواناً في القائمة
+  const title = (text.split('\n').map(x => x.trim()).find(Boolean) || 'خطاب').slice(0, 70);
   const row = {
-    kind: document.getElementById('lt-kind').value,
-    title, recipient: nullIfBlank(document.getElementById('lt-to').value),
+    title, recipient: null,
     body, date: document.getElementById('lt-date').value || todayISO(),
     with_stamp: document.getElementById('lt-stamp').checked,
+    with_date: document.getElementById('lt-show-date').checked,
+    with_sign: document.getElementById('lt-sign').checked,
     author_id: DB.currentUser.userId,
     author_name: DB.currentUser.name,
     author_role: DB.currentUser.role || '',
@@ -3106,6 +3100,10 @@ async function deleteLetter(id) {
 }
 
 // ───── الإصدار على الورق الرسمي ─────
+// صورة توقيع كل حساب باسم مستخدمه؛ من لا صورة له يظهر توقيعه نصّاً
+const SIGN_IMAGES = {
+  // 'ziyad': 'signature-ziyad.png',
+};
 // المقاسات بالنقاط لأن المستند للطباعة: ١٢ للمتن و١٤ غليظ للعنوان
 function buildLetterHTML(l) {
   const raw = l.body || '';
@@ -3119,20 +3117,25 @@ function buildLetterHTML(l) {
     if (!b.style.margin)     b.style.margin = '0 0 7pt';
   });
   const body = box.innerHTML;
-  const sig = `
-    <div style="margin-top:14pt; text-align:center; font-size:12pt">
+  const author = DB.users.find(u => u.id === l.authorId);
+  const signFile = author && SIGN_IMAGES[author.user];
+  const sig = l.showSign === false ? '' : `
+    <div style="margin-top:20pt; text-align:left; font-size:12pt; line-height:1.8">
+      <div>توقيع:</div>
+      <div>${escHtml(l.authorRole || 'المحامي')}</div>
       <div style="font-weight:700">${escHtml(l.authorName || '')}</div>
-      ${l.authorRole ? `<div style="font-size:11pt; color:#6B6757; margin-top:2pt">${escHtml(l.authorRole)}</div>` : ''}
-      ${l.withStamp ? `<div class="sig-mark" style="height:26mm; margin-top:2mm">
-          <img class="sig-stamp" style="position:absolute; top:0; left:50%; transform:translateX(-50%) rotate(-7deg); width:26mm"
-               src="${portalBaseUrl()}../assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب"></div>` : ''}
+      ${signFile || l.withStamp ? `<div style="position:relative; height:30mm; margin-top:1mm">
+        ${signFile ? `<img style="position:absolute; top:0; right:0; width:38mm"
+             src="${portalBaseUrl()}../assets/${signFile}?v=${ASSET_V}" alt="التوقيع">` : ''}
+        ${l.withStamp ? `<img style="position:absolute; top:8mm; right:${signFile ? '34mm' : '0'}; width:26mm;
+             transform:rotate(-7deg); mix-blend-mode:multiply; opacity:.92"
+             src="${portalBaseUrl()}../assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب">` : ''}
+      </div>` : ''}
     </div>`;
   return `
-    <div style="text-align:left; font-size:11pt; color:#44423A; margin:0 0 10pt">
+    ${l.showDate === false ? '' : `<div style="text-align:right; font-size:11pt; color:#44423A; margin:0 0 12pt">
       ${formatDate(l.date)}
-    </div>
-    ${l.recipient ? `<div style="font-size:12pt; font-weight:600; margin:0 0 8pt">${escHtml(l.recipient)}</div>` : ''}
-    <div style="font-size:14pt; font-weight:700; text-align:center; margin:0 0 12pt">${escHtml(l.title)}</div>
+    </div>`}
     ${body}
     ${sig}`;
 }
@@ -3141,8 +3144,8 @@ function openLetterPDF(id) {
   const l = DB.letters.find(x => x.id === id); if (!l) return;
   openContractPDF(null, {
     html: buildLetterHTML(l),
-    title: l.kind + ' — ' + l.title,
-    refText: l.kind + (l.ref ? ' رقم ' + arNum(l.ref) : ''),
+    title: l.title,
+    refText: 'مكتب الزاحم للمحاماة والاستشارات القانونية',
   });
 }
 
