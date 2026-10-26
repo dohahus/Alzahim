@@ -3979,7 +3979,7 @@ let taskModalState = { assigneeIds: [], editId: null };
 function openTaskModal(id) {
   const t = id ? DB.tasks.find(x=>x.id===id) : null;
   taskModalState = { assigneeIds: t ? [...(t.assigneeIds || [])] : [], editId: t ? t.id : null };
-  document.getElementById('task-modal-title').textContent = t ? '✏️ تعديل المهمة' : '➕ مهمة جديدة';
+  document.getElementById('task-modal-title').innerHTML = iconify(t ? '✏️ تعديل المهمة' : '➕ مهمة جديدة');
   document.getElementById('task-modal-save-btn').textContent = t ? '💾 حفظ التعديلات' : '💾 حفظ المهمة';
   document.getElementById('task-title').value = t ? t.title : '';
   document.getElementById('task-desc').value = t ? (t.desc||'') : '';
@@ -4199,6 +4199,7 @@ function renderInvoices() {
             <td style="white-space:nowrap">
               <button class="btn btn-secondary btn-sm" onclick="openInvoiceDetail('${inv.id}')">📄 الدفعات</button>
               <button class="btn btn-primary btn-sm" onclick="openDocPDF('${inv.id}')">🖨️ ${docKindLabel(inv.kind)} PDF</button>
+              ${(inv.kind||'fee') !== 'receipt' && !(inv.kind==='quote' && inv.convertedTo) ? `<button class="btn btn-secondary btn-sm" onclick="openDocEdit('${inv.id}')">✏️ تعديل</button>` : ''}
               ${inv.kind==='quote' && !inv.convertedTo ? `<button class="btn btn-primary btn-sm" onclick="convertQuoteToInvoice('${inv.id}')">✅ اعتماد وإصدار فاتورة</button>` : ''}
               <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteInvoice('${inv.id}')">🗑️ حذف</button>
             </td>
@@ -4474,7 +4475,7 @@ let expenseEditId = null;
 function openExpenseModal(id) {
   expenseEditId = id || null;
   const e = id ? DB.expenses.find(x => x.id === id) : null;
-  document.getElementById('exp-modal-title').textContent = e ? '✏️ تعديل المصروف' : '➕ مصروف جديد';
+  document.getElementById('exp-modal-title').innerHTML = iconify(e ? '✏️ تعديل المصروف' : '➕ مصروف جديد');
   document.getElementById('exp-date').value = e ? e.date : new Date().toISOString().split('T')[0];
   document.getElementById('exp-title').value = e ? e.title : '';
   document.getElementById('exp-cat').innerHTML = EXPENSE_CATS
@@ -5633,7 +5634,7 @@ function openCaseModal(id) {
   caseModalEditId = id || null;
   populateCaseModal();
   const c = id ? DB.cases.find(x=>x.id===id) : null;
-  document.getElementById('case-modal-title').textContent = c ? '✏️ تعديل القضية' : '➕ إضافة قضية جديدة';
+  document.getElementById('case-modal-title').innerHTML = iconify(c ? '✏️ تعديل القضية' : '➕ إضافة قضية جديدة');
   document.getElementById('case-modal-save-btn').textContent = c ? '💾 حفظ التعديلات' : '💾 حفظ القضية';
   document.getElementById('new-case-num').value = c ? c.num : '';
   document.getElementById('new-case-title').value = c ? c.title : '';
@@ -5794,7 +5795,13 @@ function updateInvTotalPreview() {
   el.textContent = sum ? `الإجمالي ${sum.toLocaleString()} ر.س` : '';
 }
 
+// معرّف المستند عند التعديل؛ فارغ يعني إنشاء مستند جديد
+let invEditId = null;
 function populateInvoiceModal(kind) {
+  invEditId = null;
+  document.getElementById('inv-kind-grid').style.display = '';
+  document.getElementById('inv-modal-title').innerHTML = iconify('🧾 مستند جديد');
+  document.getElementById('inv-save-print-btn').innerHTML = iconify('🖨️ حفظ وإصدار PDF');
   document.getElementById('inv-client').innerHTML = '<option value="">اختر الموكل</option>' + DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('inv-city').value = 'المدينة المنورة';
@@ -5821,6 +5828,49 @@ function populateInvoiceModal(kind) {
   setInvKind(kind && canDoc(kind) ? kind : (allowedDocKinds()[0] || 'fee'));
   updateInvDatePreview();
 }
+// تعديل مستند بعد إصداره: عقد أتعاب أو استشارات أو عرض سعر أو فاتورة.
+// الدفعات المسدَّدة تبقى بسجلّها وإيصالها، فلا تُمسح ولا يُعاد إنشاؤها.
+function openDocEdit(id) {
+  const q = DB.invoices.find(i => i.id === id);
+  if (!q) return;
+  const kind = q.kind || 'fee';
+  if (kind === 'receipt') { alert('الفاتورة الصادرة إقراراً باستلام مبلغ لا تُعدَّل — احذفها وأصدرها من جديد إن لزم'); return; }
+  if (!canDoc(kind)) { alert('ليست لديك صلاحية تعديل هذا النوع من المستندات'); return; }
+  if (kind === 'quote' && q.convertedTo) {
+    alert('هذا العرض حُوِّل إلى فاتورة، فلا يُعدَّل بعد اعتماده.\nعدّل الفاتورة الناتجة عنه، أو أصدر عرضاً جديداً.');
+    return;
+  }
+  openModal('add-invoice-modal');
+  populateInvoiceModal(kind);        // تُصفِّر الحقول وتضبط النوع
+  invEditId = id;                    // بعدها، فالتهيئة تُصفّرها
+  document.getElementById('inv-kind-grid').style.display = 'none';
+  document.getElementById('inv-modal-title').innerHTML =
+    iconify('✏️ تعديل ') + escHtml(docKindLabel(kind) + ' ' + q.ref);
+
+  const cl = DB.clients.find(c => c.id === q.clientId);
+  const freeName = ['quote','invoice'].includes(kind);
+  if (freeName) document.getElementById('inv-client-free').value = cl ? cl.name : (q.clientName || '');
+  else document.getElementById('inv-client').value = q.clientId || '';
+  document.getElementById('inv-date').value = q.date || '';
+  document.getElementById('inv-city').value = q.city || 'المدينة المنورة';
+  document.getElementById('inv-ref').value = q.ref || '';
+  document.getElementById('inv-subject').value = q.subject || '';
+  document.getElementById('inv-valid').value = q.validDays || 30;
+  document.getElementById('inv-due').value = q.dueDate || '';
+  document.getElementById('inv-notes').value = q.notes || '';
+  document.getElementById('inv-bank').value = q.bankInfo || OFFICE.bankInfo;
+  invClientChanged();
+  document.querySelectorAll('.inv-case-chk').forEach(ch => {
+    ch.checked = (q.caseIds || []).includes(ch.value);
+  });
+  const box = document.getElementById('inv-installments');
+  box.innerHTML = '';
+  (q.installments || []).forEach(it => addInstRow(it.amount, it.label, it.dueDate, { id: it.id, paid: it.paid }));
+  if (!(q.installments || []).length) { addInstRow(); addInstRow(); }
+  updateInvTotalPreview();
+  updateInvDatePreview();
+}
+
 function updateInvDatePreview() {
   const el = document.getElementById('inv-date-hijri'); if (!el) return;
   const v = document.getElementById('inv-date').value;
@@ -5873,11 +5923,14 @@ function ordinalInstLabel(n) { return 'الدفعة ' + (ORDINAL_AR[n-1] || ('ر
 function renumberInstRows() {
   document.querySelectorAll('#inv-installments .inst-label-auto').forEach((el,i) => { el.textContent = ordinalInstLabel(i+1); });
 }
-function addInstRow(amount, desc, due) {
+function addInstRow(amount, desc, due, meta) {
   const box = document.getElementById('inv-installments');
   const useDesc = DOC_KINDS[invKind] && DOC_KINDS[invKind].desc;
   const row = document.createElement('div');
   row.className = 'inst-row' + (useDesc ? ' desc' : '');
+  // عند التعديل: يُحفظ معرّف الدفعة ليُحدَّث سطرها بدل إنشاء سطر جديد
+  if (meta && meta.id) row.dataset.instId = meta.id;
+  if (meta && meta.paid) row.dataset.paid = '1';
   const first = useDesc
     ? `<input type="text" class="inst-desc" placeholder="وصف البند — مثال: إعداد ومراجعة عقد التأسيس" value="${escHtml(desc||'')}" />`
     : '<div class="inst-label-auto"></div>';
@@ -5886,7 +5939,9 @@ function addInstRow(amount, desc, due) {
     <input type="text" class="inst-amount" oninput="updateInvTotalPreview()"
       placeholder="${useDesc ? 'المبلغ بالريال' : 'المبلغ — رقم أو نص حر (مثال: 10000 أو 50% من قيمة الحكم)'}" value="${escHtml(amount||'')}" />
     <input type="date" class="inst-due" title="تاريخ استحقاق الدفعة — عليه تُحسب أعمار الديون" value="${escHtml(due||'')}" />
-    <button class="inst-del" title="حذف البند" onclick="this.parentElement.remove();renumberInstRows();updateInvTotalPreview()">${ic('trash',15)}</button>`;
+    ${(meta && meta.paid)
+      ? `<span class="inst-del" title="دفعة مسدَّدة — لا تُحذف من هنا" style="cursor:default;opacity:.55">${ic('check-circle',15)}</span>`
+      : `<button class="inst-del" title="حذف البند" onclick="this.parentElement.remove();renumberInstRows();updateInvTotalPreview()">${ic('trash',15)}</button>`}`;
   box.appendChild(row);
   renumberInstRows();
 }
@@ -6014,7 +6069,7 @@ async function copyInviteMessage() {
 function openClientModal(id) {
   clientModalEditId = id || null;
   const cl = id ? DB.clients.find(c => c.id === id) : null;
-  document.getElementById('client-modal-title').textContent = cl ? '✏️ تعديل بيانات الموكل' : '👤 إضافة موكل جديد';
+  document.getElementById('client-modal-title').innerHTML = iconify(cl ? '✏️ تعديل بيانات الموكل' : '👤 إضافة موكل جديد');
   document.getElementById('client-modal-save-btn').textContent = cl ? '💾 حفظ التعديلات' : '💾 حفظ الموكل';
   document.getElementById('nc-name').value = cl ? cl.name : '';
   document.getElementById('nc-id').value = cl ? (cl.idNum || '') : '';
@@ -6600,46 +6655,93 @@ async function saveInvoiceContract(print) {
   // بنود عرض السعر والفاتورة لها وصف يكتبه المستخدم، ودفعات العقود تُرقَّم تلقائياً
   const insts = [...document.querySelectorAll('#inv-installments .inst-row')]
     .map(r => ({
+      id: r.dataset.instId || null,
+      paid: r.dataset.paid === '1',
       amount: r.querySelector('.inst-amount').value.trim(),
       desc: r.querySelector('.inst-desc') ? r.querySelector('.inst-desc').value.trim() : '',
       due: r.querySelector('.inst-due') ? r.querySelector('.inst-due').value : '',
     }))
-    .filter(x => x.amount !== '' || x.desc !== '')
-    .map((x,i) => ({ label: k.desc ? (x.desc || 'بند ' + (i+1)) : ordinalInstLabel(i+1),
+    .filter(x => x.amount !== '' || x.desc !== '' || x.paid)
+    .map((x,i) => ({ id: x.id, paid: x.paid,
+                     label: k.desc ? (x.desc || 'بند ' + (i+1)) : ordinalInstLabel(i+1),
                      amount: x.amount, sort: i, due_date: x.due || null }));
   if (!insts.length) { alert(k.desc ? 'يرجى إدخال بند واحد على الأقل' : 'يرجى إدخال دفعة واحدة على الأقل'); return; }
   if (['quote','invoice'].includes(invKind) && !document.getElementById('inv-subject').value.trim()) {
     alert('يرجى كتابة الموضوع'); return;
   }
   const isDoc = ['quote','invoice'].includes(invKind);
+  const editing = DB.invoices.find(i => i.id === invEditId) || null;
   const ref = document.getElementById('inv-ref').value.trim()
-    || nextDocRef(document.getElementById('inv-date').value);
+    || (editing ? editing.ref : nextDocRef(document.getElementById('inv-date').value));
+
+  // الدفعة المسدَّدة لها إيصالها وسجلّها، فلا تُحذف من شاشة التعديل
+  if (editing) {
+    const kept = new Set(insts.map(x => x.id).filter(Boolean));
+    const lostPaid = (editing.installments || []).filter(it => it.paid && !kept.has(it.id));
+    if (lostPaid.length) {
+      alert('لا يمكن حذف دفعة مسدَّدة: «' + lostPaid[0].label + '».\n'
+          + 'ألغِ تسديدها من شاشة الدفعات أولاً إن أردت حذفها.');
+      return;
+    }
+  }
+
+  const fields = () => ({
+    ref, client_id: clientId, client_name: nullIfBlank(who.name), kind: invKind,
+    date: document.getElementById('inv-date').value || todayISO(),
+    city: document.getElementById('inv-city').value.trim() || 'المدينة المنورة',
+    notes: nullIfBlank(document.getElementById('inv-notes').value),
+    subject: nullIfBlank(document.getElementById('inv-subject').value),
+    valid_days: invKind === 'quote' ? (+document.getElementById('inv-valid').value || 30) : null,
+    due_date: invKind === 'invoice' ? nullIfBlank(document.getElementById('inv-due').value) : null,
+    // لا يُحفظ إلا إن عدّله المستخدم، فيبقى الباقي تابعاً لبيانات المكتب
+    bank_info: (() => {
+      if (!isDoc) return null;
+      const v = document.getElementById('inv-bank').value.trim();
+      return (!v || v === OFFICE.bankInfo.trim()) ? null : v;
+    })(),
+  });
+
   let newId = null;
   const ok = await dbWrite(k.title.replace(/^\S+\s/,''), async () => {
-    const ins = await sb.from('invoices').insert({
-      ref, client_id: clientId, client_name: nullIfBlank(who.name), kind: invKind,
-      date: document.getElementById('inv-date').value || new Date().toISOString().split('T')[0],
-      city: document.getElementById('inv-city').value.trim() || 'المدينة المنورة',
-      notes: nullIfBlank(document.getElementById('inv-notes').value),
-      subject: nullIfBlank(document.getElementById('inv-subject').value),
-      valid_days: invKind === 'quote' ? (+document.getElementById('inv-valid').value || 30) : null,
-      due_date: invKind === 'invoice' ? nullIfBlank(document.getElementById('inv-due').value) : null,
-      // لا يُحفظ إلا إن عدّله المستخدم، فيبقى الباقي تابعاً لبيانات المكتب
-      bank_info: (() => {
-        if (!isDoc) return null;
-        const v = document.getElementById('inv-bank').value.trim();
-        return (!v || v === OFFICE.bankInfo.trim()) ? null : v;
-      })(),
-    }).select('id').single();
+    if (editing) {
+      const up = await sb.from('invoices').update(fields()).eq('id', editing.id);
+      if (up.error) return up;
+      // القضايا المرتبطة تُعاد بناؤها، فلا سجلّ فيها يُفقد
+      const delC = await sb.from('invoice_cases').delete().eq('invoice_id', editing.id);
+      if (delC.error) return delC;
+      if (caseIds.length) {
+        const link = await sb.from('invoice_cases').insert(caseIds.map(cid => ({ invoice_id: editing.id, case_id: cid })));
+        if (link.error) return link;
+      }
+      const kept = new Set(insts.map(x => x.id).filter(Boolean));
+      const gone = (editing.installments || []).filter(it => !kept.has(it.id)).map(it => it.id);
+      if (gone.length) {
+        const delI = await sb.from('installments').delete().in('id', gone);
+        if (delI.error) return delI;
+      }
+      for (const x of insts) {
+        const row = { label: x.label, amount: x.amount, sort: x.sort, due_date: x.due_date };
+        const res = x.id
+          ? await sb.from('installments').update(row).eq('id', x.id)
+          : await sb.from('installments').insert({ ...row, invoice_id: editing.id });
+        if (res.error) return res;
+      }
+      newId = editing.id;
+      return { error: null };
+    }
+    const ins = await sb.from('invoices').insert(fields()).select('id').single();
     if (ins.error) return ins;
     newId = ins.data.id;
     if (caseIds.length) {
       const link = await sb.from('invoice_cases').insert(caseIds.map(cid => ({ invoice_id: newId, case_id: cid })));
       if (link.error) return link;
     }
-    return sb.from('installments').insert(insts.map(x => ({ ...x, invoice_id: newId })));
+    return sb.from('installments').insert(insts.map(x => ({
+      label: x.label, amount: x.amount, sort: x.sort, due_date: x.due_date, invoice_id: newId,
+    })));
   });
   if (!ok) return;
+  invEditId = null;
   closeModal('add-invoice-modal',{});
   navTo('invoices');
   if (print && newId) openDocPDF(newId);
