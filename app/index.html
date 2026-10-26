@@ -3154,7 +3154,8 @@ function openLetterPDF(id) {
   openContractPDF(null, {
     html: buildLetterHTML(l),
     title: l.title,
-    refText: 'مكتب الزاحم للمحاماة والاستشارات القانونية',
+    refText: '',
+    footer: 'pages',   // رقم الصفحة وحده، ولا يظهر إن كانت صفحة واحدة
   });
 }
 
@@ -7462,7 +7463,8 @@ function openContractPDF(id, spec, noPrint) {
   if (id && !inv) return;
   spec = spec || DOC_PRINT[(inv && inv.kind) || 'fee'] || DOC_PRINT.fee;
   const contractBody = spec.html || spec.build(inv);
-  const refText = spec.refText || (spec.ref + ': ' + arNum(inv.ref));
+  // المستند بلا مرجع (كالخطاب) يمرّر نصّاً فارغاً، فلا يُشتقّ من فاتورة غير موجودة
+  const refText = spec.refText != null ? spec.refText : (spec.ref + ': ' + arNum(inv.ref));
   const base = location.href.replace(/[^/]*$/, '');
   const bg = base + '../assets/letterhead.png?v=' + ASSET_V;
   const w = window.open('', '_blank');
@@ -7539,6 +7541,8 @@ function openContractPDF(id, spec, noPrint) {
     body.compact ol { margin-bottom:3px; }
     body.compact li { margin-bottom:1px; }
     .ref-line { position:absolute; bottom:30mm; right:20mm; left:20mm; text-align:center; font-size:10.5px; color:#8C8C8C; font-family:'IBM Plex Mono', monospace; }
+    /* ترقيم الخطابات: يمين التذييل في المساحة البيضاء، بلا مرجع */
+    .ref-line.pages-only { text-align:right; left:auto; font-family:'IBM Plex Sans Arabic',sans-serif; font-size:11px; color:#6B6757; }
     .toolbar { position:fixed; top:12px; left:12px; z-index:50; }
     .toolbar button { padding:11px 22px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; background:#A3801C; color:#FFFDF6; box-shadow:0 2px 10px rgba(0,0,0,.4); }
     @media print {
@@ -7556,6 +7560,7 @@ function openContractPDF(id, spec, noPrint) {
   (function(){
     var BG = ${JSON.stringify(bg)};
     var REF = ${JSON.stringify(refText)};
+    var FOOTER = ${JSON.stringify(spec.footer || 'ref')};
     function arNumJS(v){ return String(v).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[+d]; }); }
     function paginate() {
       var flow = document.getElementById('flow');
@@ -7578,8 +7583,20 @@ function openContractPDF(id, spec, noPrint) {
         }
       });
       flow.parentNode.removeChild(flow);
-      // ترويسة مرجعية أسفل كل صفحة مع ترقيمها
       var pages = pagesWrap.querySelectorAll('.page');
+      // نمط «الترقيم وحده»: رقم الصفحة يمين التذييل، ويُسقَط إن كانت صفحة واحدة
+      if (FOOTER === 'pages') {
+        if (pages.length > 1) {
+          for (var i = 0; i < pages.length; i++) {
+            var f = document.createElement('div');
+            f.className = 'ref-line pages-only';
+            f.textContent = 'صفحة ' + arNumJS(i+1) + ' من ' + arNumJS(pages.length);
+            pages[i].appendChild(f);
+          }
+        }
+        return;
+      }
+      // النمط المعتاد للعقود والفواتير: المرجع ثم ترقيم الصفحة
       for (var i = 0; i < pages.length; i++) {
         var f = document.createElement('div');
         f.className = 'ref-line';
