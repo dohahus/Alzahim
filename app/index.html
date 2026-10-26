@@ -3132,10 +3132,8 @@ function buildLetterHTML(l) {
   // الاسم صورة بخط عربي لا نصّ مكتوب، وتحته التوقيع والختم جنباً إلى جنب
   const sig = !who && !l.withStamp ? '' : `
     <div style="margin-top:18pt; text-align:left">
-      ${who ? `<div style="font-size:12pt; line-height:1.7">توقيع</div>
-      ${who.roleInName ? '' : `<div style="font-size:12pt; line-height:1.7">${escHtml(who.role)}</div>`}
-      <img style="display:block; width:${who.roleInName ? '46mm' : '62mm'};
-                  margin:1mm auto 2mm 0" src="${A}${who.nameImg}?v=${ASSET_V}"
+      ${who ? `<img style="display:block; width:${who.roleInName ? '34mm' : '46mm'};
+                  margin:0 auto 2mm 0" src="${A}${who.nameImg}?v=${ASSET_V}"
            alt="${escHtml(who.name)}">` : ''}
       <div style="direction:ltr; display:flex; align-items:center; gap:7mm">
         ${who ? `<img style="width:34mm" src="${A}${who.img}?v=${ASSET_V}" alt="التوقيع">` : ''}
