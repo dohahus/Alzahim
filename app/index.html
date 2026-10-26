@@ -933,6 +933,24 @@ tbody td { padding:13px 16px; font-size:14.9px; }
   .menu-toggle { font-size:20.7px; }
   .login-box { padding:28px 18px; }
 }
+
+/* محرّر الخطابات: شريط مختصر ومساحة كتابة تشبه الورقة */
+.lt-bar { display:flex; flex-wrap:wrap; align-items:center; gap:4px; padding:6px;
+  border:1px solid var(--border); border-bottom:none; border-radius:9px 9px 0 0; background:var(--dark-3); }
+.lt-bar select { font-family:inherit; font-size:13px; padding:4px 6px; border:1px solid var(--border);
+  border-radius:6px; background:var(--dark-2); color:var(--white); }
+.lt-b { min-width:30px; height:30px; padding:0 7px; border:1px solid var(--border); background:var(--dark-2);
+  color:var(--white); border-radius:6px; cursor:pointer; font-family:inherit; font-size:14px; line-height:1; }
+.lt-b:hover { border-color:var(--gold); color:var(--gold); }
+.lt-sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+.lt-editor { border:1px solid var(--border); border-radius:0 0 9px 9px; background:var(--dark-2);
+  color:var(--white); padding:14px 16px; min-height:260px; max-height:420px; overflow-y:auto;
+  font-family:'Scheherazade New','IBM Plex Sans Arabic',serif; font-size:16px; line-height:1.95;
+  text-align:justify; outline:none; }
+.lt-editor:focus { border-color:var(--gold); }
+.lt-editor:empty:before { content:attr(data-placeholder); color:var(--gray); }
+.lt-editor p { margin:0 0 7px; }
+.lt-editor ol, .lt-editor ul { padding-right:26px; margin:0 0 7px; }
 </style>
 </head>
 <body>
@@ -1093,8 +1111,38 @@ tbody td { padding:13px 16px; font-size:14.9px; }
         <input type="text" id="lt-to" placeholder="مثال: سعادة مدير إدارة التنفيذ المحترم" />
       </div>
       <div class="form-group-v">
-        <label>المحتوى <span class="color-gray text-sm">(يظهر بحجم ١٢ — اترك سطراً فارغاً بين الفقرات)</span></label>
-        <textarea id="lt-body" rows="12" style="line-height:1.9" placeholder="اكتب المحتوى بسرعة، ثم اضغط «تدقيق وتنسيق»..."></textarea>
+        <label>المحتوى</label>
+        <div class="lt-bar">
+          <select id="lt-font" onchange="ltStyle({fontFamily:this.value})" title="نوع الخط">
+            <option value="'Adobe Arabic','Scheherazade New',serif">الخط الرسمي</option>
+            <option value="'IBM Plex Sans Arabic',sans-serif">بلكس العربي</option>
+            <option value="'Noto Naskh Arabic',serif">نسخ</option>
+            <option value="'Amiri',serif">أميري</option>
+            <option value="'Alharf',serif">خط الهوية</option>
+          </select>
+          <select id="lt-size" onchange="ltStyle({fontSize:this.value})" title="حجم الخط">
+            ${[10,11,12,13,14,16,18,20,24].map(n=>`<option value="${n}pt"${n===12?' selected':''}>${n}</option>`).join('')}
+          </select>
+          <button type="button" class="lt-b" onclick="ltCmd('bold')" title="غليظ" style="font-weight:800">B</button>
+          <button type="button" class="lt-b" onclick="ltCmd('underline')" title="تسطير" style="text-decoration:underline">U</button>
+          <span class="lt-sep"></span>
+          <button type="button" class="lt-b" onclick="ltCmd('justifyRight')" title="محاذاة لليمين">⇥</button>
+          <button type="button" class="lt-b" onclick="ltCmd('justifyCenter')" title="توسيط">↔</button>
+          <button type="button" class="lt-b" onclick="ltCmd('justifyLeft')" title="محاذاة لليسار">⇤</button>
+          <button type="button" class="lt-b" onclick="ltCmd('justifyFull')" title="ضبط من الطرفين">☰</button>
+          <span class="lt-sep"></span>
+          <select id="lt-lh" onchange="ltSpacing(this.value)" title="تباعد الأسطر">
+            <option value="1.4">تباعد ١</option>
+            <option value="1.95" selected>تباعد ١٫٥</option>
+            <option value="2.4">تباعد ٢</option>
+          </select>
+          <button type="button" class="lt-b" onclick="ltCmd('insertUnorderedList')" title="قائمة نقطية">•</button>
+          <button type="button" class="lt-b" onclick="ltCmd('insertOrderedList')" title="قائمة مرقّمة">١.</button>
+          <span class="lt-sep"></span>
+          <button type="button" class="lt-b" onclick="ltClearFormat()" title="مسح التنسيق">✕</button>
+        </div>
+        <div id="lt-body" class="lt-editor" contenteditable="true" dir="rtl"
+             data-placeholder="اكتب المحتوى هنا…"></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
         <button class="btn btn-secondary btn-sm" onclick="runLetterFix()">✅ تدقيق وتنسيق</button>
@@ -2832,8 +2880,8 @@ const AR_FIXES = [
 // كلمات لا يُسمح بسابقة قبلها كيلا تُصحَّح كلمةٌ أخرى بغير وجه
 const AR_NO_PREFIX = new Set(['جدا', 'سهلا', 'علما', 'بان', 'لان']);
 
-// علامات الترقيم اللاتينية تُستبدل بالعربية خارج الأرقام والروابط
-function fixArabicText(t) {
+// الإصلاحات السطرية: ترقيم ومسافات ومعجم — تصلح لنصّ خام أو لعقدة نصّ داخل تنسيق
+function fixInlineArabic(t) {
   if (!t) return '';
   let out = String(t);
   out = out.replace(/ـ+/g, '');                       // حذف التطويل
@@ -2856,9 +2904,12 @@ function fixArabicText(t) {
       new RegExp('(^|[\\s،؛:.!؟(«"\\n])' + pre + a + '(?=$|[\\s،؛:.!؟)»"\\n])', 'g'),
       (m, p1, p2) => p1 + (p2 || '') + b);
   }
-  // فقرات مرتّبة: سطر فارغ واحد بين الفقرات، ولا مسافات في الأطراف
+  return out;
+}
+// نصّ خام: يضيف ترتيب الفقرات فوق الإصلاحات السطرية
+function fixArabicText(t) {
+  let out = fixInlineArabic(t);
   out = out.split('\n').map(l => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
-  // كل فقرة تنتهي بنقطة ما لم تنتهِ بعلامة ترقيم
   out = out.split('\n\n').map(par => {
     const p = par.trim();
     if (!p) return p;
@@ -2867,15 +2918,97 @@ function fixArabicText(t) {
   return out;
 }
 
+// ───── محرّر الخطاب: تنسيق على المحدَّد، وإلّا على الفقرة التي فيها المؤشر ─────
+function ltEditor() { return document.getElementById('lt-body'); }
+function ltFocus() { const e = ltEditor(); if (!e.contains(document.activeElement)) e.focus(); }
+function ltCmd(cmd) {
+  ltFocus();
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand(cmd, false, null);
+}
+// كتل المحرّر العليا التي يشملها التحديد
+function ltSelectedBlocks() {
+  const ed = ltEditor();
+  const sel = window.getSelection();
+  const blocks = [...ed.children];
+  if (!sel.rangeCount || !ed.contains(sel.anchorNode)) return blocks;
+  const r = sel.getRangeAt(0);
+  const hit = blocks.filter(b => r.intersectsNode(b));
+  return hit.length ? hit : blocks;
+}
+function ltStyle(style) {
+  ltFocus();
+  const sel = window.getSelection();
+  const ed = ltEditor();
+  // تحديد قائم: يُلفّ بنطاق يحمل التنسيق
+  if (sel.rangeCount && !sel.isCollapsed && ed.contains(sel.anchorNode)) {
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    Object.assign(span.style, style);
+    try { range.surroundContents(span); }
+    catch (_) { span.appendChild(range.extractContents()); range.insertNode(span); }
+    sel.removeAllRanges();
+    const nr = document.createRange(); nr.selectNodeContents(span); sel.addRange(nr);
+    return;
+  }
+  // بلا تحديد: يسري على الفقرة التي فيها المؤشر
+  ltSelectedBlocks().forEach(b => Object.assign(b.style, style));
+}
+function ltSpacing(v) {
+  ltEditor().style.lineHeight = v;
+  [...ltEditor().children].forEach(b => { b.style.lineHeight = v; });
+}
+function ltClearFormat() {
+  ltFocus();
+  document.execCommand('removeFormat', false, null);
+  ltSelectedBlocks().forEach(b => { b.removeAttribute('style'); });
+}
+
+// ───── تحويل النص إلى كتل، وتنظيفه قبل الحفظ ─────
+function ltTextToHTML(t) {
+  return String(t || '').split(/\n{2,}/).map(par => {
+    const p = par.trim();
+    return p ? `<p>${escHtml(p).replace(/\n/g, '<br>')}</p>` : '';
+  }).join('') || '<p><br></p>';
+}
+// المحتوى يكتبه منسوب المكتب، ومع ذلك يُنقّى من أي عنصر تنفيذي قبل الحفظ والعرض
+const LT_ALLOWED = new Set(['P','DIV','BR','SPAN','B','STRONG','I','EM','U','UL','OL','LI','H1','H2','H3','TABLE','TBODY','TR','TD','TH']);
+function ltSanitize(html) {
+  const box = document.createElement('div');
+  box.innerHTML = String(html || '');
+  box.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(n => n.remove());
+  box.querySelectorAll('*').forEach(el => {
+    if (!LT_ALLOWED.has(el.tagName)) {
+      el.replaceWith(...el.childNodes);
+      return;
+    }
+    [...el.attributes].forEach(a => {
+      const n = a.name.toLowerCase();
+      if (n === 'style') return;
+      if (n === 'dir' || n === 'align') return;
+      el.removeAttribute(a.name);
+    });
+  });
+  return box.innerHTML;
+}
+// التدقيق يمرّ على النصوص وحدها فلا يمسّ التنسيق
+function ltFixInPlace(root) {
+  let changed = false;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n => {
+    const after = fixInlineArabic(n.nodeValue);
+    if (after !== n.nodeValue) { n.nodeValue = after; changed = true; }
+  });
+  return changed;
+}
+
 function runLetterFix() {
-  const ta = document.getElementById('lt-body');
-  const before = ta.value;
-  const after = fixArabicText(before);
-  ta.value = after;
+  const changed = ltFixInPlace(ltEditor());
   const tEl = document.getElementById('lt-title');
   tEl.value = fixArabicText(tEl.value).replace(/\.$/, '');
   const note = document.getElementById('lt-fix-note');
-  const changed = before !== after;
   note.textContent = changed ? 'طُبّق التدقيق الإملائي والتنسيق — راجع النص قبل الإصدار'
                              : 'لم يُعثر على ما يُصحَّح';
   note.style.color = changed ? 'var(--green)' : 'var(--gray-light)';
@@ -2922,7 +3055,13 @@ function openLetterModal(id) {
     .map(k => `<option${l && l.kind === k ? ' selected' : ''}>${k}</option>`).join('');
   document.getElementById('lt-title').value = l ? l.title : '';
   document.getElementById('lt-to').value = l ? l.recipient : '';
-  document.getElementById('lt-body').value = l ? l.body : '';
+  const ed = document.getElementById('lt-body');
+  const raw = l ? (l.body || '') : '';
+  ed.innerHTML = /<[a-z][\s\S]*>/i.test(raw) ? ltSanitize(raw) : ltTextToHTML(raw);
+  ed.style.lineHeight = '1.95';
+  document.getElementById('lt-lh').value = '1.95';
+  document.getElementById('lt-size').value = '12pt';
+  document.getElementById('lt-font').selectedIndex = 0;
   document.getElementById('lt-date').value = l ? l.date : todayISO();
   document.getElementById('lt-stamp').checked = l ? l.withStamp : false;
   document.getElementById('lt-fix-note').textContent = '';
@@ -2931,9 +3070,10 @@ function openLetterModal(id) {
 
 async function saveLetter(print) {
   const title = document.getElementById('lt-title').value.trim();
-  const body = document.getElementById('lt-body').value.trim();
+  const ed = ltEditor();
+  const body = ltSanitize(ed.innerHTML).trim();
   if (!title) { alert('يرجى كتابة عنوان الخطاب'); return; }
-  if (!body)  { alert('يرجى كتابة محتوى الخطاب'); return; }
+  if (!ed.innerText.trim()) { alert('يرجى كتابة محتوى الخطاب'); return; }
   const row = {
     kind: document.getElementById('lt-kind').value,
     title, recipient: nullIfBlank(document.getElementById('lt-to').value),
@@ -2968,10 +3108,17 @@ async function deleteLetter(id) {
 // ───── الإصدار على الورق الرسمي ─────
 // المقاسات بالنقاط لأن المستند للطباعة: ١٢ للمتن و١٤ غليظ للعنوان
 function buildLetterHTML(l) {
-  const P = 'font-size:12pt; line-height:1.95; text-align:justify; margin:0 0 7pt';
-  const pars = (l.body || '').split(/\n{2,}/).map(x => x.trim()).filter(Boolean);
-  const body = pars.map(par =>
-    `<p style="${P}">${escHtml(par).replace(/\n/g, '<br>')}</p>`).join('');
+  const raw = l.body || '';
+  const box = document.createElement('div');
+  box.innerHTML = /<[a-z][\s\S]*>/i.test(raw) ? ltSanitize(raw) : ltTextToHTML(raw);
+  // ما لم ينسّقه الكاتب يأخذ مقاس المتن: ١٢ نقطة بتباعد مريح وضبط من الطرفين
+  [...box.children].forEach(b => {
+    if (!b.style.fontSize)   b.style.fontSize = '12pt';
+    if (!b.style.lineHeight) b.style.lineHeight = '1.95';
+    if (!b.style.textAlign)  b.style.textAlign = 'justify';
+    if (!b.style.margin)     b.style.margin = '0 0 7pt';
+  });
+  const body = box.innerHTML;
   const sig = `
     <div style="margin-top:14pt; text-align:center; font-size:12pt">
       <div style="font-weight:700">${escHtml(l.authorName || '')}</div>
@@ -6744,7 +6891,7 @@ function reportDocParts(c, u, cl) {
   </div>`;
   const head = `<meta charset="utf-8"><title>تقرير — ${esc(c.title)}</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>${css}</style>`;
   return { css, body, head };
 }
@@ -7311,7 +7458,7 @@ function openContractPDF(id, spec, noPrint) {
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
   <title>${spec.title}${inv ? ' — ' + inv.ref : ''}</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     @page { size: A4; margin: 0; }
     * { margin:0; padding:0; box-sizing:border-box; }
