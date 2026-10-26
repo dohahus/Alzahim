@@ -3108,8 +3108,11 @@ async function deleteLetter(id) {
 // ───── الإصدار على الورق الرسمي ─────
 // الموقِّعون المعتمدون: اسمٌ ومسمّى وصورة توقيع
 const SIGNERS = {
-  abdullah: { name: 'أ.د. عبدالله بن إبراهيم الزاحم', role: 'المحامي', img: 'signature-abdullah.png' },
-  ziyad:    { name: 'زياد بن عبدالله الزاحم',        role: 'المحامي', img: 'signature-ziyad.png' },
+  abdullah: { name: 'أ.د. عبدالله بن إبراهيم الزاحم', role: 'المحامي',
+              nameImg: 'name-abdullah.png', img: 'signature-abdullah.png' },
+  // صورة اسم زياد تحمل كلمة «المحامي» فوقها، فلا تُكتب مرة أخرى
+  ziyad:    { name: 'زياد بن عبدالله الزاحم', role: 'المحامي', roleInName: true,
+              nameImg: 'name-ziyad.png', img: 'signature-ziyad.png' },
 };
 // المقاسات بالنقاط لأن المستند للطباعة: ١٢ للمتن و١٤ غليظ للعنوان
 function buildLetterHTML(l) {
@@ -3125,17 +3128,19 @@ function buildLetterHTML(l) {
   });
   const body = box.innerHTML;
   const who = SIGNERS[l.signBy];
+  const A = portalBaseUrl() + '../assets/';
+  // الاسم صورة بخط عربي لا نصّ مكتوب، وتحته التوقيع والختم جنباً إلى جنب
   const sig = !who && !l.withStamp ? '' : `
-    <div style="margin-top:20pt; text-align:left; font-size:12pt; line-height:1.75">
-      ${who ? `<div>توقيع</div>
-      <div>${escHtml(who.role)}</div>
-      <div style="font-weight:700">${escHtml(who.name)}</div>` : ''}
-      <div style="position:relative; height:28mm; margin-top:1mm">
-        ${who ? `<img style="position:absolute; top:0; left:6mm; width:36mm"
-             src="${portalBaseUrl()}../assets/${who.img}?v=${ASSET_V}" alt="التوقيع">` : ''}
-        ${l.withStamp ? `<img style="position:absolute; top:7mm; left:${who ? '42mm' : '6mm'}; width:25mm;
-             transform:rotate(-7deg); mix-blend-mode:multiply; opacity:.92"
-             src="${portalBaseUrl()}../assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب">` : ''}
+    <div style="margin-top:18pt; text-align:left">
+      ${who ? `<div style="font-size:12pt; line-height:1.7">توقيع</div>
+      ${who.roleInName ? '' : `<div style="font-size:12pt; line-height:1.7">${escHtml(who.role)}</div>`}
+      <img style="display:block; width:${who.roleInName ? '46mm' : '62mm'};
+                  margin:1mm auto 2mm 0" src="${A}${who.nameImg}?v=${ASSET_V}"
+           alt="${escHtml(who.name)}">` : ''}
+      <div style="direction:ltr; display:flex; align-items:center; gap:7mm">
+        ${who ? `<img style="width:34mm" src="${A}${who.img}?v=${ASSET_V}" alt="التوقيع">` : ''}
+        ${l.withStamp ? `<img style="width:25mm; transform:rotate(-7deg); mix-blend-mode:multiply; opacity:.92"
+             src="${A}stamp.png?v=${ASSET_V}" alt="ختم المكتب">` : ''}
       </div>
     </div>`;
   return `
