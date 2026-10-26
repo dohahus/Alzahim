@@ -2626,6 +2626,11 @@ function taskBelongsTo(t, uid) {
 function myScopedTasks() {
   return DB.tasks.filter(t => taskBelongsTo(t, DB.currentUser.userId));
 }
+// الجلسة تبقى «قادمة» في يومها، وتخرج من الحساب بانقضائه
+function upcomingOf(list) {
+  const t = todayISO();
+  return (list || []).filter(h => (h.date || '') >= t).sort((a, b) => a.date.localeCompare(b.date));
+}
 function myScopedTickets() {
   if (isOfficeOwner()) return DB.clientMessages;
   const ids = new Set(myScopedClients().map(cl=>cl.id));
@@ -2956,10 +2961,11 @@ function renderDashboard() {
   const tasks = myScopedTasks();
   const active = cases.filter(c=>c.status==='active').length;
   const pending = cases.filter(c=>c.status==='pending').length;
-  const upcomingHearings = hearings.filter(h => new Date(h.date) >= new Date()).length;
+  const upcoming = upcomingOf(hearings);
+  const upcomingHearings = upcoming.length;
   const fin = financeTotals();
   const unpaidInv = fin.due;
-  const todayH = hearings.filter(h => h.date === new Date().toISOString().split('T')[0]);
+  const todayH = hearings.filter(h => h.date === todayISO());
   const pendingTasks = tasks.filter(t=>!t.done);
   const canSeeFinance = hasPerm('fee_contracts');
 
@@ -3028,7 +3034,8 @@ function renderDashboard() {
           <span class="card-title">📅 الجلسات القادمة</span>
           <button class="btn btn-secondary btn-sm" onclick="openHearingModal()">+ إضافة</button>
         </div>
-        ${hearings.slice().sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3).map(h => {
+        ${upcoming.length === 0 ? '<div class="color-gray text-sm" style="padding:14px 2px">لا توجد جلسات قادمة</div>' : ''}
+        ${upcoming.slice(0,3).map(h => {
           const c = DB.cases.find(x=>x.id===h.caseId);
           const d = new Date(h.date);
           return `
@@ -4883,7 +4890,7 @@ function renderReports() {
         ['القضايا المعلقة', DB.cases.filter(c=>c.status==='pending').length, '🟡'],
         ['القضايا المغلقة', DB.cases.filter(c=>c.status==='closed').length, '🔒'],
         ['الموكلون', DB.clients.length, '👥'],
-        ['الجلسات القادمة', DB.hearings.filter(h=>new Date(h.date)>=new Date()).length, '📅'],
+        ['الجلسات القادمة', upcomingOf(DB.hearings).length, '📅'],
         ['المهام المعلقة', DB.tasks.filter(t=>!t.done).length, '✅'],
         ['فواتير لم يكتمل سدادها', financeTotals().openCount, '💰'],
       ].map(([l,v,i]) => `
@@ -5250,7 +5257,7 @@ function renderClientPortal() {
   </div>
   <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
     <div class="stat-card gold"><div class="stat-icon">⚖️</div><div class="stat-value">${myCases.length}</div><div class="stat-label">قضاياي</div></div>
-    <div class="stat-card blue"><div class="stat-icon">📅</div><div class="stat-value">${DB.hearings.filter(h=>myCases.find(c=>c.id===h.caseId)&&new Date(h.date)>=new Date()).length}</div><div class="stat-label">جلسات قادمة</div></div>
+    <div class="stat-card blue"><div class="stat-icon">📅</div><div class="stat-value">${upcomingOf(DB.hearings.filter(h=>myCases.find(c=>c.id===h.caseId))).length}</div><div class="stat-label">جلسات قادمة</div></div>
     <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value">${myCases.filter(c=>c.status==='active').length}</div><div class="stat-label">قضايا جارية</div></div>
   </div>
   ${myCases.length === 0 ? '<div class="card"><p class="color-gray">لا توجد قضايا مسجلة بعد. تواصل مع المكتب للاستفسار.</p></div>' :
