@@ -1128,15 +1128,22 @@ tbody td { padding:13px 16px; font-size:14.9px; }
             <option value="'Alharf',serif">خط الهوية</option>
           </select>
           <select id="lt-size" onchange="ltStyle({fontSize:this.value})" title="حجم الخط">
-            ${[10,11,12,13,14,16,18,20,24].map(n=>`<option value="${n}pt"${n===12?' selected':''}>${n}</option>`).join('')}
+            <option value="9pt">9</option><option value="10pt">10</option>
+            <option value="11pt">11</option><option value="12pt" selected>12</option>
+            <option value="13pt">13</option><option value="14pt">14</option>
+            <option value="16pt">16</option><option value="18pt">18</option>
+            <option value="20pt">20</option><option value="24pt">24</option>
+            <option value="28pt">28</option><option value="32pt">32</option>
           </select>
+          <button type="button" class="lt-b" onclick="ltFontStep(1)" title="تكبير الخط">A+</button>
+          <button type="button" class="lt-b" onclick="ltFontStep(-1)" title="تصغير الخط">A−</button>
           <button type="button" class="lt-b" onclick="ltCmd('bold')" title="غليظ" style="font-weight:800">B</button>
           <button type="button" class="lt-b" onclick="ltCmd('underline')" title="تسطير" style="text-decoration:underline">U</button>
           <span class="lt-sep"></span>
           <button type="button" class="lt-b" onclick="ltCmd('justifyRight')" title="محاذاة لليمين">⇥</button>
           <button type="button" class="lt-b" onclick="ltCmd('justifyCenter')" title="توسيط">↔</button>
           <button type="button" class="lt-b" onclick="ltCmd('justifyLeft')" title="محاذاة لليسار">⇤</button>
-          <button type="button" class="lt-b" onclick="ltCmd('justifyFull')" title="ضبط من الطرفين">☰</button>
+          <button type="button" class="lt-b" onclick="ltCmd('justifyFull')" title="ضبط من الطرفين">≡</button>
           <span class="lt-sep"></span>
           <select id="lt-lh" onchange="ltSpacing(this.value)" title="تباعد الأسطر">
             <option value="1.4">تباعد ١</option>
@@ -2957,6 +2964,33 @@ function ltStyle(style) {
   }
   // بلا تحديد: يسري على الفقرة التي فيها المؤشر
   ltSelectedBlocks().forEach(b => Object.assign(b.style, style));
+}
+// سلّم المقاسات: التكبير والتصغير ينتقلان بين درجاتها
+const FONT_STEPS = [9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32];
+function ltCurrentSizePt() {
+  const ed = ltEditor();
+  const sel = window.getSelection();
+  let node = sel && sel.anchorNode;
+  if (node && node.nodeType === 3) node = node.parentElement;
+  if (!node || !ed.contains(node)) node = ed.firstElementChild || ed;
+  const px = parseFloat(getComputedStyle(node).fontSize) || 16;
+  return Math.round(px * 0.75);   // بكسل إلى نقطة
+}
+function ltFontStep(dir) {
+  ltFocus();
+  const cur = ltCurrentSizePt();
+  let i = FONT_STEPS.indexOf(cur);
+  if (i < 0) {
+    // مقاس غير قياسي: يُلتقط أقرب درجة في اتجاه الحركة
+    i = FONT_STEPS.findIndex(v => v > cur);
+    if (i < 0) i = FONT_STEPS.length - 1;
+    if (dir > 0) i -= 1;
+  }
+  const next = FONT_STEPS[Math.max(0, Math.min(FONT_STEPS.length - 1, i + dir))];
+  ltStyle({ fontSize: next + 'pt' });
+  const sizeSel = document.getElementById('lt-size');
+  const opt = [...sizeSel.options].find(o => o.value === next + 'pt');
+  if (opt) sizeSel.value = next + 'pt';
 }
 function ltSpacing(v) {
   ltEditor().style.lineHeight = v;
