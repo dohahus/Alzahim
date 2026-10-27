@@ -3207,12 +3207,12 @@ function buildLetterHTML(l) {
   const A = portalBaseUrl() + '../assets/';
   // الاسم صورة بخط عربي لا نصّ مكتوب، وتحته التوقيع والختم جنباً إلى جنب
   const sig = !who && !l.withStamp ? '' : `
-    <div style="margin-top:18pt; text-align:left">
-      ${who ? `<img style="display:block; width:${who.roleInName ? '34mm' : '46mm'};
+    <div data-sig="1" style="margin-top:12pt; text-align:left">
+      ${who ? `<img style="display:block; width:${who.roleInName ? '30mm' : '40mm'};
                   margin:0 auto 2mm 0" src="${A}${who.nameImg}?v=${ASSET_V}"
            alt="${escHtml(who.name)}">` : ''}
       <div style="direction:ltr; display:flex; align-items:center; gap:7mm">
-        ${who ? `<img style="width:34mm" src="${A}${who.img}?v=${ASSET_V}" alt="التوقيع">` : ''}
+        ${who ? `<img style="width:32mm" src="${A}${who.img}?v=${ASSET_V}" alt="التوقيع">` : ''}
         ${l.withStamp ? `<img style="width:29mm; transform:rotate(-7deg); mix-blend-mode:multiply; opacity:.92"
              src="${A}stamp.png?v=${ASSET_V}" alt="ختم المكتب">` : ''}
       </div>
@@ -3232,6 +3232,7 @@ function openLetterPDF(id) {
     title: l.title,
     refText: '',
     footer: 'pages',   // رقم الصفحة وحده، ولا يظهر إن كانت صفحة واحدة
+    bodyClass: 'letter',
   });
 }
 
@@ -6520,10 +6521,10 @@ function portalBaseUrl() {
 }
 function buildClientInvite(name, user, pass) {
   return `السلام عليكم ورحمة الله وبركاته
-الأستاذ/ة ${name}
+سعادة العميل/ ${name}
 
 تم تفعيل حسابكم في بوابة موكلي أ.د عبدالله الزاحم للمحاماة والاستشارات القانونية،
-وتمكّنكم من متابعة قضاياكم وجلساتكم ومستنداتكم أولاً بأول.
+ويمكنكم متابعة قضاياكم وجلساتكم ومستنداتكم أولاً بأول.
 
 رابط الدخول:
 ${portalBaseUrl()}
@@ -7356,9 +7357,11 @@ function buildContractHTML(inv) {
     ${inv.notes ? `<h3>شروط خاصة</h3><p>${inv.notes}</p>` : ''}
     <p class="center">وصلى الله على نبينا محمد وعلى آله وصحبه أجمعين</p>
     <div class="sig-row">
-      <div class="sig"><div class="sig-title">الطرف الأول</div><div>${OFFICE.lawyer}</div>
+      <div class="sig"><div class="sig-title">الطرف الأول</div>
+        <img class="sig-name" src="${portalBaseUrl()}../assets/name-abdullah.png?v=${ASSET_V}"
+             alt="${escHtml(OFFICE.lawyer)}">
         <div class="sig-mark">
-          <img class="sig-img" src="${portalBaseUrl()}../assets/signature.png?v=${ASSET_V}" alt="التوقيع">
+          <img class="sig-img" src="${portalBaseUrl()}../assets/signature-abdullah.png?v=${ASSET_V}" alt="التوقيع">
           <img class="sig-stamp" src="${portalBaseUrl()}../assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب">
         </div>
       </div>
@@ -7509,9 +7512,11 @@ function buildConsultingHTML(inv) {
     ${inv.notes ? `<h3>شروط خاصة</h3><p>${escHtml(inv.notes)}</p>` : ''}
     <p class="center">وصلى الله على نبينا محمد وعلى آله وصحبه أجمعين</p>
     <div class="sig-row">
-      <div class="sig"><div class="sig-title">الطرف الأول</div><div>${OFFICE.lawyer}</div>
+      <div class="sig"><div class="sig-title">الطرف الأول</div>
+        <img class="sig-name" src="${portalBaseUrl()}../assets/name-abdullah.png?v=${ASSET_V}"
+             alt="${escHtml(OFFICE.lawyer)}">
         <div class="sig-mark">
-          <img class="sig-img" src="${portalBaseUrl()}../assets/signature.png?v=${ASSET_V}" alt="التوقيع">
+          <img class="sig-img" src="${portalBaseUrl()}../assets/signature-abdullah.png?v=${ASSET_V}" alt="التوقيع">
           <img class="sig-stamp" src="${portalBaseUrl()}../assets/stamp.png?v=${ASSET_V}" alt="ختم المكتب">
         </div>
       </div>
@@ -7574,6 +7579,8 @@ function openContractPDF(id, spec, noPrint) {
     .sig-title { font-weight:700; color:#7C5F16; margin-bottom:6px; }
     .sig-line { margin-top:14px; color:#444; }
     /* توقيع المكتب وختمه متراكبان قليلاً كما يُوقَّع الورق فعلاً */
+    /* اسم المحامي بالخط العربي بدل كتابته بخط عادي */
+    .sig-name { display:block; width:44mm; margin:2mm auto 0; }
     .sig-mark { position:relative; height:34mm; margin-top:1mm; }
     .sig-img { position:absolute; top:0; right:9%; width:31mm; }
     .sig-stamp { position:absolute; top:10mm; left:9%; width:27mm;
@@ -7618,7 +7625,9 @@ function openContractPDF(id, spec, noPrint) {
     body.compact li { margin-bottom:1px; }
     .ref-line { position:absolute; bottom:30mm; right:20mm; left:20mm; text-align:center; font-size:10.5px; color:#8C8C8C; font-family:'IBM Plex Mono', monospace; }
     /* ترقيم الخطابات: يمين التذييل في المساحة البيضاء، بلا مرجع */
-    .ref-line.pages-only { text-align:right; left:auto; font-family:'IBM Plex Sans Arabic',sans-serif; font-size:11px; color:#6B6757; }
+    .ref-line.pages-only { text-align:right; left:auto; bottom:26mm; font-family:'IBM Plex Sans Arabic',sans-serif; font-size:11px; color:#6B6757; }
+    /* زخرفة تذييل الورق تبدأ على بعد ٢٣ مم من الأسفل، فللخطاب فسحة أوسع */
+    body.letter .pagecontent { bottom:33mm; }
     .toolbar { position:fixed; top:12px; left:12px; z-index:50; }
     .toolbar button { padding:11px 22px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; background:#A3801C; color:#FFFDF6; box-shadow:0 2px 10px rgba(0,0,0,.4); }
     @media print {
@@ -7628,7 +7637,7 @@ function openContractPDF(id, spec, noPrint) {
       .toolbar { display:none; }
     }
     #flow { position:absolute; visibility:hidden; pointer-events:none; }
-  </style></head><body class="${spec.compact ? 'compact' : ''}">
+  </style></head><body class="${spec.compact ? 'compact ' : ''}${spec.bodyClass || ''}">
   <div class="toolbar"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>
   <div id="pages"></div>
   <div id="flow" class="pagecontent" style="position:absolute;top:0;right:0;left:auto;bottom:auto;width:170mm">${contractBody}</div>
@@ -7638,6 +7647,7 @@ function openContractPDF(id, spec, noPrint) {
     var REF = ${JSON.stringify(refText)};
     var FOOTER = ${JSON.stringify(spec.footer || 'ref')};
     function arNumJS(v){ return String(v).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[+d]; }); }
+    var SIG_TOL = 34;   // نحو ٩ مم: الفراغ الأبيض فوق زخرفة التذييل
     function paginate() {
       var flow = document.getElementById('flow');
       var pagesWrap = document.getElementById('pages');
@@ -7652,13 +7662,53 @@ function openContractPDF(id, spec, noPrint) {
       var cur = newPage();
       blocks.forEach(function(b){
         cur.appendChild(b);
-        // إن تجاوزت الكتلة حدود الصفحة، انقلها إلى صفحة جديدة بدل قصّها
-        if (cur.scrollHeight > cur.clientHeight && cur.children.length > 1) {
-          cur = newPage();
-          cur.appendChild(b);
+        if (cur.scrollHeight <= cur.clientHeight || cur.children.length === 1) return;
+        // كتلة التوقيع: تُقلَّص فسحتها العلوية، ويُتسامح بتجاوز يسير
+        // في الفراغ الأبيض فوق زخرفة التذييل، قبل أن تُدفع إلى صفحة وحدها
+        if (b.getAttribute('data-sig')) {
+          // تُقلَّص فسحتها العلوية أولاً، ويُتسامح بتجاوز يسير في الفراغ
+          // الأبيض الذي فوق زخرفة تذييل الورق
+          var keep = b.style.marginTop;
+          b.style.marginTop = '2pt';
+          if (cur.scrollHeight - cur.clientHeight <= SIG_TOL) {
+            cur.style.overflow = 'visible';
+            return;
+          }
+          b.style.marginTop = keep;
         }
+        // وإلّا فإلى صفحة جديدة بدل أن تُقصّ
+        cur = newPage();
+        cur.appendChild(b);
       });
       flow.parentNode.removeChild(flow);
+      // صفحة أخيرة لا تحمل إلا التوقيع: يُعاد إلى صفحة الكلام مصغَّراً بقدر الفراغ
+      var ps = pagesWrap.querySelectorAll('.page');
+      if (ps.length > 1) {
+        var lastC = ps[ps.length - 1].querySelector('.pagecontent');
+        var only = lastC.children.length === 1 ? lastC.children[0] : null;
+        if (only && only.getAttribute('data-sig')) {
+          var prevC = ps[ps.length - 2].querySelector('.pagecontent');
+          // scrollHeight لا ينزل تحت clientHeight، فيُقاس المشغول من آخر كتلة
+          var kids  = prevC.children;
+          var used  = kids.length
+            ? kids[kids.length - 1].getBoundingClientRect().bottom - prevC.getBoundingClientRect().top
+            : 0;
+          var free  = prevC.clientHeight - used + SIG_TOL;
+          var h     = only.getBoundingClientRect().height;
+          var scale = Math.min(1, free / h);
+          if (scale >= 0.6) {
+            only.style.marginTop = '2pt';
+            if (scale < 1) {
+              only.style.transformOrigin = 'top left';
+              only.style.transform = 'scale(' + scale.toFixed(3) + ')';
+              only.style.height = Math.floor(h * scale) + 'px';
+            }
+            prevC.style.overflow = 'visible';
+            prevC.appendChild(only);
+            ps[ps.length - 1].parentNode.removeChild(ps[ps.length - 1]);
+          }
+        }
+      }
       var pages = pagesWrap.querySelectorAll('.page');
       // نمط «الترقيم وحده»: رقم الصفحة يمين التذييل، ويُسقَط إن كانت صفحة واحدة
       if (FOOTER === 'pages') {
@@ -7681,9 +7731,27 @@ function openContractPDF(id, spec, noPrint) {
       }
     }
     var AUTO_PRINT = ${noPrint ? 'false' : 'true'};
+    // الصور غير المحمَّلة ارتفاعها صفر، فيخطئ القياس ويخرج التوقيع في غير موضعه
+    function whenImagesReady(cb) {
+      var imgs = Array.prototype.slice.call(document.querySelectorAll('#flow img'));
+      var pending = imgs.filter(function(i){ return !i.complete; });
+      if (!pending.length) return cb();
+      var left = pending.length, done = false;
+      var finish = function(){ if (!done) { done = true; cb(); } };
+      pending.forEach(function(i){
+        i.addEventListener('load',  function(){ if (--left === 0) finish(); });
+        i.addEventListener('error', function(){ if (--left === 0) finish(); });
+      });
+      setTimeout(finish, 3000);
+    }
     window.onload = function(){
       // القياس قبل تحميل الخط يقسّم الصفحات على مقاسات الخط البديل
-      var go = function(){ paginate(); if (AUTO_PRINT) setTimeout(function(){ window.print(); }, 500); };
+      var go = function(){
+        whenImagesReady(function(){
+          paginate();
+          if (AUTO_PRINT) setTimeout(function(){ window.print(); }, 500);
+        });
+      };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else setTimeout(go, 900);
     };
   })();
