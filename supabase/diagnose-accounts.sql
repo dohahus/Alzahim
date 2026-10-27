@@ -52,10 +52,12 @@ select line from (
   where u.id <> s.id
 
   union all
-  -- حساب مصادقة واحد يحمل أكثر من سطر مكتب
-  select 7, s.id::text, format('خلل ④ | حساب مصادقة واحد (%s) له %s سطر مكتب: %s',
-    s.id, count(*), string_agg(s.username, ' ، '))
-  from staff s group by s.id having count(*) > 1
+  -- سطر المكتب مرتبط بحساب مصادقة بريده مختلف عن بريد دخوله المحسوب
+  -- ← هذه بصمة الاستيلاء: الاسم أو البريد في السطر استُبدل بغير صاحبه
+  select 7, s.username, format('خلل ④ | «%s» سطره مرتبط بحساب مصادقة بريده %s بينما بريد دخوله المحسوب %s',
+    s.username, u.email, auth_email_for(s.username, s.email))
+  from staff s join auth.users u on u.id = s.id
+  where lower(u.email) <> auth_email_for(s.username, s.email)
 
   union all
   -- بريد مكرر بين سطور المكتب ← يجعل تحديد الحساب عشوائياً
