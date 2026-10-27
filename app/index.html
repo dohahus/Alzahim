@@ -5688,11 +5688,27 @@ async function saveUser() {
   if (!name || !user) { alert('يرجى تعبئة الاسم واسم الدخول'); return; }
   if (!id && pass.length < 6) { alert('كلمة المرور يجب أن تكون ٦ أحرف على الأقل'); return; }
   if (DB.users.some(x => x.user === user && x.id !== id)) { alert('اسم الدخول مستخدم مسبقاً — اختر اسماً آخر'); return; }
+  if (!id && (DB.pending || []).some(x => x.user === user)) {
+    alert('اسم الدخول «' + user + '» لحساب أُنشئ ولم يدخل صاحبه بعد.\n'
+      + 'ألغِ دعوته أولاً من الجدول، أو اختر اسماً آخر.'); return;
+  }
   const perms = {};
   document.querySelectorAll('.um-perm').forEach(c => { perms[c.value] = c.checked; });
   const role = selectedRole();
   if (!role) { alert('يرجى كتابة اسم الدور الجديد'); return; }
   const email = nullIfBlank((document.getElementById('um-email') || {}).value);
+  // بريد الدخول يحدِّد الحساب في نظام المصادقة. تكراره يربط الحساب الجديد
+  // بحساب دخول قائم، فيحلّ محلّ صاحبه الأصلي ويُخرجه من الموقع
+  if (email) {
+    const low = email.toLowerCase();
+    const clash = DB.users.find(x => x.id !== id && (x.email || '').toLowerCase() === low)
+      || (DB.pending || []).find(x => x.user !== user && (x.email || '').toLowerCase() === low)
+      || DB.clients.find(x => (x.email || '').toLowerCase() === low);
+    if (clash) {
+      alert('البريد «' + email + '» مستخدم لحساب «' + (clash.name || clash.user) + '».\n\n'
+        + 'لكل حساب بريد خاص به — أو اتركه فارغاً ليُبنى بريد الدخول من اسم المستخدم.'); return;
+    }
+  }
   let ok;
   if (id) {
     const u = DB.users.find(x=>x.id===id); if (!u) return;

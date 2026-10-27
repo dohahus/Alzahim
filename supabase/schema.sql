@@ -29,6 +29,14 @@ create table if not exists staff (
 -- لقواعد البيانات المُنشأة قبل إضافة البريد
 alter table staff add column if not exists email text;
 
+-- بريد واحد لا يصلح لحسابين: تكراره يجعل تحديد الحساب عند الدخول عشوائياً
+do $idx$
+begin
+  if not exists (select 1 from staff where email is not null group by lower(email) having count(*) > 1) then
+    create unique index if not exists staff_email_unique_idx on staff (lower(email)) where email is not null;
+  end if;
+end $idx$;
+
 -- الموكلون. auth_user_id يُملأ عند أول دخول للموكل من بوابة العميل
 create table if not exists clients (
   id           uuid primary key default gen_random_uuid(),
@@ -556,7 +564,7 @@ create or replace function auth_email_for(p_username text, p_email text)
 returns text language sql immutable as $$
   select case
     when p_email is not null and btrim(p_email) <> '' then lower(btrim(p_email))
-    else lower(btrim(p_username)) || '@alzahimlaw.app'
+    else lower(btrim(p_username)) || '@zahemlaw.app'  -- لا يُغيَّر أبداً: مغيَّره يقطع الدخول عن كل حساب بلا بريد
   end;
 $$;
 
@@ -568,6 +576,9 @@ create or replace function create_pending_account(
   p_email text default null
 ) returns void
   language plpgsql security definer set search_path = public, extensions as $$
+declare
+  v_auth_email text := auth_email_for(p_username, p_email);
+  v_uid        uuid;
 begin
   if not is_owner() then
     raise exception 'غير مصرَّح: إنشاء الحسابات لمدير المكتب فقط';
@@ -582,6 +593,16 @@ begin
       raise exception 'البريد الإلكتروني مستخدم لحساب آخر';
     end if;
   end if;
+
+  select id into v_uid from auth.users where lower(email) = v_auth_email;
+  if v_uid is not null then
+    -- إعادة دعوة الموكل نفسه مسموحة؛ وما عداها بريد دخول مشغول
+    if not (p_kind = 'client' and p_client_id is not null
+            and exists (select 1 from clients where id = p_client_id and auth_user_id = v_uid)) then
+      raise exception 'بريد الدخول «%» له حساب قائم في النظام. اختر بريداً آخر، أو اتركه فارغاً ليُبنى من اسم المستخدم.', v_auth_email;
+    end if;
+  end if;
+
   insert into pending_accounts (username, password_hash, kind, name, email, role, perms, client_id)
   values (p_username, crypt(p_password, gen_salt('bf')), p_kind, p_name,
           nullif(btrim(coalesce(p_email,'')),''), p_role, p_perms, p_client_id)
@@ -624,20 +645,31 @@ declare
   v_pending pending_accounts;
   v_staff   staff;
   v_client  clients;
+  v_n       int;
 begin
   select * into v_pending from pending_accounts
-   where lower(username) = v_id or lower(email) = v_id;
+   where lower(username) = v_id or lower(email) = v_id
+   order by (lower(username) = v_id) desc limit 1;
   if v_pending.username is not null
      and v_pending.password_hash = crypt(p_password, v_pending.password_hash) then
     return query select auth_email_for(v_pending.username, v_pending.email), v_pending.kind, false;
     return;
   end if;
 
-  -- حساب مُسجَّل مسبقاً: يُترك التحقق من كلمة المرور لنظام المصادقة
+  select count(*) into v_n from staff where lower(username) = v_id or lower(email) = v_id;
+  if v_n > 1 then
+    raise exception 'المعرّف «%» يطابق أكثر من حساب — راجع مدير المكتب', p_identifier;
+  end if;
   select * into v_staff from staff where lower(username) = v_id or lower(email) = v_id;
   if v_staff.id is not null then
     return query select auth_email_for(v_staff.username, v_staff.email), 'staff'::text, true;
     return;
+  end if;
+
+  select count(*) into v_n from clients
+   where lower(username) = v_id or lower(email) = v_id or lower(id_num) = v_id;
+  if v_n > 1 then
+    raise exception 'المعرّف «%» يطابق أكثر من حساب — راجع مدير المكتب', p_identifier;
   end if;
   select * into v_client from clients
    where lower(username) = v_id or lower(email) = v_id or lower(id_num) = v_id;
@@ -662,27 +694,41 @@ returns void
 declare
   v_id      text := lower(btrim(p_identifier));
   v_pending pending_accounts;
+  v_self    staff;
+  v_client  clients;
 begin
   if auth.uid() is null then
     raise exception 'يجب تسجيل الدخول أولاً';
   end if;
-  -- يُبحَث بنفس معايير claim_account (اسم مستخدم أو بريد)، وإلّا نجحت المصادقة
-  -- بالبريد ثم لم يُربَط الحساب فيبقى معلَّقاً بلا سطر في جداول المكتب
   select * into v_pending from pending_accounts
    where lower(username) = v_id or lower(email) = v_id;
 
   if v_pending.username is null then
-    -- الحساب مكتمل أصلاً: ليس خطأً
     if exists (select 1 from staff where id = auth.uid())
        or exists (select 1 from clients where auth_user_id = auth.uid()) then
       return;
     end if;
-    -- لا حساب معلَّق ولا سطر مكتمل: يجب أن يظهر الخطأ بدل الخروج بصمت
     raise exception 'لا يوجد حساب معلَّق بهذا المعرّف';
   end if;
 
   if v_pending.password_hash <> crypt(p_password, v_pending.password_hash) then
     raise exception 'بيانات الدخول غير صحيحة';
+  end if;
+
+  -- حساب المصادقة الحالي مرتبط مسبقاً بسطر مكتب لشخص آخر:
+  -- لا يُستبدل ذلك السطر بحال — يُرفض الاستكمال ويُبلَّغ السبب
+  select * into v_self from staff where id = auth.uid();
+  if v_self.id is not null and lower(v_self.username) <> lower(v_pending.username) then
+    raise exception 'حساب الدخول هذا مرتبط مسبقاً بالمستخدم «%». أعطِ الحساب الجديد بريداً مختلفاً، أو اتركه فارغاً ليُبنى من اسم المستخدم.', v_self.username;
+  end if;
+  -- أو مرتبط بحساب موكل
+  select * into v_client from clients where auth_user_id = auth.uid();
+  if v_client.id is not null and (v_pending.kind <> 'client' or v_client.id <> v_pending.client_id) then
+    raise exception 'حساب الدخول هذا مرتبط مسبقاً بحساب موكل. أعطِ الحساب الجديد بريداً مختلفاً.';
+  end if;
+  -- واسم المستخدم محجوز لسطر مكتب آخر
+  if exists (select 1 from staff where lower(username) = lower(v_pending.username) and id <> auth.uid()) then
+    raise exception 'اسم المستخدم «%» مستخدم لحساب آخر', v_pending.username;
   end if;
 
   if v_pending.kind = 'staff' then
